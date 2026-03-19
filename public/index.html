@@ -323,6 +323,20 @@ label { font-size: 11px; color: var(--text2); font-weight: 600; display: block; 
 </head>
 <body>
 
+<!-- LOCK -->
+<div id="lock">
+  <div class="lock-card">
+    <div class="lock-icon">🧬</div>
+    <div class="lock-logo">Med<span>Study</span></div>
+    <div class="lock-sub">Personal revision tool · UK Medicine</div>
+    <input type="password" id="pwInput" placeholder="••••••••" autocomplete="off" onkeydown="if(event.key==='Enter')tryUnlock()">
+    <button class="btn btn-teal" style="width:100%;justify-content:center;padding:12px;font-size:14px;" id="lockBtn" onclick="tryUnlock()">
+      <div class="spin"></div>Unlock
+    </button>
+    <div class="lock-err" id="lockErr"></div>
+  </div>
+</div>
+
 <!-- APP -->
 <div id="app">
  <div class="layout">
