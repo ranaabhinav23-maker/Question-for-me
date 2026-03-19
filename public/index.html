@@ -604,8 +604,7 @@ function applyTheme(){
   updateThemeUI(saved==='dark');
 }
 
-// ── AUTH — single-round SHA-256 so it runs instantly ──
-// Password: Abh1n@vRana
+// ── AUTH ──
 const PW_HASH='adf3446e80aaa0d0bb18f28da17d28c346e126e37030062dd5d2b11a6352673c';
 const PW_SALT='medstudy_2025_salt';
 
@@ -656,9 +655,12 @@ function unlock(){
   init();
 }
 
-// Check session on page load
+// ── SINGLE DOMContentLoaded — all startup logic lives here ──
 document.addEventListener('DOMContentLoaded',function(){
   applyTheme();
+  // Attach modal-background close listeners now that DOM is ready
+  document.querySelectorAll('.modal-bg').forEach(m=>m.addEventListener('click',e=>{if(e.target===m)m.classList.remove('open');}));
+  // Auto-unlock if already authenticated this session
   if(sessionStorage.getItem(SK)==='1') unlock();
 });
 
@@ -694,9 +696,7 @@ function buildPills(){
   lpp.innerHTML=`<span class="subj-pill active" onclick="setLecF('pass','all',this)">All</span><span class="subj-pill" onclick="setLecF('pass','none',this)">Not started</span><span class="subj-pill" onclick="setLecF('pass','p1',this)">Pass 1 done</span><span class="subj-pill" onclick="setLecF('pass','p2',this)">Both passes</span>`;
   ['drugPills','bugPills','reviewPills'].forEach(id=>{document.getElementById(id).innerHTML=BLOCKS.map(b=>`<span class="pill pill-${BC[b]} active" onclick="togglePill('${id}','${b}',this)">${b}</span>`).join('');});
   ['drugTestPills','bugTestPills'].forEach(id=>{document.getElementById(id).innerHTML=BLOCKS.map(b=>`<span class="pill pill-${BC[b]} active" onclick="toggleTestPill('${id}','${b}',this)">${b}</span>`).join('');});
-  // Mock block pills - all selected by default
   document.getElementById('mockBlockPills').innerHTML=BLOCKS.map(b=>`<span class="pill pill-${BC[b]} active" onclick="this.classList.toggle('active')">${b}</span>`).join('');
-  // Source radio listener
   document.querySelectorAll('input[name="recallSrc"]').forEach(r=>r.addEventListener('change',()=>{
     document.getElementById('recallNotesInput').style.display=r.value==='notes'&&r.checked?'block':'none';
   }));
@@ -845,13 +845,10 @@ async function startMockExam(){
   const blocks=getActivePills('mockBlockPills');
   const diff=document.getElementById('mockDiff').value;
   if(!blocks.length){showErr('mockErr','Select at least one block.');return;}
-  // Pull existing wrong answers from Supabase to use as base questions
   setBusy('mockStartBtn','mockStartTxt','Building exam…',true);hideErr('mockErr');
   const {data:existingQs}=await sb.from('wrong_answers').select('*').eq('year',yr).in('block',blocks).limit(200);
-  // Calculate how many questions for the duration (1 question per 1.5 min)
   const totalQ=Math.floor(durMin/1.5);
   const dmap={mixed:'a mix of recall, applied and hard clinical reasoning',easy:'recall: definitions and key facts',medium:'applied: mechanisms and clinical application',hard:'hard clinical vignettes'};
-  // Generate AI questions to fill up the paper
   const prompt=`Generate exactly ${Math.min(totalQ,40)} UK Year 2 medical MCQ exam questions across these blocks: ${blocks.join(', ')}. Difficulty: ${dmap[diff]}. Make them varied — different topics within each block. Clinical vignette format where appropriate. Raw JSON only: {"questions":[{"vignette":"","question":"...(mark: 1)","options":["A","B","C","D","E"],"correct":0,"explanation":"...","block":"GU"}]}`;
   try{
     const r=await fetch('/api/generate',{method:'POST',headers:{'Content-Type':'application/json'},body:JSON.stringify({model:'claude-haiku-4-5-20251001',max_tokens:6000,messages:[{role:'user',content:prompt}]})});
@@ -914,15 +911,13 @@ async function submitMock(){
     else{const ce=document.getElementById(`mxo${i}_${cor}`);if(ce)ce.classList.add('reveal');wrongs.push({year:yr,block:q.block||'Core',question:q.question,options:q.options,correct:q.correct,explanation:q.explanation,resolved:false});}
     document.getElementById(`mxe${i}`).classList.add('show');
   });
-  // Save to supabase
   const pct=Math.round(score/mockQs.length*100);
   await sb.from('mcq_sessions').insert({year:yr,block:'Mock Exam',total:mockQs.length,score,questions:mockQs});
   if(wrongs.length)await sb.from('wrong_answers').insert(wrongs);
-  // Scroll to top and show result banner
   const area=document.getElementById('mockExamArea');
   const banner=document.createElement('div');
   banner.style.cssText='margin-bottom:20px;';
-  banner.innerHTML=`<div class="score-bar show" style="background:${pct>=70?'rgba(16,185,129,0.1)':'pct>=50?rgba(245,158,11,0.1)':'rgba(239,68,68,0.1)'};border-color:${pct>=70?'rgba(16,185,129,0.3)':pct>=50?'rgba(245,158,11,0.3)':'rgba(239,68,68,0.3)'};">
+  banner.innerHTML=`<div class="score-bar show" style="background:${pct>=70?'rgba(16,185,129,0.1)':pct>=50?'rgba(245,158,11,0.1)':'rgba(239,68,68,0.1)'};border-color:${pct>=70?'rgba(16,185,129,0.3)':pct>=50?'rgba(245,158,11,0.3)':'rgba(239,68,68,0.3)'};">
     <div><div style="font-size:10px;color:var(--text2);margin-bottom:2px;font-weight:600;text-transform:uppercase;letter-spacing:0.06em;">Exam complete</div><div class="score-num">${score} / ${mockQs.length}</div></div>
     <div style="text-align:right;"><div style="font-size:1.4rem;font-weight:800;color:${pct>=70?'var(--green)':pct>=50?'var(--orange)':'var(--red)'};">${pct}%</div><div style="font-size:12px;color:var(--text2);">${pct>=70?'✓ Pass territory':pct>=50?'⚠ Borderline':'✗ Keep revising'}</div></div>
   </div>`;
@@ -1085,9 +1080,6 @@ function shuffle(a){for(let i=a.length-1;i>0;i--){const j=Math.floor(Math.random
 let _pt={};
 function startProg(pid,fid){let p=0;document.getElementById(pid).style.display='block';_pt[pid]=setInterval(()=>{p=Math.min(p+Math.random()*4,88);document.getElementById(fid).style.width=p+'%';},300);}
 function endProg(pid,fid){clearInterval(_pt[pid]);document.getElementById(fid).style.width='100%';setTimeout(()=>{document.getElementById(pid).style.display='none';document.getElementById(fid).style.width='0%';},500);}
-document.querySelectorAll('.modal-bg').forEach(m=>m.addEventListener('click',e=>{if(e.target===m)m.classList.remove('open');}));
-// Auto-unlock if already authenticated this session — runs AFTER all functions defined
-if(sessionStorage.getItem(SK)==='1')unlock();
 </script>
 </body>
 </html>
