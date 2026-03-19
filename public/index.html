@@ -7,7 +7,6 @@
 <link href="https://fonts.googleapis.com/css2?family=DM+Sans:ital,opsz,wght@0,9..40,300;0,9..40,400;0,9..40,500;0,9..40,600;0,9..40,700;0,9..40,800;1,9..40,400&family=JetBrains+Mono:wght@400;500&display=swap" rel="stylesheet">
 <script src="https://cdn.jsdelivr.net/npm/@supabase/supabase-js@2"></script>
 <style>
-/* ── LIGHT THEME ── */
 [data-theme="light"] {
   --navy:       #0f1c2e;
   --navy2:      #162438;
@@ -33,7 +32,6 @@
   --ai-sug-bg:  #f0f9ff;
   --ai-sug-border: #bae6fd;
 }
-/* ── DARK THEME ── */
 [data-theme="dark"] {
   --navy:       #0a1628;
   --navy2:      #0f1e35;
@@ -59,7 +57,6 @@
   --ai-sug-bg:  rgba(6,182,212,0.06);
   --ai-sug-border: rgba(6,182,212,0.2);
 }
-
 :root {
   --sidebar-w: 248px;
   --accent:    #06b6d4;
@@ -78,7 +75,6 @@ body { font-family: var(--font); background: var(--bg); color: var(--text); min-
 ::-webkit-scrollbar-track { background: transparent; }
 ::-webkit-scrollbar-thumb { background: var(--border2); border-radius: 99px; }
 
-/* ── LOCK ── */
 #lock { position: fixed; inset: 0; z-index: 9999; background: var(--navy); display: flex; align-items: center; justify-content: center; }
 #lock::before{content:'';position:absolute;inset:0;pointer-events:none;background:radial-gradient(ellipse 60% 50% at 20% 40%,rgba(6,182,212,0.08) 0%,transparent 60%),radial-gradient(ellipse 40% 40% at 80% 70%,rgba(16,185,129,0.06) 0%,transparent 50%);}
 .lock-card { background: var(--navy2); border: 1px solid var(--navy-light); border-radius: 20px; padding: 48px 44px; width: 400px; text-align: center; box-shadow: 0 40px 80px rgba(0,0,0,0.5); }
@@ -92,12 +88,10 @@ body { font-family: var(--font); background: var(--bg); color: var(--text); min-
 @keyframes shake { 0%,100%{transform:translateX(0)} 20%{transform:translateX(-7px)} 40%{transform:translateX(7px)} 60%{transform:translateX(-4px)} 80%{transform:translateX(4px)} }
 .lock-err { font-size: 11px; color: #f87171; margin-top: 8px; min-height: 16px; }
 
-/* ── LAYOUT ── */
 #app { display: none; }
 .layout { display: flex; min-height: 100vh; }
 
-/* ── SIDEBAR ── */
-.sidebar { width: var(--sidebar-w); background: var(--navy); display: flex; flex-direction: column; position: fixed; height: 100vh; z-index: 20; overflow-y: auto; transition: background 0.25s; position:relative; }
+.sidebar { width: var(--sidebar-w); background: var(--navy); display: flex; flex-direction: column; position: fixed; height: 100vh; z-index: 20; overflow-y: auto; transition: background 0.25s; }
 .sidebar::after{content:'';position:absolute;top:0;right:0;width:1px;height:100%;background:linear-gradient(180deg,rgba(6,182,212,0.2),transparent 40%,transparent 70%,rgba(6,182,212,0.08));}
 .sidebar-logo { padding: 22px 20px 18px; display: flex; align-items: center; gap: 10px; border-bottom: 1px solid rgba(255,255,255,0.06); }
 .logo-mark { width: 32px; height: 32px; background: linear-gradient(135deg,var(--accent),var(--accent2)); border-radius: 8px; display: flex; align-items: center; justify-content: center; font-size: 14px; font-weight: 800; color: white; flex-shrink: 0; }
@@ -116,31 +110,26 @@ body { font-family: var(--font); background: var(--bg); color: var(--text); min-
 .nav-badge { margin-left: auto; background: var(--red); color: white; border-radius: 99px; padding: 1px 7px; font-size: 10px; font-weight: 700; }
 .sidebar-bottom { margin-top: auto; padding: 14px 12px; border-top: 1px solid rgba(255,255,255,0.06); }
 
-/* dark mode toggle */
 .theme-toggle { display: flex; align-items: center; justify-content: space-between; padding: 9px 12px; background: rgba(255,255,255,0.05); border-radius: var(--r); margin-bottom: 10px; cursor: pointer; }
 .theme-toggle-label { font-size: 11px; color: rgba(255,255,255,0.5); font-weight: 500; }
 .toggle-track { width: 36px; height: 20px; background: rgba(255,255,255,0.15); border-radius: 99px; position: relative; transition: background 0.2s; }
 .toggle-track.on { background: var(--accent); }
 .toggle-thumb { width: 14px; height: 14px; background: white; border-radius: 50%; position: absolute; top: 3px; left: 3px; transition: left 0.2s; box-shadow: 0 1px 3px rgba(0,0,0,0.3); }
 .toggle-track.on .toggle-thumb { left: 19px; }
-
 .year-btn { width: 100%; background: rgba(6,182,212,0.12); border: 1px solid rgba(6,182,212,0.25); border-radius: var(--r); padding: 10px 14px; cursor: pointer; transition: all 0.2s; display: flex; align-items: center; justify-content: space-between; font-family: var(--font); }
 .year-btn:hover { background: rgba(6,182,212,0.2); }
 .year-btn-label { font-size: 10px; color: rgba(255,255,255,0.4); text-transform: uppercase; letter-spacing: 0.08em; margin-bottom: 2px; }
 .year-btn-name { font-size: 13px; font-weight: 700; color: white; }
 
-/* ── MAIN ── */
 .main { margin-left: var(--sidebar-w); flex: 1; }
 .page { display: none; padding: 28px 32px 60px; }
 .page.active { display: block; animation: fadeIn 0.2s ease; }
 @keyframes fadeIn { from { opacity: 0; transform: translateY(5px); } to { opacity: 1; transform: translateY(0); } }
 
-/* ── HERO ── */
 .page-hero { background: var(--hero-bg); border-bottom: 1px solid var(--border); padding: 20px 32px; display: flex; align-items: center; justify-content: space-between; transition: background 0.25s; }
 .page-hero-title { font-size: 1.2rem; font-weight: 800; color: var(--text); letter-spacing: -0.02em; }
 .page-hero-sub { font-size: 13px; color: var(--text2); margin-top: 3px; }
 
-/* ── STAT CARDS ── */
 .stat-card { background: var(--surface); border: 1px solid var(--border); border-radius: var(--r2); padding: 20px 22px; box-shadow: var(--card-shadow); position: relative; overflow: hidden; transition: all 0.2s; }
 .stat-card:hover { box-shadow: var(--card-shadow-md); transform: translateY(-1px); }
 .stat-card-bar { position: absolute; top: 0; left: 0; right: 0; height: 3px; }
@@ -149,19 +138,16 @@ body { font-family: var(--font); background: var(--bg); color: var(--text); min-
 .stat-label { font-size: 12px; color: var(--text2); font-weight: 500; }
 .stat-hint { font-size: 11px; color: var(--text3); margin-top: 3px; }
 
-/* ── SECTION CARDS ── */
 .section-card { background: var(--surface); border: 1px solid var(--border); border-radius: var(--r2); box-shadow: var(--card-shadow); overflow: hidden; transition: background 0.25s, border-color 0.25s; }
 .section-head { padding: 15px 20px; border-bottom: 1px solid var(--border); display: flex; align-items: center; justify-content: space-between; }
 .section-title { font-size: 14px; font-weight: 700; color: var(--text); letter-spacing: -0.01em; }
 .section-sub { font-size: 12px; color: var(--text2); margin-top: 2px; }
 .section-body { padding: 20px; }
 
-/* ── GRIDS ── */
 .g2 { display: grid; grid-template-columns: 1fr 1fr; gap: 16px; }
 .g3 { display: grid; grid-template-columns: 1fr 1fr 1fr; gap: 16px; }
 .g4 { display: grid; grid-template-columns: repeat(4,1fr); gap: 14px; }
 
-/* ── BUTTONS ── */
 .btn { display: inline-flex; align-items: center; gap: 6px; padding: 8px 16px; border-radius: var(--r); font-family: var(--font); font-size: 13px; font-weight: 600; cursor: pointer; border: none; transition: all 0.15s; white-space: nowrap; letter-spacing: -0.01em; }
 .btn-primary { background: var(--navy); color: white; }
 .btn-primary:hover { background: var(--navy2); box-shadow: 0 4px 12px rgba(15,28,46,0.25); }
@@ -182,14 +168,12 @@ body { font-family: var(--font); background: var(--bg); color: var(--text); min-
 .btn-sm { padding: 6px 12px; font-size: 12px; }
 .btn-xs { padding: 3px 9px; font-size: 11px; border-radius: 6px; }
 
-/* ── INPUTS ── */
-input[type=text], input[type=password], input[type=number], textarea, select { background: var(--input-bg); border: 1px solid var(--border2); border-radius: var(--r); padding: 10px 14px; font-family: var(--font); font-size: 13px; color: var(--text); outline: none; transition: all 0.15s; width: 100%; }
+input[type=text], input[type=password], input[type=number], input[type=date], textarea, select { background: var(--input-bg); border: 1px solid var(--border2); border-radius: var(--r); padding: 10px 14px; font-family: var(--font); font-size: 13px; color: var(--text); outline: none; transition: all 0.15s; width: 100%; }
 input:focus, textarea:focus, select:focus { border-color: var(--accent); box-shadow: 0 0 0 3px rgba(6,182,212,0.12); }
 textarea { resize: vertical; line-height: 1.65; min-height: 120px; }
 select option { background: var(--input-bg); color: var(--text); }
 label { font-size: 11px; color: var(--text2); font-weight: 600; display: block; margin-bottom: 5px; letter-spacing: 0.04em; text-transform: uppercase; }
 
-/* ── BADGES ── */
 .badge { display: inline-flex; align-items: center; padding: 2px 8px; border-radius: 99px; font-size: 11px; font-weight: 600; }
 .badge-teal { background: rgba(6,182,212,0.12); color: #0e9bbf; border: 1px solid rgba(6,182,212,0.25); }
 .badge-green { background: rgba(16,185,129,0.12); color: #0d9e6e; border: 1px solid rgba(16,185,129,0.25); }
@@ -198,18 +182,15 @@ label { font-size: 11px; color: var(--text2); font-weight: 600; display: block; 
 .badge-blue { background: rgba(59,130,246,0.1); color: #2563eb; border: 1px solid rgba(59,130,246,0.2); }
 .badge-muted { background: var(--surface2); color: var(--text2); border: 1px solid var(--border); }
 
-/* ── BLOCK COLOURS ── */
 .dot { width: 8px; height: 8px; border-radius: 50%; display: inline-block; flex-shrink: 0; }
 .d-gu{background:#ec4899;} .d-msk{background:#3b82f6;} .d-neuro{background:#10b981;}
 .d-gi{background:#f97316;} .d-cvr{background:#ef4444;} .d-core{background:#8b5cf6;}
 .c-gu{color:#ec4899;} .c-msk{color:#3b82f6;} .c-neuro{color:#10b981;}
 .c-gi{color:#f97316;} .c-cvr{color:#ef4444;} .c-core{color:#8b5cf6;}
 
-/* ── PROGRESS ── */
 .prog-track { height: 6px; background: var(--surface2); border-radius: 99px; overflow: hidden; border: 1px solid var(--border); }
 .prog-fill { height: 100%; border-radius: 99px; transition: width 0.5s ease; }
 
-/* ── PILLS ── */
 .pill-row { display: flex; flex-wrap: wrap; gap: 6px; margin-bottom: 18px; }
 .pill { padding: 5px 13px; border-radius: 99px; font-size: 12px; font-weight: 600; cursor: pointer; border: 1px solid var(--border2); background: var(--surface); color: var(--text2); transition: all 0.15s; font-family: var(--font); box-shadow: var(--card-shadow); }
 .pill:hover { border-color: var(--navy); color: var(--text); }
@@ -221,7 +202,6 @@ label { font-size: 11px; color: var(--text2); font-weight: 600; display: block; 
 .subj-pill:hover { color: var(--text2); border-color: var(--border2); }
 .subj-pill.active { background: var(--surface2); border-color: var(--border2); color: var(--text); font-weight: 600; }
 
-/* ── MCQ ── */
 .q-card { background: var(--surface); border: 1px solid var(--border); border-radius: var(--r2); padding: 22px 24px; margin-bottom: 12px; box-shadow: var(--card-shadow); animation: fadeIn 0.2s ease both; transition: background 0.25s; }
 .q-num { font-size: 10px; color: var(--accent); font-weight: 700; letter-spacing: 0.1em; text-transform: uppercase; margin-bottom: 10px; }
 .q-text { font-size: 13.5px; line-height: 1.85; color: var(--text); margin-bottom: 16px; }
@@ -234,27 +214,23 @@ label { font-size: 11px; color: var(--text2); font-weight: 600; display: block; 
 .expl { margin-top: 12px; padding: 12px 16px; background: var(--expl-bg); border-left: 3px solid var(--accent); border-radius: 0 var(--r) var(--r) 0; font-size: 12px; line-height: 1.75; color: var(--text2); display: none; }
 .expl.show { display: block; }
 
-/* ── DATA CARDS ── */
 .data-card { background: var(--surface); border: 1px solid var(--border); border-radius: var(--r2); padding: 18px 20px; margin-bottom: 10px; box-shadow: var(--card-shadow); transition: all 0.15s; }
 .data-card:hover { box-shadow: var(--card-shadow-md); }
 .field-label { font-size: 10px; color: var(--text3); font-weight: 700; letter-spacing: 0.08em; text-transform: uppercase; margin-bottom: 3px; }
 .field-val { font-size: 13px; color: var(--text); line-height: 1.5; }
 
-/* ── BUG TABLE ── */
 .btable { width: 100%; border-collapse: collapse; font-size: 13px; }
 .btable th { background: var(--surface2); color: var(--text2); padding: 10px 14px; text-align: left; font-weight: 600; font-size: 11px; text-transform: uppercase; letter-spacing: 0.06em; border-bottom: 1px solid var(--border); }
 .btable td { padding: 11px 14px; border-bottom: 1px solid var(--border); color: var(--text); vertical-align: top; }
 .btable tr:last-child td { border-bottom: none; }
 .btable tbody tr:hover td { background: var(--surface2); }
 
-/* ── LECTURE ROWS ── */
 .lec-row { display: flex; align-items: center; gap: 10px; padding: 11px 16px; border-radius: var(--r); border: 1px solid var(--border); margin-bottom: 6px; background: var(--surface); transition: all 0.15s; box-shadow: var(--card-shadow); }
 .lec-row:hover { border-color: var(--border2); box-shadow: var(--card-shadow-md); }
 .lec-row.p1 { border-left: 3px solid var(--orange); }
 .lec-row.p2 { border-left: 3px solid var(--green); }
 .lec-title { flex: 1; font-size: 13px; font-weight: 500; color: var(--text); }
 
-/* ── TARGETS ── */
 .target-card { background: var(--target-bg); border: 1px solid var(--target-border); border-radius: var(--r2); padding: 18px; }
 .target-item { display: flex; align-items: center; gap: 10px; padding: 8px 0; border-bottom: 1px solid var(--border); cursor: pointer; transition: all 0.12s; }
 .target-item:last-child { border-bottom: none; }
@@ -264,24 +240,20 @@ label { font-size: 11px; color: var(--text2); font-weight: 600; display: block; 
 .target-text { font-size: 12px; font-weight: 500; color: var(--text); flex: 1; }
 .target-text.done { text-decoration: line-through; color: var(--text3); }
 
-/* ── SCORE BAR ── */
 .score-bar { background: var(--surface); border: 1px solid var(--border); border-radius: var(--r2); padding: 16px 22px; margin-bottom: 16px; display: none; align-items: center; justify-content: space-between; box-shadow: var(--card-shadow); }
 .score-bar.show { display: flex; }
 .score-num { font-size: 2rem; font-weight: 800; letter-spacing: -0.03em; color: var(--text); }
 
-/* ── TABS ── */
 .tab-row { display: flex; gap: 0; margin-bottom: 20px; background: var(--surface); border: 1px solid var(--border); border-radius: var(--r); padding: 3px; width: fit-content; box-shadow: var(--card-shadow); }
 .tab { padding: 7px 18px; cursor: pointer; font-size: 13px; font-weight: 600; color: var(--text2); border-radius: 6px; transition: all 0.15s; }
 .tab.active { background: var(--navy); color: white; box-shadow: 0 2px 8px rgba(15,28,46,0.2); }
 
-/* ── MOCK EXAM TIMER ── */
 .exam-timer { font-family: var(--mono); font-size: 2rem; font-weight: 700; letter-spacing: 0.05em; color: var(--text); }
 .exam-timer.warning { color: var(--orange); }
 .exam-timer.danger { color: var(--red); animation: pulse 1s ease infinite; }
 @keyframes pulse { 0%,100%{opacity:1} 50%{opacity:0.5} }
 .exam-progress-wrap { background: var(--surface2); border: 1px solid var(--border); border-radius: var(--r2); padding: 16px 20px; margin-bottom: 16px; display: flex; align-items: center; gap: 20px; }
 
-/* ── QUICK RECALL ── */
 .recall-card { background: var(--surface); border: 1px solid var(--border); border-radius: var(--r2); padding: 28px; box-shadow: var(--card-shadow); text-align: center; }
 .recall-term { font-size: 1.4rem; font-weight: 800; color: var(--text); letter-spacing: -0.02em; margin-bottom: 8px; }
 .recall-hint { font-size: 12px; color: var(--text2); margin-bottom: 24px; }
@@ -291,15 +263,12 @@ label { font-size: 11px; color: var(--text2); font-weight: 600; display: block; 
 .recall-score-dot.hit { background: var(--green); }
 .recall-score-dot.miss { background: var(--red); }
 
-/* ── AI FEEDBACK ── */
 .ai-feedback { border-radius: var(--r); padding: 14px 16px; margin-top: 14px; font-size: 13px; line-height: 1.7; display: none; }
 .ai-feedback.show { display: block; }
 .ai-fb-good { background: rgba(16,185,129,0.08); border-left: 3px solid var(--green); color: var(--text2); }
 .ai-fb-ok { background: rgba(245,158,11,0.08); border-left: 3px solid var(--orange); color: var(--text2); }
 .ai-fb-bad { background: rgba(239,68,68,0.08); border-left: 3px solid var(--red); color: var(--text2); }
 
-
-/* COUNTDOWN CARD */
 .countdown-card{background:linear-gradient(135deg,var(--navy),var(--navy3));border:1px solid rgba(6,182,212,0.25);border-radius:var(--r2);padding:20px 22px;position:relative;overflow:hidden;box-shadow:var(--card-shadow),0 0 40px rgba(6,182,212,0.06);}
 .countdown-card::before{content:'';position:absolute;top:0;left:0;right:0;height:2px;background:linear-gradient(90deg,var(--accent),var(--accent2),transparent);}
 .countdown-card::after{content:'';position:absolute;top:-30px;right:-30px;width:100px;height:100px;background:radial-gradient(circle,rgba(6,182,212,0.1) 0%,transparent 70%);pointer-events:none;}
@@ -321,7 +290,7 @@ label { font-size: 11px; color: var(--text2); font-weight: 600; display: block; 
 .imp-soon{background:rgba(239,68,68,0.2);color:#fca5a5;}
 .imp-near{background:rgba(245,158,11,0.15);color:#fcd34d;}
 .imp-far{background:rgba(6,182,212,0.15);color:#67e8f9;}
-/* SUBJECT BREAKDOWN */
+
 .subj-row{display:flex;align-items:center;gap:10px;margin-bottom:11px;}
 .subj-row:last-child{margin-bottom:0;}
 .subj-label{font-size:12px;color:var(--text2);width:115px;flex-shrink:0;font-weight:500;}
@@ -329,7 +298,6 @@ label { font-size: 11px; color: var(--text2); font-weight: 600; display: block; 
 .subj-fill{height:100%;border-radius:99px;transition:width 0.6s ease;}
 .subj-pct{font-size:11px;color:var(--text3);width:34px;text-align:right;font-family:var(--mono);}
 
-/* ── SPIN / PROG ── */
 .spin { width: 13px; height: 13px; border: 2px solid rgba(255,255,255,0.25); border-top-color: white; border-radius: 50%; animation: rot 0.6s linear infinite; display: none; flex-shrink: 0; }
 .loading .spin { display: inline-block; }
 @keyframes rot { to { transform: rotate(360deg); } }
@@ -337,13 +305,11 @@ label { font-size: 11px; color: var(--text2); font-weight: 600; display: block; 
 .gen-prog-track { height: 3px; background: var(--border); border-radius: 99px; overflow: hidden; }
 .gen-prog-fill { height: 100%; background: linear-gradient(90deg,var(--accent),var(--accent2)); width: 0%; transition: width 0.3s; border-radius: 99px; }
 
-/* ── MODAL ── */
 .modal-bg { position: fixed; inset: 0; background: rgba(5,10,20,0.7); backdrop-filter: blur(4px); z-index: 1000; display: none; align-items: center; justify-content: center; }
 .modal-bg.open { display: flex; }
 .modal { background: var(--modal-bg); border: 1px solid var(--border); border-radius: 20px; padding: 28px; width: 520px; max-height: 85vh; overflow-y: auto; box-shadow: 0 40px 80px rgba(0,0,0,0.25); transition: background 0.25s; }
 .modal-title { font-size: 1rem; font-weight: 800; letter-spacing: -0.02em; color: var(--text); margin-bottom: 20px; }
 
-/* ── MISC ── */
 .divider { height: 1px; background: var(--border); margin: 16px 0; }
 .empty { text-align: center; padding: 48px 20px; color: var(--text2); font-size: 13px; line-height: 2; }
 .empty-ico { font-size: 2rem; margin-bottom: 10px; display: block; opacity: 0.4; }
@@ -373,8 +339,6 @@ label { font-size: 11px; color: var(--text2); font-weight: 600; display: block; 
 <!-- APP -->
 <div id="app">
  <div class="layout">
-
-  <!-- SIDEBAR -->
   <div class="sidebar">
     <div class="sidebar-logo">
       <div class="logo-mark">M</div>
@@ -416,9 +380,7 @@ label { font-size: 11px; color: var(--text2); font-weight: 600; display: block; 
     </div>
   </div>
 
-  <!-- MAIN -->
   <div class="main">
-
    <!-- DASHBOARD -->
    <div class="page active" id="page-dashboard">
     <div class="page-hero">
@@ -438,7 +400,6 @@ label { font-size: 11px; color: var(--text2); font-weight: 600; display: block; 
       <div class="g2">
         <div class="section-card"><div class="section-head"><div><div class="section-title">Block progress</div><div class="section-sub">Pass 1 and pass 2 across all blocks</div></div></div><div class="section-body"><div id="blockProg"></div></div></div>
         <div style="display:flex;flex-direction:column;gap:14px;">
-          <!-- EXAM COUNTDOWN -->
           <div class="countdown-card" id="countdownCard">
             <div class="cd-label">Exam countdown</div>
             <div class="cd-exam-name"><span id="cdName" style="flex:1;">Set your exam date</span><button class="cd-edit-btn" onclick="openExamModal()">Edit dates</button></div>
@@ -447,17 +408,15 @@ label { font-size: 11px; color: var(--text2); font-weight: 600; display: block; 
             <div class="cd-bar"><div class="cd-bar-fill" id="cdBarFill" style="width:0%;"></div></div>
             <div id="cdImportantDates"></div>
           </div>
-          <!-- TARGETS -->
           <div class="target-card">
             <div class="row mb12"><div class="flex1"><div style="font-size:13px;font-weight:700;color:var(--text);">Today's targets</div><div style="font-size:12px;color:var(--text2);margin-top:2px;" id="targetProgress">No targets set</div></div><button class="btn btn-xs btn-outline" onclick="openTargetModal()">Edit</button></div>
             <div id="targetList"><div style="font-size:12px;color:var(--text3);text-align:center;padding:12px 0;">Click Edit to add targets</div></div>
           </div>
         </div>
       </div>
-      <!-- ROW 3: recent scores + subject breakdown -->
       <div class="g2 mt16">
         <div class="section-card"><div class="section-head"><div class="section-title">Recent scores</div></div><div class="section-body"><div id="recentScores"></div></div></div>
-        <div class="section-card"><div class="section-head"><div><div class="section-title">Block breakdown</div><div class="section-sub">MCQ accuracy per block</div></div></div><div class="section-body"><div id="subjBreakdown"><div class="empty" style="padding:20px 0;font-size:12px;"><span class="empty-ico">&#128202;</span>Complete MCQs to see breakdown</div></div></div></div>
+        <div class="section-card"><div class="section-head"><div><div class="section-title">Block breakdown</div><div class="section-sub">MCQ accuracy per block</div></div></div><div class="section-body"><div id="subjBreakdown"><div class="empty" style="padding:20px 0;font-size:12px;"><span class="empty-ico">📊</span>Complete MCQs to see breakdown</div></div></div></div>
       </div>
     </div>
    </div>
@@ -506,7 +465,7 @@ label { font-size: 11px; color: var(--text2); font-weight: 600; display: block; 
           <div class="g2 mb16">
             <div>
               <label>Duration</label>
-              <div style="display:flex;flex-direction:column;gap:8px;" id="durationBtns">
+              <div style="display:flex;flex-direction:column;gap:8px;">
                 <label style="text-transform:none;font-size:13px;display:flex;align-items:center;gap:10px;cursor:pointer;"><input type="radio" name="dur" value="30" style="width:auto;"> <span>30 min — Sprint (approx 20 questions)</span></label>
                 <label style="text-transform:none;font-size:13px;display:flex;align-items:center;gap:10px;cursor:pointer;"><input type="radio" name="dur" value="60" checked style="width:auto;"> <span>1 hour — Standard (approx 40 questions)</span></label>
                 <label style="text-transform:none;font-size:13px;display:flex;align-items:center;gap:10px;cursor:pointer;"><input type="radio" name="dur" value="120" style="width:auto;"> <span>2 hours — Full paper (approx 80 questions)</span></label>
@@ -526,7 +485,7 @@ label { font-size: 11px; color: var(--text2); font-weight: 600; display: block; 
         </div>
       </div>
     </div>
-    <div style="padding:0 32px;" id="mockExamArea" style="display:none;"></div>
+    <div style="padding:0 32px;" id="mockExamArea"></div>
    </div>
 
    <!-- QUICK RECALL -->
@@ -586,12 +545,11 @@ label { font-size: 11px; color: var(--text2); font-weight: 600; display: block; 
       <div id="bugTest" style="display:none;"><div class="section-card mb16"><div class="section-head"><div class="section-title">Select blocks</div></div><div class="section-body"><div class="pill-row" id="bugTestPills"></div><button class="btn btn-primary mt8" onclick="startBugTest()">Start test</button></div></div><div id="bugTestArea"></div></div>
     </div>
    </div>
-
   </div>
  </div>
 </div>
 
-<!-- MODALS -->
+<!-- ALL MODALS — must be before </body> and before the script so DOMContentLoaded finds them -->
 <div class="modal-bg" id="yearModal">
   <div class="modal"><div class="modal-title">Year profiles</div><div id="yearList" class="mb16"></div><div class="divider"></div><div style="font-size:13px;font-weight:700;margin-bottom:10px;color:var(--text);">Add new profile</div><div class="row"><input type="text" id="newYearInput" placeholder="e.g. Year 3" style="flex:1;"><button class="btn btn-primary btn-sm" onclick="addYear()">Add</button></div><button class="btn btn-ghost mt12" onclick="closeModal('yearModal')">Close</button></div>
 </div>
@@ -606,6 +564,22 @@ label { font-size: 11px; color: var(--text2); font-weight: 600; display: block; 
 </div>
 <div class="modal-bg" id="targetModal">
   <div class="modal"><div class="modal-title">Today's targets</div><div class="mb16"><label>Add a target</label><div class="row" style="gap:8px;"><input type="text" id="targetInput" placeholder="e.g. GU lecture 12 — renal tubular acidosis" style="flex:1;" onkeydown="if(event.key==='Enter')addTarget()"><select id="targetBlock" style="width:110px;"><option>GU</option><option>MSK</option><option>Neurology</option><option>GI</option><option>CVR</option><option>Core</option></select><button class="btn btn-primary btn-sm" onclick="addTarget()">Add</button></div></div><div id="targetModalList" class="mb12"></div><button class="btn btn-ghost" onclick="closeModal('targetModal')">Done</button></div>
+</div>
+<div class="modal-bg" id="examModal">
+  <div class="modal">
+    <div class="modal-title">Exam dates</div>
+    <div class="mb12"><label>Main exam name</label><input type="text" id="examNameInp" placeholder="e.g. Year 2 Finals — Paper 1 and 2"></div>
+    <div class="mb16"><label>Main exam date</label><input type="date" id="examDateInp"></div>
+    <div class="divider"></div>
+    <div style="font-size:13px;font-weight:700;color:var(--text);margin-bottom:12px;">Important dates <span style="font-size:11px;color:var(--text3);font-weight:400;margin-left:4px;">smaller countdowns on dashboard</span></div>
+    <div class="row mb12" style="gap:8px;">
+      <input type="text" id="impNameInp" placeholder="e.g. Paper 2, Mock, OSCEs..." style="flex:2;">
+      <input type="date" id="impDateInp" style="flex:1;">
+      <button class="btn btn-primary btn-sm" onclick="addImpDate()">Add</button>
+    </div>
+    <div id="impDateList" class="mb16"></div>
+    <div class="row" style="gap:8px;"><button class="btn btn-primary flex1" onclick="saveExamDates()">Save</button><button class="btn btn-outline" onclick="closeModal('examModal')">Cancel</button></div>
+  </div>
 </div>
 
 <script>
@@ -625,10 +599,10 @@ let revQs=[],revIdx=0,revPk={};
 let selDrugBlocks=new Set(BLOCKS),selBugBlocks=new Set(BLOCKS);
 let lecBlockF='all',lecSubjF='all',lecPassF='all';
 let targets=[];
-// Mock exam state
 let mockQs=[],mockPk={},mockDone=false,mockTimer=null,mockEndTime=0;
-// Recall state
 let recallTerms=[],recallIdx=0,recallResults=[];
+const IMP_COLORS=['#06b6d4','#10b981','#f59e0b','#8b5cf6','#ec4899','#ef4444','#3b82f6','#f97316'];
+let tmpImpDates=[];
 
 // ── THEME ──
 function toggleTheme(){
@@ -651,22 +625,16 @@ function applyTheme(){
   updateThemeUI(saved==='dark');
 }
 
-// ── AUTH — single-round SHA-256 so it runs instantly ──
-// Password: Abh1n@vRana
+// ── AUTH ──
 const PW_HASH='adf3446e80aaa0d0bb18f28da17d28c346e126e37030062dd5d2b11a6352673c';
 const PW_SALT='medstudy_2025_salt';
-
 async function sha256str(s){
   const buf=await crypto.subtle.digest('SHA-256',new TextEncoder().encode(s));
   return Array.from(new Uint8Array(buf)).map(b=>b.toString(16).padStart(2,'0')).join('');
 }
-
 async function tryUnlock(){
   const now=Date.now();
-  if(now<lockTil){
-    document.getElementById('lockErr').textContent='Locked — wait '+Math.ceil((lockTil-now)/1000)+'s';
-    return;
-  }
+  if(now<lockTil){document.getElementById('lockErr').textContent='Locked — wait '+Math.ceil((lockTil-now)/1000)+'s';return;}
   const pw=document.getElementById('pwInput').value;
   if(!pw)return;
   const btn=document.getElementById('lockBtn');
@@ -696,14 +664,18 @@ async function tryUnlock(){
     btn.querySelector('.spin').style.display='none';
   }
 }
-
 function unlock(){
   document.getElementById('lock').style.display='none';
   document.getElementById('app').style.display='block';
   init();
 }
 
-
+// ── SINGLE DOMContentLoaded ──
+document.addEventListener('DOMContentLoaded',function(){
+  applyTheme();
+  document.querySelectorAll('.modal-bg').forEach(m=>m.addEventListener('click',e=>{if(e.target===m)m.classList.remove('open');}));
+  if(sessionStorage.getItem(SK)==='1') unlock();
+});
 
 async function init(){
   applyTheme();
@@ -712,7 +684,10 @@ async function init(){
   document.getElementById('sidebarYear').textContent=yr;
   document.getElementById('dashSub').textContent=yr+' · Keep going — you\'ve got this.';
   targets=JSON.parse(localStorage.getItem('_ms_targets_'+yr)||'[]');
-  buildPills();renderCountdown();await loadDash();updateWrongBadge();
+  buildPills();
+  renderCountdown();
+  await loadDash();
+  updateWrongBadge();
 }
 
 function nav(page,el){
@@ -724,22 +699,17 @@ function nav(page,el){
   if(page==='lectures')loadLecs();
   if(page==='drugs')loadDrugs();
   if(page==='bugs')loadBugs();
-  if(page==='mock'){resetMockSetup();}
-  if(page==='recall'){resetRecallSetup();}
+  if(page==='mock')resetMockSetup();
+  if(page==='recall')resetRecallSetup();
 }
 
 function buildPills(){
-  const lbp=document.getElementById('lecBlockPills');
-  lbp.innerHTML=`<span class="pill pill-all active" onclick="setLecF('block','all',this)">All blocks</span>`+BLOCKS.map(b=>`<span class="pill pill-${BC[b]}" onclick="setLecF('block','${b}',this)">${b}</span>`).join('');
-  const lsp=document.getElementById('lecSubjPills');
-  lsp.innerHTML=`<span class="subj-pill active" onclick="setLecF('subj','all',this)">All subjects</span>`+SUBJECTS.map(s=>`<span class="subj-pill" onclick="setLecF('subj','${s}',this)">${s}</span>`).join('');
-  const lpp=document.getElementById('lecPassPills');
-  lpp.innerHTML=`<span class="subj-pill active" onclick="setLecF('pass','all',this)">All</span><span class="subj-pill" onclick="setLecF('pass','none',this)">Not started</span><span class="subj-pill" onclick="setLecF('pass','p1',this)">Pass 1 done</span><span class="subj-pill" onclick="setLecF('pass','p2',this)">Both passes</span>`;
+  document.getElementById('lecBlockPills').innerHTML=`<span class="pill pill-all active" onclick="setLecF('block','all',this)">All blocks</span>`+BLOCKS.map(b=>`<span class="pill pill-${BC[b]}" onclick="setLecF('block','${b}',this)">${b}</span>`).join('');
+  document.getElementById('lecSubjPills').innerHTML=`<span class="subj-pill active" onclick="setLecF('subj','all',this)">All subjects</span>`+SUBJECTS.map(s=>`<span class="subj-pill" onclick="setLecF('subj','${s}',this)">${s}</span>`).join('');
+  document.getElementById('lecPassPills').innerHTML=`<span class="subj-pill active" onclick="setLecF('pass','all',this)">All</span><span class="subj-pill" onclick="setLecF('pass','none',this)">Not started</span><span class="subj-pill" onclick="setLecF('pass','p1',this)">Pass 1 done</span><span class="subj-pill" onclick="setLecF('pass','p2',this)">Both passes</span>`;
   ['drugPills','bugPills','reviewPills'].forEach(id=>{document.getElementById(id).innerHTML=BLOCKS.map(b=>`<span class="pill pill-${BC[b]} active" onclick="togglePill('${id}','${b}',this)">${b}</span>`).join('');});
   ['drugTestPills','bugTestPills'].forEach(id=>{document.getElementById(id).innerHTML=BLOCKS.map(b=>`<span class="pill pill-${BC[b]} active" onclick="toggleTestPill('${id}','${b}',this)">${b}</span>`).join('');});
-  // Mock block pills - all selected by default
   document.getElementById('mockBlockPills').innerHTML=BLOCKS.map(b=>`<span class="pill pill-${BC[b]} active" onclick="this.classList.toggle('active')">${b}</span>`).join('');
-  // Source radio listener
   document.querySelectorAll('input[name="recallSrc"]').forEach(r=>r.addEventListener('change',()=>{
     document.getElementById('recallNotesInput').style.display=r.value==='notes'&&r.checked?'block':'none';
   }));
@@ -768,16 +738,14 @@ async function loadDash(){
   document.getElementById('blockProg').innerHTML=BLOCKS.map(b=>{
     const bl=lecs.filter(l=>l.block===b),p1=bl.filter(l=>l.pass1).length,p2=bl.filter(l=>l.pass2).length,tot=bl.length;
     const pct1=tot?Math.round(p1/tot*100):0,pct2=tot?Math.round(p2/tot*100):0;
-    return`<div style="margin-bottom:18px;"><div class="row" style="margin-bottom:7px;"><span class="dot d-${BC[b]}" style="margin-right:6px;"></span><span style="font-size:13px;font-weight:600;flex:1;">${b}</span><span style="font-size:11px;color:var(--text2);">${p1}/${tot} &nbsp;·&nbsp; <span style="color:var(--green);font-weight:600;">${p2} pass 2</span></span></div>
-    <div style="position:relative;height:7px;background:var(--surface2);border-radius:99px;overflow:hidden;border:1px solid var(--border);"><div style="position:absolute;left:0;top:0;height:100%;width:${pct2}%;background:var(--green);border-radius:99px;"></div><div style="position:absolute;left:${pct2}%;top:0;height:100%;width:${Math.max(0,pct1-pct2)}%;background:var(--orange);border-radius:99px;"></div></div></div>`;
+    return`<div style="margin-bottom:18px;"><div class="row" style="margin-bottom:7px;"><span class="dot d-${BC[b]}" style="margin-right:6px;"></span><span style="font-size:13px;font-weight:600;flex:1;">${b}</span><span style="font-size:11px;color:var(--text2);">${p1}/${tot} &nbsp;·&nbsp; <span style="color:var(--green);font-weight:600;">${p2} pass 2</span></span></div><div style="position:relative;height:7px;background:var(--surface2);border-radius:99px;overflow:hidden;border:1px solid var(--border);"><div style="position:absolute;left:0;top:0;height:100%;width:${pct2}%;background:var(--green);border-radius:99px;"></div><div style="position:absolute;left:${pct2}%;top:0;height:100%;width:${Math.max(0,pct1-pct2)}%;background:var(--orange);border-radius:99px;"></div></div></div>`;
   }).join('');
-  const recent=[...(sessions||[])].reverse().slice(0,6);
+  const recent=[...sessions].reverse().slice(0,6);
   document.getElementById('recentScores').innerHTML=recent.length?recent.map(s=>{
     const pct=s.total?Math.round(s.score/s.total*100):0,col=pct>=70?'var(--green)':pct>=50?'var(--orange)':'var(--red)';
     const d=new Date(s.created_at);
     return`<div class="row mb12"><span class="dot d-${BC[s.block]||''}" style="margin-right:4px;"></span><span style="font-size:13px;flex:1;font-weight:500;">${s.block}</span><span style="font-size:11px;color:var(--text2);">${d.getDate()}/${d.getMonth()+1}</span><span style="font-size:14px;font-weight:800;color:${col};min-width:52px;text-align:right;">${s.score}/${s.total}</span></div>`;
   }).join(''):`<div class="empty" style="padding:20px;"><span class="empty-ico">📊</span>No sessions yet</div>`;
-  // Subject breakdown
   const blockStats={};
   sessions.forEach(s=>{
     if(!s.total||s.score===null)return;
@@ -785,15 +753,12 @@ async function loadDash(){
     if(!blockStats[bl])blockStats[bl]={score:0,total:0};
     blockStats[bl].score+=s.score;blockStats[bl].total+=s.total;
   });
-  const rows=Object.entries(blockStats).filter(([,v])=>v.total>0)
-    .map(([bl,v])=>({bl,pct:Math.round(v.score/v.total*100),col:BLOCK_COLORS[bl]||'#64748b'}))
-    .sort((a,b)=>a.pct-b.pct);
+  const rows=Object.entries(blockStats).filter(([,v])=>v.total>0).map(([bl,v])=>({bl,pct:Math.round(v.score/v.total*100),col:BLOCK_COLORS[bl]||'#64748b'})).sort((a,b)=>a.pct-b.pct);
   const sbEl=document.getElementById('subjBreakdown');
   if(sbEl){
-    if(!rows.length){sbEl.innerHTML='<div class="empty" style="padding:20px 0;font-size:12px;"><span class="empty-ico">&#128202;</span>Complete MCQs to see breakdown</div>';}
-    else{sbEl.innerHTML=rows.map(r=>{const barCol=r.pct>=70?'var(--green)':r.pct>=50?'var(--orange)':'var(--red)';return'<div class="subj-row"><div class="subj-label"><span class="dot" style="background:'+r.col+';margin-right:6px;"></span>'+r.bl+'</div><div class="subj-track"><div class="subj-fill" style="width:'+r.pct+'%;background:'+barCol+';"></div></div><div class="subj-pct">'+r.pct+'%</div></div>';}).join('')+'<div style="font-size:11px;color:var(--text3);margin-top:12px;">Based on '+sessions.filter(s=>s.score!==null).length+' session'+(sessions.filter(s=>s.score!==null).length!==1?'s':'')+' · lowest first</div>';}
+    if(!rows.length){sbEl.innerHTML='<div class="empty" style="padding:20px 0;font-size:12px;"><span class="empty-ico">📊</span>Complete MCQs to see breakdown</div>';}
+    else{sbEl.innerHTML=rows.map(r=>{const bc=r.pct>=70?'var(--green)':r.pct>=50?'var(--orange)':'var(--red)';return'<div class="subj-row"><div class="subj-label"><span class="dot" style="background:'+r.col+';margin-right:6px;"></span>'+r.bl+'</div><div class="subj-track"><div class="subj-fill" style="width:'+r.pct+'%;background:'+bc+';"></div></div><div class="subj-pct">'+r.pct+'%</div></div>';}).join('')+'<div style="font-size:11px;color:var(--text3);margin-top:12px;">Based on '+sessions.filter(s=>s.score!==null).length+' session'+(sessions.filter(s=>s.score!==null).length!==1?'s':'')+' · lowest first</div>';}
   }
-
   renderTargets();
   renderCountdown();
 }
@@ -900,19 +865,14 @@ function resetMockSetup(){
   document.getElementById('mockExamArea').style.display='none';
   hideErr('mockErr');
 }
-
 async function startMockExam(){
   const durMin=parseInt(document.querySelector('input[name="dur"]:checked').value);
   const blocks=getActivePills('mockBlockPills');
   const diff=document.getElementById('mockDiff').value;
   if(!blocks.length){showErr('mockErr','Select at least one block.');return;}
-  // Pull existing wrong answers from Supabase to use as base questions
   setBusy('mockStartBtn','mockStartTxt','Building exam…',true);hideErr('mockErr');
-  const {data:existingQs}=await sb.from('wrong_answers').select('*').eq('year',yr).in('block',blocks).limit(200);
-  // Calculate how many questions for the duration (1 question per 1.5 min)
   const totalQ=Math.floor(durMin/1.5);
   const dmap={mixed:'a mix of recall, applied and hard clinical reasoning',easy:'recall: definitions and key facts',medium:'applied: mechanisms and clinical application',hard:'hard clinical vignettes'};
-  // Generate AI questions to fill up the paper
   const prompt=`Generate exactly ${Math.min(totalQ,40)} UK Year 2 medical MCQ exam questions across these blocks: ${blocks.join(', ')}. Difficulty: ${dmap[diff]}. Make them varied — different topics within each block. Clinical vignette format where appropriate. Raw JSON only: {"questions":[{"vignette":"","question":"...(mark: 1)","options":["A","B","C","D","E"],"correct":0,"explanation":"...","block":"GU"}]}`;
   try{
     const r=await fetch('/api/generate',{method:'POST',headers:{'Content-Type':'application/json'},body:JSON.stringify({model:'claude-haiku-4-5-20251001',max_tokens:6000,messages:[{role:'user',content:prompt}]})});
@@ -932,24 +892,11 @@ async function startMockExam(){
   }catch(e){showErr('mockErr',e.message);}
   finally{setBusy('mockStartBtn','mockStartTxt','Start exam',false);}
 }
-
 function renderMockExam(durMin){
   const area=document.getElementById('mockExamArea');
-  area.innerHTML=`
-    <div class="exam-progress-wrap">
-      <div style="flex:1;"><div style="font-size:11px;color:var(--text2);font-weight:600;text-transform:uppercase;letter-spacing:0.06em;margin-bottom:4px;">Time remaining</div><div class="exam-timer" id="examTimer">00:00</div></div>
-      <div style="text-align:center;"><div style="font-size:11px;color:var(--text2);font-weight:600;text-transform:uppercase;letter-spacing:0.06em;margin-bottom:4px;">Questions</div><div style="font-size:1.2rem;font-weight:700;color:var(--text);">${mockQs.length}</div></div>
-      <div style="text-align:right;"><div style="font-size:11px;color:var(--text2);font-weight:600;text-transform:uppercase;letter-spacing:0.06em;margin-bottom:4px;">Duration</div><div style="font-size:1.2rem;font-weight:700;color:var(--text);">${durMin} min</div></div>
-    </div>
-    <div id="mockQsList">
-    ${mockQs.map((q,i)=>`<div class="q-card" style="animation-delay:${i*0.02}s"><div class="q-num">Q${i+1} <span class="badge badge-muted" style="margin-left:4px;">${q.block||''}</span></div><div class="q-text">${q.vignette?`${esc(q.vignette)}<br><br>`:''}<strong>${esc(q.question)}</strong></div><div>${q.options.map((o,j)=>`<div class="opt" id="mxo${i}_${j}" onclick="mxPick(${i},${j})"><input type="radio" name="mxq${i}" value="${j}"><span>${esc(o)}</span></div>`).join('')}</div><div class="expl" id="mxe${i}"><strong style="color:var(--accent);">Explanation:</strong> ${esc(q.explanation)}</div></div>`).join('')}
-    </div>
-    <div class="row mt20" style="gap:10px;"><button class="btn btn-green" style="font-size:14px;padding:10px 28px;" onclick="submitMock()">Submit exam</button><button class="btn btn-danger btn-sm" onclick="resetMockSetup()">Abandon</button></div>
-  `;
+  area.innerHTML=`<div class="exam-progress-wrap"><div style="flex:1;"><div style="font-size:11px;color:var(--text2);font-weight:600;text-transform:uppercase;letter-spacing:0.06em;margin-bottom:4px;">Time remaining</div><div class="exam-timer" id="examTimer">00:00</div></div><div style="text-align:center;"><div style="font-size:11px;color:var(--text2);font-weight:600;text-transform:uppercase;letter-spacing:0.06em;margin-bottom:4px;">Questions</div><div style="font-size:1.2rem;font-weight:700;color:var(--text);">${mockQs.length}</div></div><div style="text-align:right;"><div style="font-size:11px;color:var(--text2);font-weight:600;text-transform:uppercase;letter-spacing:0.06em;margin-bottom:4px;">Duration</div><div style="font-size:1.2rem;font-weight:700;color:var(--text);">${durMin} min</div></div></div>${mockQs.map((q,i)=>`<div class="q-card" style="animation-delay:${i*0.02}s"><div class="q-num">Q${i+1} <span class="badge badge-muted" style="margin-left:4px;">${q.block||''}</span></div><div class="q-text">${q.vignette?`${esc(q.vignette)}<br><br>`:''}<strong>${esc(q.question)}</strong></div><div>${q.options.map((o,j)=>`<div class="opt" id="mxo${i}_${j}" onclick="mxPick(${i},${j})"><input type="radio" name="mxq${i}" value="${j}"><span>${esc(o)}</span></div>`).join('')}</div><div class="expl" id="mxe${i}"><strong style="color:var(--accent);">Explanation:</strong> ${esc(q.explanation)}</div></div>`).join('')}<div class="row mt20" style="gap:10px;"><button class="btn btn-green" style="font-size:14px;padding:10px 28px;" onclick="submitMock()">Submit exam</button><button class="btn btn-danger btn-sm" onclick="resetMockSetup()">Abandon</button></div>`;
 }
-
 function mxPick(qi,oi){if(mockDone)return;mockPk[qi]=oi;for(let j=0;j<mockQs[qi].options.length;j++){const e=document.getElementById(`mxo${qi}_${j}`);if(e)e.style.borderColor=j===oi?'var(--accent)':'';}};
-
 function startMockTimer(){
   if(mockTimer)clearInterval(mockTimer);
   mockTimer=setInterval(()=>{
@@ -962,7 +909,6 @@ function startMockTimer(){
     if(left===0){clearInterval(mockTimer);submitMock();}
   },1000);
 }
-
 async function submitMock(){
   if(mockDone)return;mockDone=true;
   if(mockTimer)clearInterval(mockTimer);
@@ -975,15 +921,13 @@ async function submitMock(){
     else{const ce=document.getElementById(`mxo${i}_${cor}`);if(ce)ce.classList.add('reveal');wrongs.push({year:yr,block:q.block||'Core',question:q.question,options:q.options,correct:q.correct,explanation:q.explanation,resolved:false});}
     document.getElementById(`mxe${i}`).classList.add('show');
   });
-  // Save to supabase
   const pct=Math.round(score/mockQs.length*100);
   await sb.from('mcq_sessions').insert({year:yr,block:'Mock Exam',total:mockQs.length,score,questions:mockQs});
   if(wrongs.length)await sb.from('wrong_answers').insert(wrongs);
-  // Scroll to top and show result banner
   const area=document.getElementById('mockExamArea');
   const banner=document.createElement('div');
   banner.style.cssText='margin-bottom:20px;';
-  banner.innerHTML=`<div class="score-bar show" style="background:${pct>=70?'rgba(16,185,129,0.1)':'pct>=50?rgba(245,158,11,0.1)':'rgba(239,68,68,0.1)'};border-color:${pct>=70?'rgba(16,185,129,0.3)':pct>=50?'rgba(245,158,11,0.3)':'rgba(239,68,68,0.3)'};">
+  banner.innerHTML=`<div class="score-bar show" style="background:${pct>=70?'rgba(16,185,129,0.1)':pct>=50?'rgba(245,158,11,0.1)':'rgba(239,68,68,0.1)'};border-color:${pct>=70?'rgba(16,185,129,0.3)':pct>=50?'rgba(245,158,11,0.3)':'rgba(239,68,68,0.3)'};">
     <div><div style="font-size:10px;color:var(--text2);margin-bottom:2px;font-weight:600;text-transform:uppercase;letter-spacing:0.06em;">Exam complete</div><div class="score-num">${score} / ${mockQs.length}</div></div>
     <div style="text-align:right;"><div style="font-size:1.4rem;font-weight:800;color:${pct>=70?'var(--green)':pct>=50?'var(--orange)':'var(--red)'};">${pct}%</div><div style="font-size:12px;color:var(--text2);">${pct>=70?'✓ Pass territory':pct>=50?'⚠ Borderline':'✗ Keep revising'}</div></div>
   </div>`;
@@ -999,25 +943,23 @@ function resetRecallSetup(){
   document.getElementById('recallArea').innerHTML='';
   hideErr('recallErr');
 }
-
 async function startRecall(){
   const src=document.querySelector('input[name="recallSrc"]:checked').value;
   const count=parseInt(document.getElementById('recallCount').value);
   const block=document.getElementById('recallBlock').value;
   setBusy('recallStartBtn','recallStartTxt','Building session…',true);hideErr('recallErr');
-
   try{
     if(src==='drugs'){
       const{data}=await sb.from('drug_cards').select('*').eq('year',yr);
       let drugs=data||[];if(block!=='all')drugs=drugs.filter(d=>d.block===block);
       if(!drugs.length)throw new Error('No drug cards found. Add some first.');
       recallTerms=shuffle(drugs).slice(0,count).map(d=>({term:d.name,context:'drug',hints:`Block: ${d.block}`,data:d}));
-    } else if(src==='bugs'){
+    }else if(src==='bugs'){
       const{data}=await sb.from('bug_table').select('*').eq('year',yr);
       let bugs=data||[];if(block!=='all')bugs=bugs.filter(b=>b.block===block);
       if(!bugs.length)throw new Error('No bugs found. Add some first.');
       recallTerms=shuffle(bugs).slice(0,count).map(b=>({term:b.name,context:'bug',hints:`Block: ${b.block}`,data:b}));
-    } else {
+    }else{
       const notes=document.getElementById('recallNotes').value.trim();
       if(!notes||notes.length<20)throw new Error('Paste some notes first.');
       const prompt=`Extract exactly ${count} key medical terms, drugs, conditions, or concepts from these notes. For each one, provide a brief model answer (2-3 sentences of key facts a Year 2 UK med student should know). Raw JSON only: {"terms":[{"term":"HPV","context":"virology","model_answer":"HPV is a double-stranded DNA virus. High-risk strains 16 and 18 cause ~70% of cervical cancers via E6/E7 oncoproteins. Low-risk strains 6 and 11 cause genital warts."}]}\nNotes: ${notes}`;
@@ -1034,47 +976,24 @@ async function startRecall(){
   }catch(e){showErr('recallErr',e.message);}
   finally{setBusy('recallStartBtn','recallStartTxt','Start recall',false);}
 }
-
 function renderRecallCard(){
   const area=document.getElementById('recallArea');
   if(recallIdx>=recallTerms.length){
     const hits=recallResults.filter(r=>r>=4).length,total=recallResults.length;
-    area.innerHTML=`<div class="section-card" style="text-align:center;padding:40px;"><div style="font-size:1.3rem;font-weight:800;color:var(--text);margin-bottom:8px;">Session complete! 🎉</div>
-      <div style="font-size:14px;color:var(--text2);margin-bottom:20px;">Scored well on ${hits} of ${total} terms</div>
-      <div class="recall-score-bar" style="justify-content:center;margin-bottom:20px;">${recallResults.map(s=>`<div class="recall-score-dot ${s>=4?'hit':'miss'}"></div>`).join('')}</div>
-      <div class="row" style="gap:10px;justify-content:center;"><button class="btn btn-primary" onclick="resetRecallSetup();document.getElementById('recallSetup').style.display='block';">New session</button></div>
-    </div>`;
+    area.innerHTML=`<div class="section-card" style="text-align:center;padding:40px;"><div style="font-size:1.3rem;font-weight:800;color:var(--text);margin-bottom:8px;">Session complete! 🎉</div><div style="font-size:14px;color:var(--text2);margin-bottom:20px;">Scored well on ${hits} of ${total} terms</div><div class="recall-score-bar" style="justify-content:center;margin-bottom:20px;">${recallResults.map(s=>`<div class="recall-score-dot ${s>=4?'hit':'miss'}"></div>`).join('')}</div><div class="row" style="gap:10px;justify-content:center;"><button class="btn btn-primary" onclick="resetRecallSetup();document.getElementById('recallSetup').style.display='block';">New session</button></div></div>`;
     return;
   }
   const t=recallTerms[recallIdx];
-  area.innerHTML=`
-    <div style="font-size:11px;color:var(--text2);margin-bottom:12px;">Term ${recallIdx+1} of ${recallTerms.length}</div>
-    <div class="recall-card">
-      <div class="recall-score-bar" style="justify-content:center;">${recallTerms.map((_,i)=>`<div class="recall-score-dot ${i<recallResults.length?(recallResults[i]>=4?'hit':'miss'):''}"></div>`).join('')}</div>
-      <div style="font-size:11px;color:var(--text2);margin-top:8px;margin-bottom:16px;">${t.context||''}</div>
-      <div class="recall-term">${esc(t.term)}</div>
-      <div class="recall-hint">Type everything you know about this</div>
-      <textarea class="recall-input" id="recallAns" placeholder="Type what you know..." style="width:100%;margin-bottom:14px;"></textarea>
-      <button class="btn btn-primary" id="recallCheckBtn" onclick="checkRecall()" style="width:100%;justify-content:center;"><div class="spin"></div><span id="recallCheckTxt">Check my answer (AI)</span></button>
-      <div id="recallFeedback" class="ai-feedback"></div>
-      <div id="recallNextBtn" style="display:none;margin-top:12px;"><button class="btn btn-outline" onclick="recallNext()">Next term →</button></div>
-    </div>`;
+  area.innerHTML=`<div style="font-size:11px;color:var(--text2);margin-bottom:12px;">Term ${recallIdx+1} of ${recallTerms.length}</div><div class="recall-card"><div class="recall-score-bar" style="justify-content:center;">${recallTerms.map((_,i)=>`<div class="recall-score-dot ${i<recallResults.length?(recallResults[i]>=4?'hit':'miss'):''}"></div>`).join('')}</div><div style="font-size:11px;color:var(--text2);margin-top:8px;margin-bottom:16px;">${t.context||''}</div><div class="recall-term">${esc(t.term)}</div><div class="recall-hint">Type everything you know about this</div><textarea class="recall-input" id="recallAns" placeholder="Type what you know..." style="width:100%;margin-bottom:14px;"></textarea><button class="btn btn-primary" id="recallCheckBtn" onclick="checkRecall()" style="width:100%;justify-content:center;"><div class="spin"></div><span id="recallCheckTxt">Check my answer (AI)</span></button><div id="recallFeedback" class="ai-feedback"></div><div id="recallNextBtn" style="display:none;margin-top:12px;"><button class="btn btn-outline" onclick="recallNext()">Next term →</button></div></div>`;
 }
-
 async function checkRecall(){
-  const ans=document.getElementById('recallAns').value.trim();
-  if(!ans){return;}
+  const ans=document.getElementById('recallAns').value.trim();if(!ans)return;
   setBusy('recallCheckBtn','recallCheckTxt','Checking…',true);
   const t=recallTerms[recallIdx];
   let modelAns=t.model_answer||'';
   if(t.context==='drug'&&t.data){modelAns=`Mechanism: ${t.data.mechanism||''}. Used for: ${t.data.used_for||''}. Key side effect: ${t.data.side_effect||''}. ${t.data.ai_notes||''}`;}
   if(t.context==='bug'&&t.data){modelAns=`Gram: ${t.data.gram}. Type: ${t.data.type||''}. Causes: ${t.data.causes||''}. Treatment: ${t.data.treatment||''}. ${t.data.ai_notes||''}`;}
-  const prompt=`A UK Year 2 med student was asked to recall: "${t.term}"
-Their answer: "${ans}"
-Model answer: "${modelAns}"
-Score their answer 1-5 (5=excellent, 4=good, 3=partial, 2=poor, 1=wrong/blank).
-Give brief feedback: what they got right, what they missed. Keep it to 2-3 sentences.
-Respond ONLY with JSON: {"score":4,"feedback":"...","grade":"Good"}`;
+  const prompt=`A UK Year 2 med student was asked to recall: "${t.term}"\nTheir answer: "${ans}"\nModel answer: "${modelAns}"\nScore their answer 1-5 (5=excellent, 4=good, 3=partial, 2=poor, 1=wrong/blank).\nGive brief feedback: what they got right, what they missed. Keep it to 2-3 sentences.\nRespond ONLY with JSON: {"score":4,"feedback":"...","grade":"Good"}`;
   try{
     const r=await fetch('/api/generate',{method:'POST',headers:{'Content-Type':'application/json'},body:JSON.stringify({model:'claude-haiku-4-5-20251001',max_tokens:200,messages:[{role:'user',content:prompt}]})});
     const d=await r.json();const raw=(d.content?.[0]?.text||'').trim();
@@ -1135,11 +1054,7 @@ function openYearModal(){const years=JSON.parse(localStorage.getItem('_ms_years'
 function switchYear(y){yr=y;localStorage.setItem('_ms_yr',y);document.getElementById('yearName').textContent=y;document.getElementById('sidebarYear').textContent=y;document.getElementById('dashSub').textContent=y+' · Keep going — you\'ve got this.';targets=JSON.parse(localStorage.getItem('_ms_targets_'+yr)||'[]');closeModal('yearModal');renderCountdown();loadDash();updateWrongBadge();}
 function addYear(){const n=document.getElementById('newYearInput').value.trim();if(!n)return;const years=JSON.parse(localStorage.getItem('_ms_years')||'["Year 2"]');if(!years.includes(n)){years.push(n);localStorage.setItem('_ms_years',JSON.stringify(years));}document.getElementById('newYearInput').value='';switchYear(n);}
 
-
 // ── EXAM COUNTDOWN ──
-const IMP_COLORS=['#06b6d4','#10b981','#f59e0b','#8b5cf6','#ec4899','#ef4444','#3b82f6','#f97316'];
-let tmpImpDates=[];
-
 function renderCountdown(){
   const d=JSON.parse(localStorage.getItem('_ms_exam_'+yr)||'null');
   const today=new Date();today.setHours(0,0,0,0);
@@ -1180,7 +1095,6 @@ function renderCountdown(){
     return'<div class="imp-date-row"><span class="imp-dot" style="background:'+item.color+'"></span><span class="imp-date-name">'+esc(item.name)+'</span><span class="imp-date-badge '+cls+'">'+label+'</span></div>';
   }).join('');
 }
-
 function openExamModal(){
   const d=JSON.parse(localStorage.getItem('_ms_exam_'+yr)||'null')||{};
   document.getElementById('examNameInp').value=d.name||'';
@@ -1223,30 +1137,6 @@ function shuffle(a){for(let i=a.length-1;i>0;i--){const j=Math.floor(Math.random
 let _pt={};
 function startProg(pid,fid){let p=0;document.getElementById(pid).style.display='block';_pt[pid]=setInterval(()=>{p=Math.min(p+Math.random()*4,88);document.getElementById(fid).style.width=p+'%';},300);}
 function endProg(pid,fid){clearInterval(_pt[pid]);document.getElementById(fid).style.width='100%';setTimeout(()=>{document.getElementById(pid).style.display='none';document.getElementById(fid).style.width='0%';},500);}
-document.addEventListener('DOMContentLoaded',function(){
-  applyTheme();
-  document.querySelectorAll('.modal-bg').forEach(m=>m.addEventListener('click',e=>{if(e.target===m)m.classList.remove('open');}));
-  if(sessionStorage.getItem(SK)==='1')unlock();
-});
 </script>
-
-<!-- EXAM DATE MODAL -->
-<div class="modal-bg" id="examModal">
-  <div class="modal">
-    <div class="modal-title">Exam dates</div>
-    <div class="mb12"><label>Main exam name</label><input type="text" id="examNameInp" placeholder="e.g. Year 2 Finals — Paper 1 and 2"></div>
-    <div class="mb16"><label>Main exam date</label><input type="date" id="examDateInp"></div>
-    <div class="divider"></div>
-    <div style="font-size:13px;font-weight:700;color:var(--text);margin-bottom:12px;">Important dates <span style="font-size:11px;color:var(--text3);font-weight:400;margin-left:4px;">smaller countdowns on dashboard</span></div>
-    <div class="row mb12" style="gap:8px;">
-      <input type="text" id="impNameInp" placeholder="e.g. Paper 2, Mock, OSCEs..." style="flex:2;">
-      <input type="date" id="impDateInp" style="flex:1;">
-      <button class="btn btn-primary btn-sm" onclick="addImpDate()">Add</button>
-    </div>
-    <div id="impDateList" class="mb16"></div>
-    <div class="row" style="gap:8px;"><button class="btn btn-primary flex1" onclick="saveExamDates()">Save</button><button class="btn btn-outline" onclick="closeModal('examModal')">Cancel</button></div>
-  </div>
-</div>
-
 </body>
 </html>
