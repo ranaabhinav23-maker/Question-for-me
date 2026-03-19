@@ -1,0 +1,522 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>MCQ Generator</title>
+<link href="https://fonts.googleapis.com/css2?family=DM+Mono:ital,wght@0,400;0,500;1,400&family=Fraunces:opsz,wght@9..144,300;9..144,600&display=swap" rel="stylesheet">
+<style>
+  :root {
+    --navy: #1e2469;
+    --navy2: #272e82;
+    --accent: #4f56c8;
+    --bg: #eef0f8;
+    --card: #ffffff;
+    --text: #1a1a2e;
+    --muted: #64748b;
+    --border: #dde2f0;
+    --green: #059669;
+    --red: #dc2626;
+  }
+  * { box-sizing: border-box; margin: 0; padding: 0; }
+  body { font-family: 'DM Mono', monospace; background: var(--bg); min-height: 100vh; color: var(--text); font-size: 13px; }
+
+  #lockScreen {
+    position: fixed; inset: 0; z-index: 9999;
+    background: var(--navy);
+    display: flex; align-items: center; justify-content: center;
+  }
+  .lock-box {
+    background: #fff; border-radius: 14px; padding: 40px 36px;
+    width: 360px; text-align: center;
+    box-shadow: 0 24px 80px rgba(0,0,0,0.35);
+  }
+  .lock-logo { font-family: 'Fraunces', serif; font-size: 1.15rem; color: var(--navy); margin-bottom: 6px; font-weight: 600; }
+  .lock-sub { font-size: 11px; color: var(--muted); margin-bottom: 28px; }
+  .lock-label { font-size: 11px; color: var(--muted); text-align: left; margin-bottom: 6px; }
+  .lock-input {
+    width: 100%; border: 1.5px solid var(--border); border-radius: 8px;
+    padding: 11px 14px; font-family: 'DM Mono', monospace; font-size: 13px;
+    color: var(--text); background: #f8f9fe; outline: none;
+    letter-spacing: 0.05em; transition: border-color 0.2s; margin-bottom: 14px;
+  }
+  .lock-input:focus { border-color: var(--accent); }
+  .lock-input.shake { animation: shake 0.4s ease; border-color: var(--red); }
+  @keyframes shake {
+    0%,100%{transform:translateX(0)} 20%{transform:translateX(-8px)}
+    40%{transform:translateX(8px)} 60%{transform:translateX(-5px)} 80%{transform:translateX(5px)}
+  }
+  .lock-btn {
+    width: 100%; background: var(--navy); color: white; border: none;
+    border-radius: 8px; padding: 11px; font-family: 'DM Mono', monospace;
+    font-size: 13px; font-weight: 500; cursor: pointer; transition: background 0.15s;
+  }
+  .lock-btn:hover { background: var(--navy2); }
+  .lock-btn:disabled { opacity: 0.5; cursor: not-allowed; }
+  .lock-err { font-size: 11px; color: var(--red); margin-top: 10px; min-height: 16px; }
+  .lock-attempts { font-size: 10px; color: var(--muted); margin-top: 8px; }
+
+  #app { display: none; }
+
+  .topbar {
+    background: var(--navy); color: rgba(255,255,255,0.9);
+    display: flex; align-items: center; gap: 10px;
+    padding: 9px 18px; font-size: 12px; position: sticky; top: 0; z-index: 100;
+  }
+  .topbar-title { flex: 1; text-align: center; font-size: 12px; opacity: 0.85; }
+  .wrap { max-width: 860px; margin: 0 auto; padding: 28px 18px 60px; }
+  .panel { background: var(--card); border: 1.5px solid var(--border); border-radius: 12px; overflow: hidden; margin-bottom: 20px; }
+  .panel-head { background: var(--navy); color: white; padding: 10px 18px; font-size: 11px; letter-spacing: 0.08em; text-transform: uppercase; }
+  .panel-body { padding: 18px; }
+  textarea {
+    width: 100%; min-height: 170px; border: 1.5px solid var(--border); border-radius: 8px;
+    padding: 13px; font-family: 'DM Mono', monospace; font-size: 12px; color: var(--text);
+    background: #f8f9fe; resize: vertical; outline: none; line-height: 1.65; transition: border-color 0.2s;
+  }
+  textarea:focus { border-color: var(--accent); }
+  textarea::placeholder { color: #b0bad8; font-style: italic; }
+  .ctrl-row { display: flex; flex-wrap: wrap; gap: 10px; align-items: center; margin-top: 13px; }
+  .ctrl { display: flex; align-items: center; gap: 6px; }
+  .ctrl label { font-size: 11px; color: var(--muted); white-space: nowrap; }
+  select {
+    border: 1.5px solid var(--border); border-radius: 6px; padding: 6px 9px;
+    font-family: 'DM Mono', monospace; font-size: 11px; color: var(--text);
+    background: white; cursor: pointer; outline: none;
+  }
+  select:focus { border-color: var(--accent); }
+  .btn-gen {
+    margin-left: auto; background: var(--navy); color: white; border: none;
+    border-radius: 8px; padding: 9px 20px; font-family: 'DM Mono', monospace;
+    font-size: 12px; font-weight: 500; cursor: pointer;
+    display: flex; align-items: center; gap: 8px; transition: background 0.15s;
+  }
+  .btn-gen:hover { background: var(--navy2); }
+  .btn-gen:disabled { opacity: 0.5; cursor: not-allowed; }
+  .spin {
+    width: 13px; height: 13px; border: 2px solid rgba(255,255,255,0.35);
+    border-top-color: #fff; border-radius: 50%; animation: rot 0.65s linear infinite; display: none;
+  }
+  .loading .spin { display: block; }
+  @keyframes rot { to { transform: rotate(360deg); } }
+  .prog-wrap { margin-top: 13px; display: none; }
+  .prog-label { font-size: 10px; color: var(--muted); margin-bottom: 4px; display: flex; justify-content: space-between; }
+  .prog-track { height: 4px; background: var(--border); border-radius: 99px; overflow: hidden; }
+  .prog-fill { height: 100%; background: var(--accent); border-radius: 99px; transition: width 0.35s ease; width: 0%; }
+  .err { background: #fef2f2; border: 1.5px solid #fca5a5; border-radius: 8px; padding: 12px 16px; color: #b91c1c; font-size: 12px; margin-bottom: 16px; display: none; }
+  .score-bar {
+    background: var(--navy); color: white; border-radius: 10px; padding: 14px 20px;
+    margin-bottom: 20px; display: none; align-items: center; justify-content: space-between; font-size: 12px;
+  }
+  .score-bar.show { display: flex; }
+  .score-big { font-family: 'Fraunces', serif; font-size: 1.6rem; margin-top: 2px; }
+  .qcard {
+    background: var(--card); border: 1.5px solid var(--border); border-radius: 12px;
+    padding: 22px 24px; margin-bottom: 14px; animation: up 0.3s ease both;
+  }
+  @keyframes up { from { opacity:0; transform:translateY(8px); } to { opacity:1; transform:translateY(0); } }
+  .qnum { font-size: 11.5px; font-weight: 500; color: var(--accent); margin-bottom: 10px; }
+  .qtext { font-size: 13px; line-height: 1.8; color: var(--text); margin-bottom: 16px; }
+  .ask { display: block; margin-top: 9px; font-weight: 500; }
+  .opts { display: flex; flex-direction: column; gap: 7px; }
+  .opt {
+    display: flex; align-items: flex-start; gap: 10px; padding: 9px 13px;
+    border-radius: 7px; border: 1.5px solid var(--border); background: #fafbff;
+    cursor: pointer; transition: border-color 0.12s, background 0.12s;
+    font-size: 12.5px; line-height: 1.55; user-select: none;
+  }
+  .opt:hover:not(.locked) { border-color: var(--accent); background: #eef0ff; }
+  .opt input[type=radio] { margin-top: 2px; accent-color: var(--navy); flex-shrink: 0; }
+  .opt.correct   { border-color: var(--green); background: #ecfdf5; color: #065f46; }
+  .opt.incorrect { border-color: var(--red);   background: #fef2f2; color: #991b1b; }
+  .opt.reveal    { border-color: var(--green); background: #ecfdf5; color: #065f46; }
+  .expl {
+    margin-top: 13px; padding: 11px 14px; background: #f0f4ff;
+    border-left: 3px solid var(--accent); border-radius: 0 6px 6px 0;
+    font-size: 12px; line-height: 1.65; color: #1e2469; display: none;
+  }
+  .expl.show { display: block; }
+  .expl b { color: var(--navy); }
+  .actions { display: flex; gap: 10px; margin-top: 6px; flex-wrap: wrap; }
+  .btn-sub { background: var(--navy); color: white; border: none; border-radius: 8px; padding: 9px 20px; font-family: 'DM Mono', monospace; font-size: 12px; cursor: pointer; }
+  .btn-sub:hover { background: var(--navy2); }
+  .btn-sub:disabled { opacity: 0.4; cursor: not-allowed; }
+  .btn-outline { background: white; color: var(--navy); border: 1.5px solid var(--navy); border-radius: 8px; padding: 8px 18px; font-family: 'DM Mono', monospace; font-size: 12px; cursor: pointer; }
+  .btn-outline:hover { background: var(--bg); }
+  .btn-ghost { background: white; color: var(--muted); border: 1.5px solid var(--border); border-radius: 8px; padding: 8px 18px; font-family: 'DM Mono', monospace; font-size: 12px; cursor: pointer; }
+  .btn-ghost:hover { border-color: var(--muted); }
+  .empty { text-align: center; padding: 55px 20px; color: var(--muted); font-size: 12px; line-height: 2; background: white; border: 1.5px solid var(--border); border-radius: 12px; }
+  @media (max-width: 580px) {
+    .ctrl-row { flex-direction: column; align-items: flex-start; }
+    .btn-gen { margin-left: 0; width: 100%; justify-content: center; }
+    .qcard { padding: 16px; }
+  }
+</style>
+</head>
+<body>
+
+<!-- LOCK SCREEN -->
+<div id="lockScreen">
+  <div class="lock-box">
+    <div style="display:flex;gap:6px;justify-content:center;margin-bottom:18px;">
+      <div style="width:12px;height:12px;border-radius:50%;background:#ff5f57"></div>
+      <div style="width:12px;height:12px;border-radius:50%;background:#febc2e"></div>
+      <div style="width:12px;height:12px;border-radius:50%;background:#28c840"></div>
+    </div>
+    <div class="lock-logo">MedMCQ</div>
+    <div class="lock-sub">AI-powered question generator</div>
+    <div class="lock-label">Access password</div>
+    <input class="lock-input" type="password" id="pwInput" placeholder="Enter password"
+      autocomplete="off" autocorrect="off" spellcheck="false"
+      onkeydown="if(event.key==='Enter')tryUnlock()">
+    <button class="lock-btn" id="lockBtn" onclick="tryUnlock()">Unlock</button>
+    <div class="lock-err" id="lockErr"></div>
+    <div class="lock-attempts" id="lockAttempts"></div>
+  </div>
+</div>
+
+<!-- MAIN APP -->
+<div id="app">
+  <div class="topbar">
+    <div class="topbar-title">MedMCQ — AI Question Generator</div>
+  </div>
+
+  <div class="wrap">
+    <div class="panel">
+      <div class="panel-head">📄 Paste your notes / lecture content</div>
+      <div class="panel-body">
+        <textarea id="notes" placeholder="Paste your lecture notes, PowerPoint text, or study material here...
+
+e.g. HPV is a double-stranded DNA virus. High-risk oncogenic strains include types 16 and 18. Low-risk strains include types 6 and 11 which cause genital warts. T helper 2 cells drive type I hypersensitivity via IL-4/IL-13..."></textarea>
+        <div class="ctrl-row">
+          <div class="ctrl"><label>Questions:</label>
+            <select id="num">
+              <option value="5">5</option>
+              <option value="10" selected>10</option>
+              <option value="15">15</option>
+              <option value="20">20</option>
+            </select>
+          </div>
+          <div class="ctrl"><label>Difficulty:</label>
+            <select id="diff">
+              <option value="mixed" selected>Mixed</option>
+              <option value="easy">Recall / Easy</option>
+              <option value="medium">Applied / Medium</option>
+              <option value="hard">Clinical / Hard</option>
+            </select>
+          </div>
+          <div class="ctrl"><label>Topic:</label>
+            <select id="topic">
+              <option value="auto" selected>Auto-detect</option>
+              <option value="anatomy">Anatomy</option>
+              <option value="physiology">Physiology</option>
+              <option value="pharmacology">Pharmacology</option>
+              <option value="microbiology">Microbiology</option>
+              <option value="immunology">Immunology</option>
+              <option value="pathology">Pathology</option>
+              <option value="biochemistry">Biochemistry</option>
+              <option value="embryology">Embryology</option>
+              <option value="obs-gynae">Obs &amp; Gynae</option>
+              <option value="renal">Renal</option>
+              <option value="msk">MSK</option>
+            </select>
+          </div>
+          <button class="btn-gen" id="genBtn" onclick="generate()">
+            <div class="spin"></div>
+            <span id="btnTxt">Generate Questions</span>
+          </button>
+        </div>
+        <div class="prog-wrap" id="progWrap">
+          <div class="prog-label"><span>Generating questions…</span><span id="progPct">0%</span></div>
+          <div class="prog-track"><div class="prog-fill" id="progFill"></div></div>
+        </div>
+      </div>
+    </div>
+
+    <div class="err" id="errBox"></div>
+
+    <div class="score-bar" id="scoreBar">
+      <div>
+        <div style="font-size:11px;opacity:0.7;margin-bottom:2px;">Your score</div>
+        <div class="score-big" id="scoreNum">—</div>
+      </div>
+      <div style="text-align:right;font-size:11px;opacity:0.8;line-height:1.9" id="scoreMsg"></div>
+    </div>
+
+    <div id="qsection">
+      <div class="empty">
+        🩺 Paste your notes above and hit <strong>Generate Questions</strong><br>
+        Clinical vignettes with 5 options — exam-style format<br>
+        Anatomy · Physiology · Pharmacology · Micro · Immunology · Path · Obs &amp; Gynae · Renal · MSK
+      </div>
+    </div>
+  </div>
+</div>
+
+<script>
+const STORED_HASH = '993c737a59e7f58bbf5f24f37c112ede4bf7059e7b77f00b7120f232502fd5cd';
+const SALT = 'mx2010_uclan_salt_9f3a';
+const SESSION_KEY = '_mx_auth';
+
+let failCount = 0;
+let lockUntil = 0;
+
+if (sessionStorage.getItem(SESSION_KEY) === '1') {
+  document.getElementById('lockScreen').style.display = 'none';
+  document.getElementById('app').style.display = 'block';
+}
+
+async function sha256(str) {
+  const buf = await crypto.subtle.digest('SHA-256', new TextEncoder().encode(str));
+  return Array.from(new Uint8Array(buf)).map(b => b.toString(16).padStart(2,'0')).join('');
+}
+
+async function hashPassword(pw) {
+  let h = pw + SALT;
+  for (let i = 0; i < 100000; i++) h = await sha256(h);
+  return h;
+}
+
+async function tryUnlock() {
+  const now = Date.now();
+  if (now < lockUntil) {
+    const secs = Math.ceil((lockUntil - now) / 1000);
+    document.getElementById('lockErr').textContent = `Too many attempts. Try again in ${secs}s.`;
+    return;
+  }
+  const pw = document.getElementById('pwInput').value;
+  if (!pw) return;
+  const btn = document.getElementById('lockBtn');
+  btn.disabled = true;
+  btn.textContent = 'Verifying…';
+  document.getElementById('lockErr').textContent = '';
+  const hash = await hashPassword(pw);
+  if (hash === STORED_HASH) {
+    sessionStorage.setItem(SESSION_KEY, '1');
+    document.getElementById('lockScreen').style.display = 'none';
+    document.getElementById('app').style.display = 'block';
+  } else {
+    failCount++;
+    const input = document.getElementById('pwInput');
+    input.value = '';
+    input.classList.add('shake');
+    setTimeout(() => input.classList.remove('shake'), 400);
+    if (failCount >= 8) {
+      lockUntil = Date.now() + 600000;
+      document.getElementById('lockErr').textContent = 'Too many failed attempts. Locked for 10 minutes.';
+    } else if (failCount >= 5) {
+      lockUntil = Date.now() + 120000;
+      document.getElementById('lockErr').textContent = `Incorrect. Locked for 2 minutes. (${failCount} attempts)`;
+    } else if (failCount >= 3) {
+      lockUntil = Date.now() + 30000;
+      document.getElementById('lockErr').textContent = `Incorrect. Locked for 30 seconds. (${failCount} attempts)`;
+    } else {
+      document.getElementById('lockErr').textContent = `Incorrect password. (${failCount} attempt${failCount>1?'s':''})`;
+    }
+    document.getElementById('lockAttempts').textContent =
+      failCount >= 3 ? `${8 - failCount} attempt${8-failCount===1?'':'s'} before 10-minute lockout` : '';
+    btn.disabled = false;
+    btn.textContent = 'Unlock';
+  }
+}
+
+let qs = [], picked = {}, done = false, progTimer;
+
+function startProg() {
+  let p = 0;
+  document.getElementById('progWrap').style.display = 'block';
+  progTimer = setInterval(() => {
+    p = Math.min(p + Math.random() * 4, 88);
+    document.getElementById('progFill').style.width = p + '%';
+    document.getElementById('progPct').textContent = Math.round(p) + '%';
+  }, 300);
+}
+function endProg() {
+  clearInterval(progTimer);
+  document.getElementById('progFill').style.width = '100%';
+  document.getElementById('progPct').textContent = '100%';
+  setTimeout(() => { document.getElementById('progWrap').style.display = 'none'; }, 500);
+}
+
+async function generate() {
+  const notes = document.getElementById('notes').value.trim();
+  if (!notes || notes.length < 30) { showErr('Please paste at least a paragraph of notes.'); return; }
+  const num   = document.getElementById('num').value;
+  const diff  = document.getElementById('diff').value;
+  const topic = document.getElementById('topic').value;
+  setBusy(true); hideErr(); startProg();
+
+  const diffMap = {
+    mixed:  'a mix of: straightforward recall questions, mechanism/application questions, and hard clinical reasoning vignettes',
+    easy:   'recall-level questions testing definitions, basic facts, and key names/numbers',
+    medium: 'applied questions testing mechanisms, why things happen, and clinical application of concepts',
+    hard:   'hard clinical reasoning vignettes: full patient scenario with age/sex/presentation/findings, requires working through differentials'
+  };
+
+  const prompt = `You are writing MCQ exam questions for a UK Year 2 medical student.
+
+FORMAT RULES:
+1. Clinical vignette questions: Start with patient info (e.g. "A 35 year old woman has her routine cervical smear test. Abnormal cells are seen and following subsequent tests the presence of HPV is detected."), then on a new line ask one clear specific question ending with "(mark: 1)"
+2. Knowledge questions: Short 1-2 sentence stem, then question line ending with "(mark: 1)"
+3. Exactly 5 answer options — one clearly correct, four believable distractors a Year 2 student might fall for
+4. Distractors must be medically plausible, not obviously wrong
+5. Topics: anatomy, physiology, pharmacology, microbiology, immunology, histology, pathology, biochemistry, cell biology, embryology, reproduction, obs & gynae, renal — all standard UK Year 2 content
+6. Difficulty: ${diffMap[diff]}
+${topic !== 'auto' ? '7. Focus predominantly on: ' + topic : ''}
+
+OUTPUT: Raw JSON only — no markdown, no backticks, no explanation outside the JSON.
+
+{
+  "questions": [
+    {
+      "vignette": "Clinical context sentence(s) here, or empty string for knowledge questions",
+      "question": "The specific question line ending with (mark: 1)",
+      "options": ["Option A", "Option B", "Option C", "Option D", "Option E"],
+      "correct": 0,
+      "explanation": "2-3 sentence explanation of why the correct answer is right and why the main distractors are wrong."
+    }
+  ]
+}
+
+"correct" = 0-based index of correct answer. Generate exactly ${num} questions from these notes:
+
+NOTES:
+${notes}`;
+
+  try {
+    const res = await fetch('/api/generate', {
+      method: 'POST',
+      headers: { 'Content-Type': 'application/json' },
+      body: JSON.stringify({
+        model: 'claude-sonnet-4-20250514',
+        max_tokens: 5000,
+        messages: [{ role: 'user', content: prompt }]
+      })
+    });
+    if (!res.ok) {
+      const e = await res.json().catch(() => ({}));
+      throw new Error(e?.error || 'HTTP ' + res.status);
+    }
+    const data = await res.json();
+    const raw = (data.content?.[0]?.text || '').trim();
+    let parsed;
+    try { parsed = JSON.parse(raw); }
+    catch {
+      const m = raw.match(/\{[\s\S]*\}/);
+      if (m) parsed = JSON.parse(m[0]);
+      else throw new Error('Could not parse AI response — try again.');
+    }
+    qs = parsed.questions || [];
+    if (!qs.length) throw new Error('No questions returned. Try pasting more detailed notes.');
+    picked = {}; done = false;
+    renderQs();
+  } catch (e) {
+    showErr('Error: ' + e.message);
+  } finally {
+    setBusy(false); endProg();
+  }
+}
+
+function renderQs() {
+  document.getElementById('scoreBar').classList.remove('show');
+  const sec = document.getElementById('qsection');
+  let html = '';
+  qs.forEach((q, i) => {
+    const vigHtml = q.vignette ? `<span>${esc(q.vignette)}</span>` : '';
+    html += `
+    <div class="qcard" style="animation-delay:${i*0.04}s" id="card${i}">
+      <div class="qnum">Q${i+1}.</div>
+      <div class="qtext">${vigHtml}<span class="ask">${esc(q.question)}</span></div>
+      <div class="opts" id="opts${i}">
+        ${q.options.map((o, j) => `
+          <label class="opt" id="opt${i}_${j}" onclick="pick(${i},${j})">
+            <input type="radio" name="q${i}" value="${j}">
+            ${esc(o)}
+          </label>`).join('')}
+      </div>
+      <div class="expl" id="expl${i}"><b>Explanation:</b> ${esc(q.explanation)}</div>
+    </div>`;
+  });
+  html += `<div class="actions">
+    <button class="btn-sub" id="subBtn" onclick="submitAll()">Submit All Answers</button>
+    <button class="btn-outline" onclick="revealAll()">Show All Answers</button>
+    <button class="btn-ghost" onclick="resetAll()">Reset</button>
+  </div>`;
+  sec.innerHTML = html;
+  window.scrollTo({ top: sec.offsetTop - 70, behavior: 'smooth' });
+}
+
+function pick(qi, oi) {
+  if (done) return;
+  picked[qi] = oi;
+  for (let j = 0; j < qs[qi].options.length; j++) {
+    const el = document.getElementById(`opt${qi}_${j}`);
+    if (el) el.style.borderColor = j === oi ? 'var(--accent)' : '';
+  }
+}
+
+function submitAll() {
+  if (done) return;
+  done = true;
+  let score = 0;
+  qs.forEach((q, i) => {
+    const sel = picked[i], cor = q.correct;
+    lock(i);
+    if (sel !== undefined) {
+      mark(i, sel, sel === cor ? 'correct' : 'incorrect');
+      if (sel === cor) score++;
+      else mark(i, cor, 'reveal');
+    } else { mark(i, cor, 'reveal'); }
+    document.getElementById(`expl${i}`).classList.add('show');
+  });
+  document.getElementById('subBtn').disabled = true;
+  showScore(score);
+}
+
+function revealAll() {
+  done = true;
+  qs.forEach((q, i) => {
+    lock(i); mark(i, q.correct, 'reveal');
+    document.getElementById(`expl${i}`).classList.add('show');
+  });
+  const sb = document.getElementById('subBtn');
+  if (sb) sb.disabled = true;
+  showScore(null);
+}
+
+function resetAll() { picked = {}; done = false; renderQs(); document.getElementById('scoreBar').classList.remove('show'); }
+
+function lock(qi) {
+  document.querySelectorAll(`input[name="q${qi}"]`).forEach(r => r.disabled = true);
+  document.querySelectorAll(`[id^="opt${qi}_"]`).forEach(el => el.classList.add('locked'));
+}
+function mark(qi, oi, cls) {
+  const el = document.getElementById(`opt${qi}_${oi}`);
+  if (el) el.classList.add(cls);
+}
+function showScore(score) {
+  const bar = document.getElementById('scoreBar');
+  bar.classList.add('show');
+  if (score === null) {
+    document.getElementById('scoreNum').textContent = '—';
+    document.getElementById('scoreMsg').textContent = 'Answers revealed';
+  } else {
+    const pct = Math.round(score / qs.length * 100);
+    document.getElementById('scoreNum').textContent = score + ' / ' + qs.length;
+    document.getElementById('scoreMsg').innerHTML = pct + '% correct<br>' +
+      (pct >= 70 ? '✅ Pass territory' : pct >= 50 ? '⚠️ Borderline — keep revising' : '❌ Needs more revision');
+  }
+}
+function setBusy(b) {
+  const btn = document.getElementById('genBtn');
+  btn.disabled = b;
+  btn.classList.toggle('loading', b);
+  document.getElementById('btnTxt').textContent = b ? 'Generating…' : 'Generate Questions';
+}
+function showErr(m) { const e = document.getElementById('errBox'); e.textContent = m; e.style.display = 'block'; }
+function hideErr() { document.getElementById('errBox').style.display = 'none'; }
+function esc(s) {
+  return String(s || '').replace(/&/g,'&amp;').replace(/</g,'&lt;').replace(/>/g,'&gt;').replace(/\n/g,'<br>');
+}
+</script>
+</body>
+</html>
