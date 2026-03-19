@@ -703,11 +703,7 @@ function unlock(){
   init();
 }
 
-// Check session on page load
-document.addEventListener('DOMContentLoaded',function(){
-  applyTheme();
-  if(sessionStorage.getItem(SK)==='1') unlock();
-});
+
 
 async function init(){
   applyTheme();
@@ -1227,9 +1223,11 @@ function shuffle(a){for(let i=a.length-1;i>0;i--){const j=Math.floor(Math.random
 let _pt={};
 function startProg(pid,fid){let p=0;document.getElementById(pid).style.display='block';_pt[pid]=setInterval(()=>{p=Math.min(p+Math.random()*4,88);document.getElementById(fid).style.width=p+'%';},300);}
 function endProg(pid,fid){clearInterval(_pt[pid]);document.getElementById(fid).style.width='100%';setTimeout(()=>{document.getElementById(pid).style.display='none';document.getElementById(fid).style.width='0%';},500);}
-document.querySelectorAll('.modal-bg').forEach(m=>m.addEventListener('click',e=>{if(e.target===m)m.classList.remove('open');}));
-// Auto-unlock if already authenticated this session — runs AFTER all functions defined
-if(sessionStorage.getItem(SK)==='1')unlock();
+document.addEventListener('DOMContentLoaded',function(){
+  applyTheme();
+  document.querySelectorAll('.modal-bg').forEach(m=>m.addEventListener('click',e=>{if(e.target===m)m.classList.remove('open');}));
+  if(sessionStorage.getItem(SK)==='1')unlock();
+});
 </script>
 
 <!-- EXAM DATE MODAL -->
