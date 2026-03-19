@@ -564,8 +564,6 @@ label { font-size: 11px; color: var(--text2); font-weight: 600; display: block; 
 <script>
 const SB_URL='https://tzdkptyeodvlllxmvmqf.supabase.co';
 const SB_KEY='eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJpc3MiOiJzdXBhYmFzZSIsInJlZiI6InR6ZGtwdHllb2R2bGxseG12bXFmIiwicm9sZSI6ImFub24iLCJpYXQiOjE3NzM5MzQ3ODQsImV4cCI6MjA4OTUxMDc4NH0.ofEgXFjqp4xqbuXl6T5GO7tVoMRl0YzT2o5fdELi8uM';
-const HASH='993c737a59e7f58bbf5f24f37c112ede4bf7059e7b77f00b7120f232502fd5cd';
-const SALT='mx2010_uclan_salt_9f3a';
 const SK='_ms_auth';
 const BLOCKS=['GU','MSK','Neurology','GI','CVR','Core'];
 const SUBJECTS=['Anatomy','Physiology','Pharmacology','Microbiology','Immunology','Pathology','Biochemistry','Radiology','Development','Haematology','General'];
@@ -587,11 +585,11 @@ let recallTerms=[],recallIdx=0,recallResults=[];
 
 // ── THEME ──
 function toggleTheme(){
-  const html=document.documentElement;
-  const isDark=html.getAttribute('data-theme')==='dark';
-  html.setAttribute('data-theme',isDark?'light':'dark');
-  localStorage.setItem('_ms_theme',isDark?'light':'dark');
-  updateThemeUI(!isDark);
+  const isDark=document.documentElement.getAttribute('data-theme')==='dark';
+  const next=isDark?'light':'dark';
+  document.documentElement.setAttribute('data-theme',next);
+  localStorage.setItem('_ms_theme',next);
+  updateThemeUI(next==='dark');
 }
 function updateThemeUI(dark){
   const track=document.getElementById('themeTrack');
@@ -601,35 +599,68 @@ function updateThemeUI(dark){
   else{track.classList.remove('on');label.textContent='Dark mode';}
 }
 function applyTheme(){
-  try{
-    const saved=localStorage.getItem('_ms_theme')||'light';
-    document.documentElement.setAttribute('data-theme',saved);
-    updateThemeUI(saved==='dark');
-  }catch(e){}
+  const saved=localStorage.getItem('_ms_theme')||'light';
+  document.documentElement.setAttribute('data-theme',saved);
+  updateThemeUI(saved==='dark');
 }
-// Apply theme to <html> immediately (before DOM fully ready)
-(function(){try{const t=localStorage.getItem('_ms_theme')||'light';document.documentElement.setAttribute('data-theme',t);}catch(e){}})();
 
-if(sessionStorage.getItem(SK)==='1')unlock();
+// ── AUTH — single-round SHA-256 so it runs instantly ──
+// Password: Abh1n@vRana
+const PW_HASH='adf3446e80aaa0d0bb18f28da17d28c346e126e37030062dd5d2b11a6352673c';
+const PW_SALT='medstudy_2025_salt';
 
-async function sha256(s){const b=await crypto.subtle.digest('SHA-256',new TextEncoder().encode(s));return Array.from(new Uint8Array(b)).map(x=>x.toString(16).padStart(2,'0')).join('');}
-async function hashPw(pw){let h=pw+SALT;for(let i=0;i<100000;i++)h=await sha256(h);return h;}
+async function sha256str(s){
+  const buf=await crypto.subtle.digest('SHA-256',new TextEncoder().encode(s));
+  return Array.from(new Uint8Array(buf)).map(b=>b.toString(16).padStart(2,'0')).join('');
+}
+
 async function tryUnlock(){
-  const now=Date.now();if(now<lockTil){document.getElementById('lockErr').textContent=`Locked ${Math.ceil((lockTil-now)/1000)}s`;return;}
-  const pw=document.getElementById('pwInput').value;if(!pw)return;
-  const btn=document.getElementById('lockBtn');btn.disabled=true;btn.classList.add('loading');
-  const h=await hashPw(pw);
-  if(h===HASH){sessionStorage.setItem(SK,'1');unlock();}
-  else{
-    fails++;const inp=document.getElementById('pwInput');inp.value='';inp.classList.add('shake');setTimeout(()=>inp.classList.remove('shake'),400);
-    if(fails>=8)lockTil=Date.now()+600000,document.getElementById('lockErr').textContent='Locked 10 min';
-    else if(fails>=5)lockTil=Date.now()+120000,document.getElementById('lockErr').textContent='Locked 2 min';
-    else if(fails>=3)lockTil=Date.now()+30000,document.getElementById('lockErr').textContent='Locked 30s';
-    else document.getElementById('lockErr').textContent=`Incorrect (${fails} attempt${fails>1?'s':''})`;
-    btn.disabled=false;btn.classList.remove('loading');
+  const now=Date.now();
+  if(now<lockTil){
+    document.getElementById('lockErr').textContent='Locked — wait '+Math.ceil((lockTil-now)/1000)+'s';
+    return;
+  }
+  const pw=document.getElementById('pwInput').value;
+  if(!pw)return;
+  const btn=document.getElementById('lockBtn');
+  btn.disabled=true;
+  btn.querySelector('.spin').style.display='inline-block';
+  document.getElementById('lockErr').textContent='';
+  try{
+    const h=await sha256str(pw+PW_SALT);
+    if(h===PW_HASH){
+      sessionStorage.setItem(SK,'1');
+      unlock();
+    } else {
+      fails++;
+      const inp=document.getElementById('pwInput');
+      inp.value='';inp.classList.add('shake');
+      setTimeout(()=>inp.classList.remove('shake'),400);
+      if(fails>=8){lockTil=Date.now()+600000;document.getElementById('lockErr').textContent='Locked 10 min.';}
+      else if(fails>=5){lockTil=Date.now()+120000;document.getElementById('lockErr').textContent='Locked 2 min.';}
+      else if(fails>=3){lockTil=Date.now()+30000;document.getElementById('lockErr').textContent='Locked 30s.';}
+      else{document.getElementById('lockErr').textContent='Incorrect. ('+fails+' attempt'+(fails>1?'s':'')+')';}
+      btn.disabled=false;
+      btn.querySelector('.spin').style.display='none';
+    }
+  }catch(e){
+    document.getElementById('lockErr').textContent='Error: '+e.message;
+    btn.disabled=false;
+    btn.querySelector('.spin').style.display='none';
   }
 }
-function unlock(){document.getElementById('lock').style.display='none';document.getElementById('app').style.display='block';init();}
+
+function unlock(){
+  document.getElementById('lock').style.display='none';
+  document.getElementById('app').style.display='block';
+  init();
+}
+
+// Check session on page load
+document.addEventListener('DOMContentLoaded',function(){
+  applyTheme();
+  if(sessionStorage.getItem(SK)==='1') unlock();
+});
 
 async function init(){
   applyTheme();
@@ -1055,6 +1086,8 @@ let _pt={};
 function startProg(pid,fid){let p=0;document.getElementById(pid).style.display='block';_pt[pid]=setInterval(()=>{p=Math.min(p+Math.random()*4,88);document.getElementById(fid).style.width=p+'%';},300);}
 function endProg(pid,fid){clearInterval(_pt[pid]);document.getElementById(fid).style.width='100%';setTimeout(()=>{document.getElementById(pid).style.display='none';document.getElementById(fid).style.width='0%';},500);}
 document.querySelectorAll('.modal-bg').forEach(m=>m.addEventListener('click',e=>{if(e.target===m)m.classList.remove('open');}));
+// Auto-unlock if already authenticated this session — runs AFTER all functions defined
+if(sessionStorage.getItem(SK)==='1')unlock();
 </script>
 </body>
 </html>
