@@ -549,7 +549,7 @@ label { font-size: 11px; color: var(--text2); font-weight: 600; display: block; 
   <div class="modal"><div class="modal-title">Year profiles</div><div id="yearList" class="mb16"></div><div class="divider"></div><div style="font-size:13px;font-weight:700;margin-bottom:10px;color:var(--text);">Add new profile</div><div class="row"><input type="text" id="newYearInput" placeholder="e.g. Year 3" style="flex:1;"><button class="btn btn-primary btn-sm" onclick="addYear()">Add</button></div><button class="btn btn-ghost mt12" onclick="closeModal('yearModal')">Close</button></div>
 </div>
 <div class="modal-bg" id="addLecModal">
-  <div class="modal"><div class="modal-title">Add lecture</div><div class="mb12"><label>Lecture title</label><input type="text" id="lecTitle" placeholder="e.g. Renal physiology — filtration mechanisms"></div><div class="g2 mb12"><div><label>Block</label><select id="lecBlock"><option>GU</option><option>MSK</option><option>Neurology</option><option>GI</option><option>CVR</option><option>Core</option></select></div><div><label>Subject</label><select id="lecSubj"><option>Anatomy</option><option>Physiology</option><option>Pharmacology</option><option>Microbiology</option><option>Immunology</option><option>Pathology</option><option>Biochemistry</option><option>Radiology</option><option>Development</option><option>Haematology</option><option>General</option></select></div></div><div class="row" style="gap:8px;"><button class="btn btn-primary flex1" onclick="addLec()">Add lecture</button><button class="btn btn-outline" onclick="closeModal('addLecModal')">Cancel</button></div></div>
+  <div class="modal"><div class="modal-title">Add lecture</div><div class="mb12"><label>Lecture title</label><input type="text" id="lecTitle" placeholder="e.g. Renal physiology — filtration mechanisms"></div><div class="g2 mb12"><div><label>Block</label><select id="lecBlock"><option value="GU">GU</option><option value="MSK">MSK</option><option value="Neurology">Neurology</option><option value="GI">GI</option><option value="CVR">CVR</option><option value="Core">Core</option></select></div><div><label>Subject</label><select id="lecSubj"><option value="Anatomy">Anatomy</option><option value="Physiology">Physiology</option><option value="Pharmacology">Pharmacology</option><option value="Microbiology">Microbiology</option><option value="Immunology">Immunology</option><option value="Pathology">Pathology</option><option value="Biochemistry">Biochemistry</option><option value="Radiology">Radiology</option><option value="Development">Development</option><option value="Haematology">Haematology</option><option value="General">General</option></select></div></div><div class="err-box" id="lecErr"></div><div class="row" style="gap:8px;"><button class="btn btn-primary flex1" onclick="addLec()">Add lecture</button><button class="btn btn-outline" onclick="closeModal('addLecModal')">Cancel</button></div></div>
 </div>
 <div class="modal-bg" id="addDrugModal">
   <div class="modal"><div class="modal-title">Add drug card</div><div class="mb12"><label>Drug name</label><input type="text" id="dName" placeholder="e.g. Metformin"></div><div class="mb12"><label>Mechanism</label><input type="text" id="dMech" placeholder="e.g. Activates AMPK, reduces hepatic glucose output"></div><div class="mb12"><label>Used for</label><input type="text" id="dUse" placeholder="e.g. Type 2 diabetes, first line"></div><div class="mb12"><label>Key side effect / buzzword</label><input type="text" id="dSide" placeholder="e.g. Lactic acidosis, no weight gain"></div><div class="mb12"><label>Block</label><select id="dBlock"><option>GU</option><option>MSK</option><option>Neurology</option><option>GI</option><option>CVR</option><option>Core</option></select></div><button class="btn btn-outline mb12" id="aiDBtn" onclick="aiCheckDrug()" style="width:100%;justify-content:center;"><div class="spin"></div><span id="aiDTxt">✨ Check what I missed (AI)</span></button><div id="aiDSug" style="display:none;background:var(--ai-sug-bg);border:1px solid var(--ai-sug-border);border-radius:var(--r);padding:14px;margin-bottom:12px;"><div style="font-size:10px;color:var(--accent);font-weight:700;letter-spacing:0.08em;text-transform:uppercase;margin-bottom:6px;">AI suggestions</div><div id="aiDContent" style="font-size:12px;color:var(--text2);line-height:1.7;"></div></div><div class="row" style="gap:8px;"><button class="btn btn-primary flex1" onclick="saveDrug()">Save card</button><button class="btn btn-outline" onclick="closeModal('addDrugModal')">Cancel</button></div><div class="err-box" id="dErr"></div></div>
@@ -596,15 +596,19 @@ function toggleTheme(){
 function updateThemeUI(dark){
   const track=document.getElementById('themeTrack');
   const label=document.getElementById('themeLabel');
+  if(!track||!label)return;
   if(dark){track.classList.add('on');label.textContent='Light mode';}
   else{track.classList.remove('on');label.textContent='Dark mode';}
 }
 function applyTheme(){
-  const saved=localStorage.getItem('_ms_theme')||'light';
-  document.documentElement.setAttribute('data-theme',saved);
-  updateThemeUI(saved==='dark');
+  try{
+    const saved=localStorage.getItem('_ms_theme')||'light';
+    document.documentElement.setAttribute('data-theme',saved);
+    updateThemeUI(saved==='dark');
+  }catch(e){}
 }
-applyTheme();
+// Apply theme to <html> immediately (before DOM fully ready)
+(function(){try{const t=localStorage.getItem('_ms_theme')||'light';document.documentElement.setAttribute('data-theme',t);}catch(e){}})();
 
 if(sessionStorage.getItem(SK)==='1')unlock();
 
@@ -628,6 +632,7 @@ async function tryUnlock(){
 function unlock(){document.getElementById('lock').style.display='none';document.getElementById('app').style.display='block';init();}
 
 async function init(){
+  applyTheme();
   yr=localStorage.getItem('_ms_yr')||'Year 2';
   document.getElementById('yearName').textContent=yr;
   document.getElementById('sidebarYear').textContent=yr;
@@ -737,7 +742,18 @@ async function loadLecs(){
     return`<div class="lec-row ${cls}"><span class="dot d-${BC[l.block]||''}"></span><span class="lec-title">${esc(l.title)}</span>${l.subject?`<span class="badge badge-muted" style="font-size:10px;">${l.subject}</span>`:''}<span class="badge badge-muted" style="font-size:10px;">${l.block}</span><button class="btn btn-xs ${l.pass1?'btn-success':'btn-outline'}" onclick="togglePass('${l.id}',1,${l.pass1})">${l.pass1?'✓ P1':'P1'}</button><button class="btn btn-xs ${l.pass2?'btn-success':'btn-outline'}" onclick="togglePass('${l.id}',2,${l.pass2})" ${!l.pass1?'disabled':''}>${l.pass2?'✓ P2':'P2'}</button><button class="btn btn-xs btn-danger" onclick="delLec('${l.id}')">✕</button></div>`;
   }).join('');
 }
-async function addLec(){const title=document.getElementById('lecTitle').value.trim(),block=document.getElementById('lecBlock').value,subject=document.getElementById('lecSubj').value;if(!title)return;await sb.from('lectures').insert({title,block,subject,year:yr,pass1:false,pass2:false});closeModal('addLecModal');document.getElementById('lecTitle').value='';loadLecs();loadDash();}
+async function addLec(){
+  const title=document.getElementById('lecTitle').value.trim();
+  const block=document.getElementById('lecBlock').value;
+  const subject=document.getElementById('lecSubj').value;
+  if(!title){showErr('lecErr','Please enter a lecture title.');return;}
+  const{error}=await sb.from('lectures').insert({title,block,subject,year:yr,pass1:false,pass2:false});
+  if(error){showErr('lecErr','Save failed: '+error.message);return;}
+  closeModal('addLecModal');
+  document.getElementById('lecTitle').value='';
+  hideErr('lecErr');
+  loadLecs();loadDash();
+}
 async function togglePass(id,pass,cur){await sb.from('lectures').update({[pass===1?'pass1':'pass2']:!cur}).eq('id',id);loadLecs();loadDash();}
 async function delLec(id){await sb.from('lectures').delete().eq('id',id);loadLecs();loadDash();}
 
