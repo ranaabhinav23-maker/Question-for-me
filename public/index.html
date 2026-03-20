@@ -298,6 +298,20 @@ label { font-size: 11px; color: var(--text2); font-weight: 600; display: block; 
 .subj-fill{height:100%;border-radius:99px;transition:width 0.6s ease;}
 .subj-pct{font-size:11px;color:var(--text3);width:34px;text-align:right;font-family:var(--mono);}
 
+/* ── TODAY PLAN CARD ── */
+.today-card{background:var(--target-bg);border:1px solid var(--target-border);border-radius:var(--r2);padding:18px 20px;}
+.today-ring-wrap{position:relative;width:72px;height:72px;flex-shrink:0;}
+.today-ring-wrap svg{transform:rotate(-90deg);}
+.today-ring-center{position:absolute;inset:0;display:flex;flex-direction:column;align-items:center;justify-content:center;}
+.today-ring-num{font-size:16px;font-weight:800;color:var(--text);line-height:1;}
+.today-ring-total{font-size:9px;color:var(--text3);margin-top:1px;}
+.today-task-item{display:flex;align-items:flex-start;gap:8px;padding:6px 0;border-bottom:1px solid var(--border);cursor:pointer;transition:all 0.12s;}
+.today-task-item:last-child{border-bottom:none;}
+.today-task-item:hover{padding-left:4px;}
+.today-task-check{width:16px;height:16px;border-radius:4px;border:1.5px solid var(--border2);display:flex;align-items:center;justify-content:center;flex-shrink:0;margin-top:1px;transition:all 0.15s;}
+.today-task-check.done{background:var(--green);border-color:var(--green);}
+.today-task-text{font-size:12px;font-weight:500;color:var(--text);flex:1;line-height:1.5;}
+.today-task-text.done{text-decoration:line-through;color:var(--text3);}
 /* ── NOTES HUB ── */
 .notes-layout{display:grid;grid-template-columns:240px 1fr;gap:0;height:calc(100vh - 57px);overflow:hidden;}
 .notes-sidebar{background:var(--surface);border-right:1px solid var(--border);display:flex;flex-direction:column;overflow:hidden;}
@@ -460,10 +474,7 @@ label { font-size: 11px; color: var(--text2); font-weight: 600; display: block; 
             <div class="cd-bar"><div class="cd-bar-fill" id="cdBarFill" style="width:0%;"></div></div>
             <div id="cdImportantDates"></div>
           </div>
-          <div class="target-card">
-            <div class="row mb12"><div class="flex1"><div style="font-size:13px;font-weight:700;color:var(--text);">Today's targets</div><div style="font-size:12px;color:var(--text2);margin-top:2px;" id="targetProgress">No targets set</div></div><button class="btn btn-xs btn-outline" onclick="openTargetModal()">Edit</button></div>
-            <div id="targetList"><div style="font-size:12px;color:var(--text3);text-align:center;padding:12px 0;">Click Edit to add targets</div></div>
-          </div>
+          <div id="todayPlanCard"></div>
         </div>
       </div>
       <div class="g2 mt16">
@@ -664,6 +675,7 @@ label { font-size: 11px; color: var(--text2); font-weight: 600; display: block; 
     <div class="page-hero">
       <div><div class="page-hero-title">Study Plan 📅</div><div class="page-hero-sub">9-week exam schedule — track every lecture, every day</div></div>
       <div style="display:flex;gap:8px;">
+        <button class="btn btn-outline btn-sm" id="planEditBtn" onclick="togglePlanEditMode()">✏ Edit</button>
         <button class="btn btn-outline btn-sm" onclick="openModal('planSettingsModal')">⚙ Settings</button>
         <button class="btn btn-teal btn-sm" onclick="goToToday()">Today</button>
       </div>
@@ -1055,6 +1067,7 @@ async function loadDash(){
   }
   renderTargets();
   renderCountdown();
+  renderTodayCard();
 }
 
 function updateWrongBadge(n){
@@ -1073,7 +1086,7 @@ function renderTargets(){
 }
 function toggleTarget(i){targets[i].done=!targets[i].done;saveTargets();}
 function removeTarget(i){targets.splice(i,1);saveTargets();}
-function saveTargets(){localStorage.setItem('_ms_targets_'+yr,JSON.stringify(targets));renderTargets();}
+function saveTargets(){localStorage.setItem('_ms_targets_'+yr,JSON.stringify(targets));renderTargets();renderTodayCard();}
 function addTarget(){const txt=document.getElementById('targetInput').value.trim(),block=document.getElementById('targetBlock').value;if(!txt)return;targets.push({text:txt,block,done:false});document.getElementById('targetInput').value='';saveTargets();}
 function openTargetModal(){renderTargets();openModal('targetModal');}
 
@@ -2164,6 +2177,30 @@ function timeAgo(dateStr){
 
 // ── STUDY PLAN ──
 const PLAN_KEY = '_ms_plan_';
+const PLAN_CUSTOM_KEY = '_ms_plan_custom_';
+
+function getPlanCustomData() {
+  return JSON.parse(localStorage.getItem(PLAN_CUSTOM_KEY + yr) || '{}');
+}
+function savePlanCustomData(data) {
+  localStorage.setItem(PLAN_CUSTOM_KEY + yr, JSON.stringify(data));
+}
+
+// Get tasks for a day — custom overrides default
+function getDayTasks(weekNum, dayIdx) {
+  const custom = getPlanCustomData();
+  const key = `w${weekNum}_d${dayIdx}`;
+  if (custom[key]) return custom[key];
+  return STUDY_PLAN[weekNum - 1]?.days[dayIdx]?.tasks || [];
+}
+
+function setDayTasks(weekNum, dayIdx, tasks) {
+  const custom = getPlanCustomData();
+  custom[`w${weekNum}_d${dayIdx}`] = tasks;
+  savePlanCustomData(custom);
+}
+
+let _planEditMode = false;
 const STUDY_PLAN = [
   { week: 1, topic: 'GU', pass: '2nd', type: 'revision', lectures: 33, hoursPerLec: 1.25, color: '#ec4899',
     days: [
@@ -2509,6 +2546,65 @@ function shuffle(a){for(let i=a.length-1;i>0;i--){const j=Math.floor(Math.random
 let _pt={};
 function startProg(pid,fid){let p=0;document.getElementById(pid).style.display='block';_pt[pid]=setInterval(()=>{p=Math.min(p+Math.random()*4,88);document.getElementById(fid).style.width=p+'%';},300);}
 function endProg(pid,fid){clearInterval(_pt[pid]);document.getElementById(fid).style.width='100%';setTimeout(()=>{document.getElementById(pid).style.display='none';document.getElementById(fid).style.width='0%';},500);}
+
+function renderTodayCard(){
+  const el=document.getElementById('todayPlanCard');
+  if(!el)return;
+  const currentWeek=getCurrentWeek();
+  const weekData=STUDY_PLAN[currentWeek-1];
+  const todayName=getTodayDayName();
+  const dayIdx=weekData?.days.findIndex(d=>d.day===todayName)??-1;
+  const planTasks=dayIdx>=0?getDayTasks(currentWeek,dayIdx):[];
+  const isRest=todayName==='Sun';
+  const planDone=planTasks.filter((_,ti)=>isTaskDone(currentWeek,dayIdx,ti)).length;
+  const manualTargets=targets||[];
+  const manualDone=manualTargets.filter(t=>t.done).length;
+  const totalAll=planTasks.length+manualTargets.length;
+  const doneAll=planDone+manualDone;
+  const pct=totalAll?Math.round(doneAll/totalAll*100):0;
+  const r=30,circ=2*Math.PI*r,dash=circ*(pct/100);
+  const weekColor=weekData?.color||'var(--accent)';
+  const allComplete=totalAll>0&&doneAll===totalAll;
+  const noPlan=!getPlanStartDate();
+
+  el.innerHTML=`<div class="today-card">
+    <div style="display:flex;gap:14px;align-items:flex-start;margin-bottom:14px;">
+      <div class="today-ring-wrap">
+        <svg width="72" height="72" viewBox="0 0 72 72">
+          <circle cx="36" cy="36" r="${r}" fill="none" stroke="var(--border)" stroke-width="6"/>
+          <circle cx="36" cy="36" r="${r}" fill="none" stroke="${allComplete?'var(--green)':weekColor}" stroke-width="6"
+            stroke-dasharray="${dash.toFixed(1)} ${circ.toFixed(1)}" stroke-linecap="round"
+            style="transition:stroke-dasharray 0.5s ease;"/>
+        </svg>
+        <div class="today-ring-center">
+          <div class="today-ring-num" style="color:${allComplete?'var(--green)':weekColor};">${pct}%</div>
+          <div class="today-ring-total">${doneAll}/${totalAll}</div>
+        </div>
+      </div>
+      <div style="flex:1;min-width:0;">
+        <div style="font-size:13px;font-weight:800;color:var(--text);">Today — ${todayName}</div>
+        <div style="font-size:11px;color:${weekColor};font-weight:600;margin-top:2px;">${weekData?`Week ${currentWeek} · ${weekData.topic}`:noPlan?'Set up your study plan →':''}</div>
+        <div style="font-size:11px;color:var(--text2);margin-top:3px;">${allComplete?'🎉 All done today!':isRest?'Rest day 😴':`${totalAll-doneAll} task${totalAll-doneAll!==1?'s':''} left`}</div>
+      </div>
+      <button class="btn btn-xs btn-outline" onclick="openTargetModal()" style="flex-shrink:0;">＋</button>
+    </div>
+    ${isRest?'<div style="text-align:center;font-size:22px;padding:6px 0;">You deserve the rest 😴</div>':
+    noPlan?`<div style="font-size:12px;color:var(--text3);text-align:center;padding:8px 0;"><a onclick="nav('plan',document.querySelector('[data-page=plan]'))" style="color:var(--accent);cursor:pointer;font-weight:600;">Set up your 9-week study plan →</a></div>`:`
+    <div>
+      ${planTasks.length?`<div style="font-size:10px;font-weight:700;color:var(--text3);text-transform:uppercase;letter-spacing:0.08em;margin-bottom:6px;">📅 Study Plan</div>`:''}
+      ${planTasks.map((task,ti)=>{const done=isTaskDone(currentWeek,dayIdx,ti);return`<div class="today-task-item" onclick="toggleTask(${currentWeek},${dayIdx},${ti});renderTodayCard();">
+        <div class="today-task-check ${done?'done':''}">${done?'<svg width="8" height="6" viewBox="0 0 8 6"><polyline points="1,3 3,5 7,1" stroke="white" stroke-width="1.5" fill="none" stroke-linecap="round"/></svg>':''}</div>
+        <span class="today-task-text ${done?'done':''}">${esc(task)}</span>
+      </div>`;}).join('')}
+      ${manualTargets.length?`<div style="font-size:10px;font-weight:700;color:var(--text3);text-transform:uppercase;letter-spacing:0.08em;margin:${planTasks.length?'10px':0} 0 6px;">🎯 My targets</div>`:''}
+      ${manualTargets.map((t,i)=>`<div class="today-task-item" onclick="toggleTarget(${i});renderTodayCard();">
+        <div class="today-task-check ${t.done?'done':''}">${t.done?'<svg width="8" height="6" viewBox="0 0 8 6"><polyline points="1,3 3,5 7,1" stroke="white" stroke-width="1.5" fill="none" stroke-linecap="round"/></svg>':''}</div>
+        <span class="today-task-text ${t.done?'done':''}">${esc(t.text)}<span style="font-size:10px;color:var(--text3);margin-left:6px;">[${t.block}]</span></span>
+      </div>`).join('')}
+      ${totalAll===0?`<div style="font-size:12px;color:var(--text3);text-align:center;padding:10px 0;">No tasks today — add some targets above</div>`:''}
+    </div>`}
+  </div>`;
+}
 </script>
 </body>
 </html>
