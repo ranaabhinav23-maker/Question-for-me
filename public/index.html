@@ -455,8 +455,7 @@ label { font-size: 11px; color: var(--text2); font-weight: 600; display: block; 
         <div class="page-hero-sub" id="dashSub">Year 2 · Keep going — you've got this.</div>
       </div>
       <div style="display:flex;gap:8px;">
-        <button class="btn btn-outline btn-sm" onclick="openModal('todoModal');renderTodoList()">📋 To-do</button>
-        <button class="btn btn-outline btn-sm" onclick="openTargetModal()">＋ Today's targets</button>
+        <button class="btn btn-outline btn-sm" onclick="openTargetModal()">＋ Add target</button>
       </div>
     </div>
     <div style="padding:24px 32px 0;">
@@ -477,8 +476,31 @@ label { font-size: 11px; color: var(--text2); font-weight: 600; display: block; 
             <div class="cd-bar"><div class="cd-bar-fill" id="cdBarFill" style="width:0%;"></div></div>
             <div id="cdImportantDates"></div>
           </div>
-          <div id="todayPlanCard"></div>
-          <div id="tomorrowPlanCard"></div>
+          <!-- TODAY WIDGET -->
+          <div class="section-card" id="todayWidget">
+            <div class="section-head">
+              <div>
+                <div class="section-title" id="todayWidgetTitle">Today</div>
+                <div class="section-sub" id="todayWidgetSub"></div>
+              </div>
+              <div style="display:flex;align-items:center;gap:8px;">
+                <div id="todayProgressRing"></div>
+              </div>
+            </div>
+            <div class="section-body" style="padding:12px 16px;">
+              <!-- Quick add -->
+              <div style="display:flex;gap:6px;margin-bottom:12px;">
+                <input type="text" id="quickAddInput" placeholder="Add something for today…" style="flex:1;padding:7px 12px;font-size:12px;" onkeydown="if(event.key==='Enter')quickAddTask()">
+                <button class="btn btn-teal btn-sm" onclick="quickAddTask()">＋</button>
+              </div>
+              <!-- Plan tasks for today -->
+              <div id="todayPlanTasks"></div>
+              <!-- Manual tasks -->
+              <div id="todayManualTasks"></div>
+              <!-- Tomorrow preview -->
+              <div id="tomorrowPreview"></div>
+            </div>
+          </div>
         </div>
       </div>
       <div class="g2 mt16">
@@ -679,21 +701,14 @@ label { font-size: 11px; color: var(--text2); font-weight: 600; display: block; 
     <div class="page-hero">
       <div><div class="page-hero-title">Study Plan 📅</div><div class="page-hero-sub" id="planHeroSub">9-week exam schedule — track every lecture, every day</div></div>
       <div style="display:flex;gap:8px;">
-        <button class="btn btn-outline btn-sm" id="planEditBtn" onclick="togglePlanEditMode()">✏ Edit plan</button>
+        <button class="btn btn-outline btn-sm" id="planEditBtn" onclick="togglePlanEditMode()">✏ Edit</button>
         <button class="btn btn-outline btn-sm" onclick="openModal('planSettingsModal')">⚙ Settings</button>
         <button class="btn btn-teal btn-sm" onclick="goToToday()">📍 Today</button>
       </div>
     </div>
     <div style="padding:24px 32px 0;">
       <div class="g4 mb20" id="planStats"></div>
-      <!-- Calendar mini strip -->
-      <div class="section-card mb16">
-        <div class="section-head"><div class="section-title">Calendar</div><div style="display:flex;gap:8px;align-items:center;"><button class="btn btn-xs btn-ghost" onclick="shiftCalMonth(-1)">‹</button><span id="calMonthLabel" style="font-size:12px;font-weight:700;color:var(--text2);min-width:100px;text-align:center;"></span><button class="btn btn-xs btn-ghost" onclick="shiftCalMonth(1)">›</button></div></div>
-        <div style="padding:14px 16px;"><div style="display:grid;grid-template-columns:repeat(7,1fr);gap:3px;" id="calGrid"></div></div>
-      </div>
-      <!-- Week tabs -->
       <div style="display:flex;gap:0;margin-bottom:16px;background:var(--surface);border:1px solid var(--border);border-radius:var(--r);padding:3px;width:fit-content;box-shadow:var(--card-shadow);overflow-x:auto;max-width:100%;" id="weekTabs"></div>
-      <!-- Week view -->
       <div id="planWeekView"></div>
     </div>
    </div>
@@ -1108,8 +1123,7 @@ async function loadDash(){
   }
   renderTargets();
   renderCountdown();
-  renderTodayCard();
-  renderTomorrowCard();
+  renderTodayWidget();
 }
 
 function updateWrongBadge(n){
@@ -1128,7 +1142,7 @@ function renderTargets(){
 }
 function toggleTarget(i){targets[i].done=!targets[i].done;saveTargets();}
 function removeTarget(i){targets.splice(i,1);saveTargets();}
-function saveTargets(){localStorage.setItem('_ms_targets_'+yr,JSON.stringify(targets));renderTargets();renderTodayCard();}
+function saveTargets(){localStorage.setItem('_ms_targets_'+yr,JSON.stringify(targets));renderTargets();renderTodayWidget();}
 function addTarget(){const txt=document.getElementById('targetInput').value.trim(),block=document.getElementById('targetBlock').value;if(!txt)return;targets.push({text:txt,block,done:false});document.getElementById('targetInput').value='';saveTargets();}
 function openTargetModal(){renderTargets();openModal('targetModal');}
 
@@ -2692,8 +2706,141 @@ function getWeekProgress(weekNum,week){
   return`<div style="font-size:1.4rem;font-weight:800;color:var(--text);">${pct}%</div><div style="font-size:11px;color:var(--text2);">${done}/${total} done</div><div style="width:80px;height:4px;background:var(--border);border-radius:99px;overflow:hidden;margin-top:6px;"><div style="width:${pct}%;height:100%;background:${week.color};border-radius:99px;transition:width 0.4s;"></div></div>`;
 }
 
-// ── TO-DO LIST ──
+// ── TODAY WIDGET ──
 const TODO_KEY='_ms_todo_';
+function getTodos(){return JSON.parse(localStorage.getItem(TODO_KEY+yr)||'[]');}
+function saveTodos(t){localStorage.setItem(TODO_KEY+yr,JSON.stringify(t));}
+
+function quickAddTask(){
+  const inp=document.getElementById('quickAddInput');
+  const val=inp.value.trim();if(!val)return;
+  const todos=getTodos();
+  todos.unshift({id:Date.now(),text:val,done:false,created:new Date().toISOString()});
+  saveTodos(todos);inp.value='';
+  renderTodayWidget();
+}
+
+function toggleQuickTask(id){
+  const todos=getTodos();
+  const t=todos.find(t=>t.id===id);if(t)t.done=!t.done;
+  saveTodos(todos);renderTodayWidget();
+}
+
+function deleteQuickTask(id){
+  saveTodos(getTodos().filter(t=>t.id!==id));
+  renderTodayWidget();
+}
+
+function renderTodayWidget(){
+  const currentWeek=getCurrentWeek();
+  const weekData=STUDY_PLAN[currentWeek-1];
+  const todayName=getTodayDayName();
+  const tomorrowName=getDayNameForOffset(1);
+  const dayIdx=weekData?.days.findIndex(d=>d.day===todayName)??-1;
+  const planTasks=dayIdx>=0?getDayTasks(currentWeek,dayIdx):[];
+  const noPlan=!getPlanStartDate();
+  const weekColor=weekData?.color||'var(--accent)';
+  const todos=getTodos().filter(t=>!t.done);
+  const doneTodos=getTodos().filter(t=>t.done);
+
+  // Update title/sub
+  const titleEl=document.getElementById('todayWidgetTitle');
+  const subEl=document.getElementById('todayWidgetSub');
+  if(titleEl)titleEl.textContent=`Today — ${todayName}`;
+  if(subEl)subEl.textContent=weekData?`Week ${currentWeek} · ${weekData.topic}`:'';
+
+  // Progress ring
+  const planDone=planTasks.filter((_,ti)=>isTaskDone(currentWeek,dayIdx,ti)).length;
+  const totalAll=planTasks.length+getTodos().length;
+  const doneAll=planDone+doneTodos.length;
+  const pct=totalAll?Math.round(doneAll/totalAll*100):0;
+  const r=20,circ=2*Math.PI*r,dash=circ*(pct/100);
+  const ringEl=document.getElementById('todayProgressRing');
+  if(ringEl)ringEl.innerHTML=`<div style="position:relative;width:48px;height:48px;">
+    <svg width="48" height="48" viewBox="0 0 48 48" style="transform:rotate(-90deg);">
+      <circle cx="24" cy="24" r="${r}" fill="none" stroke="var(--border)" stroke-width="5"/>
+      <circle cx="24" cy="24" r="${r}" fill="none" stroke="${pct===100?'var(--green)':weekColor}" stroke-width="5"
+        stroke-dasharray="${dash.toFixed(1)} ${circ.toFixed(1)}" stroke-linecap="round" style="transition:stroke-dasharray 0.4s;"/>
+    </svg>
+    <div style="position:absolute;inset:0;display:flex;align-items:center;justify-content:center;font-size:11px;font-weight:800;color:${pct===100?'var(--green)':weekColor};">${pct}%</div>
+  </div>`;
+
+  // Plan tasks
+  const planEl=document.getElementById('todayPlanTasks');
+  if(planEl){
+    if(noPlan){
+      planEl.innerHTML=`<div style="font-size:12px;color:var(--text3);padding:4px 0 8px;"><a onclick="nav('plan',document.querySelector('[data-page=plan]'))" style="color:var(--accent);cursor:pointer;font-weight:600;">→ Set up your 9-week study plan</a></div>`;
+    }else if(planTasks.length){
+      planEl.innerHTML=`<div style="font-size:10px;font-weight:700;color:var(--text3);text-transform:uppercase;letter-spacing:0.08em;margin-bottom:6px;display:flex;align-items:center;justify-content:space-between;">📅 Study Plan <span style="color:${weekColor};">${planDone}/${planTasks.length}</span></div>`+
+        planTasks.map((task,ti)=>{
+          const done=isTaskDone(currentWeek,dayIdx,ti);
+          return`<div style="display:flex;align-items:flex-start;gap:8px;padding:5px 0;border-bottom:1px solid var(--border);cursor:pointer;" onclick="toggleTask(${currentWeek},${dayIdx},${ti});renderTodayWidget();">
+            <div style="width:15px;height:15px;border-radius:4px;border:1.5px solid ${done?'var(--green)':'var(--border2)'};background:${done?'var(--green)':'transparent'};flex-shrink:0;margin-top:1px;display:flex;align-items:center;justify-content:center;transition:all 0.15s;">
+              ${done?'<svg width="8" height="6" viewBox="0 0 8 6"><polyline points="1,3 3,5 7,1" stroke="white" stroke-width="1.5" fill="none" stroke-linecap="round"/></svg>':''}
+            </div>
+            <span style="font-size:12px;flex:1;color:${done?'var(--text3)':'var(--text)'};text-decoration:${done?'line-through':'none'};">${esc(task)}</span>
+          </div>`;
+        }).join('');
+    }else{
+      planEl.innerHTML='';
+    }
+  }
+
+  // Manual tasks (todos)
+  const manEl=document.getElementById('todayManualTasks');
+  if(manEl){
+    const allTodos=getTodos();
+    if(allTodos.length){
+      manEl.innerHTML=`<div style="font-size:10px;font-weight:700;color:var(--text3);text-transform:uppercase;letter-spacing:0.08em;margin:${planTasks.length?'10px':0} 0 6px;">✏ My tasks</div>`+
+        allTodos.map(t=>`<div style="display:flex;align-items:flex-start;gap:8px;padding:5px 0;border-bottom:1px solid var(--border);">
+          <div onclick="toggleQuickTask(${t.id})" style="width:15px;height:15px;border-radius:4px;border:1.5px solid ${t.done?'var(--green)':'var(--border2)'};background:${t.done?'var(--green)':'transparent'};flex-shrink:0;margin-top:1px;display:flex;align-items:center;justify-content:center;cursor:pointer;transition:all 0.15s;">
+            ${t.done?'<svg width="8" height="6" viewBox="0 0 8 6"><polyline points="1,3 3,5 7,1" stroke="white" stroke-width="1.5" fill="none" stroke-linecap="round"/></svg>':''}
+          </div>
+          <span onclick="toggleQuickTask(${t.id})" style="font-size:12px;flex:1;color:${t.done?'var(--text3)':'var(--text)'};text-decoration:${t.done?'line-through':'none'};cursor:pointer;">${esc(t.text)}</span>
+          <button onclick="deleteQuickTask(${t.id})" style="background:none;border:none;color:var(--text3);cursor:pointer;font-size:12px;padding:0 2px;opacity:0.6;" onmouseover="this.style.opacity=1" onmouseout="this.style.opacity=0.6">✕</button>
+        </div>`).join('');
+    }else{
+      manEl.innerHTML='';
+    }
+  }
+
+  // Tomorrow preview
+  const tomEl=document.getElementById('tomorrowPreview');
+  if(tomEl){
+    const tomorrowWeek=getCurrentWeekForOffset(1);
+    const tomorrowWeekData=STUDY_PLAN[tomorrowWeek-1];
+    const tomorrowDayIdx=tomorrowWeekData?.days.findIndex(d=>d.day===tomorrowName)??-1;
+    const tomorrowTasks=tomorrowDayIdx>=0?getDayTasks(tomorrowWeek,tomorrowDayIdx):[];
+    if(tomorrowTasks.length&&!noPlan){
+      const tColor=tomorrowWeekData?.color||'var(--accent)';
+      tomEl.innerHTML=`<div style="margin-top:12px;padding-top:10px;border-top:1px dashed var(--border);">
+        <div style="font-size:10px;font-weight:700;color:var(--text3);text-transform:uppercase;letter-spacing:0.08em;margin-bottom:6px;">Tomorrow — ${tomorrowName}</div>
+        ${tomorrowTasks.map(t=>`<div style="font-size:11px;color:var(--text2);padding:2px 0;display:flex;gap:6px;align-items:flex-start;"><span style="width:4px;height:4px;border-radius:50%;background:${tColor};flex-shrink:0;margin-top:5px;display:inline-block;"></span>${esc(t)}</div>`).join('')}
+      </div>`;
+    }else{
+      tomEl.innerHTML='';
+    }
+  }
+}
+
+// Keep old names as aliases for compatibility
+function renderTodayCard(){renderTodayWidget();}
+function renderTomorrowCard(){renderTodayWidget();}
+function renderTodoList(){}
+
+function openModal(id){document.getElementById(id).classList.add('open');}
+function closeModal(id){document.getElementById(id).classList.remove('open');}
+function showErr(id,m){const e=document.getElementById(id);e.textContent=m;e.style.display='block';}
+function hideErr(id){document.getElementById(id).style.display='none';}
+function setBusy(bid,tid,txt,b){const btn=document.getElementById(bid);btn.disabled=b;btn.classList.toggle('loading',b);document.getElementById(tid).textContent=txt;}
+function esc(s){return String(s||'').replace(/&/g,'&amp;').replace(/</g,'&lt;').replace(/>/g,'&gt;').replace(/\n/g,'<br>');}
+function shuffle(a){for(let i=a.length-1;i>0;i--){const j=Math.floor(Math.random()*(i+1));[a[i],a[j]]=[a[j],a[i]];}return a;}
+let _pt={};
+function startProg(pid,fid){let p=0;document.getElementById(pid).style.display='block';_pt[pid]=setInterval(()=>{p=Math.min(p+Math.random()*4,88);document.getElementById(fid).style.width=p+'%';},300);}
+function endProg(pid,fid){clearInterval(_pt[pid]);document.getElementById(fid).style.width='100%';setTimeout(()=>{document.getElementById(pid).style.display='none';document.getElementById(fid).style.width='0%';},500);}
+</script>
+</body>
+</html>
 function getTodos(){return JSON.parse(localStorage.getItem(TODO_KEY+yr)||'[]');}
 function saveTodos(todos){localStorage.setItem(TODO_KEY+yr,JSON.stringify(todos));}
 
@@ -2766,65 +2913,6 @@ function shuffle(a){for(let i=a.length-1;i>0;i--){const j=Math.floor(Math.random
 let _pt={};
 function startProg(pid,fid){let p=0;document.getElementById(pid).style.display='block';_pt[pid]=setInterval(()=>{p=Math.min(p+Math.random()*4,88);document.getElementById(fid).style.width=p+'%';},300);}
 function endProg(pid,fid){clearInterval(_pt[pid]);document.getElementById(fid).style.width='100%';setTimeout(()=>{document.getElementById(pid).style.display='none';document.getElementById(fid).style.width='0%';},500);}
-
-function renderTodayCard(){
-  const el=document.getElementById('todayPlanCard');
-  if(!el)return;
-  const currentWeek=getCurrentWeek();
-  const weekData=STUDY_PLAN[currentWeek-1];
-  const todayName=getTodayDayName();
-  const dayIdx=weekData?.days.findIndex(d=>d.day===todayName)??-1;
-  const planTasks=dayIdx>=0?getDayTasks(currentWeek,dayIdx):[];
-  const isRest=todayName==='Sun';
-  const planDone=planTasks.filter((_,ti)=>isTaskDone(currentWeek,dayIdx,ti)).length;
-  const manualTargets=targets||[];
-  const manualDone=manualTargets.filter(t=>t.done).length;
-  const totalAll=planTasks.length+manualTargets.length;
-  const doneAll=planDone+manualDone;
-  const pct=totalAll?Math.round(doneAll/totalAll*100):0;
-  const r=30,circ=2*Math.PI*r,dash=circ*(pct/100);
-  const weekColor=weekData?.color||'var(--accent)';
-  const allComplete=totalAll>0&&doneAll===totalAll;
-  const noPlan=!getPlanStartDate();
-
-  el.innerHTML=`<div class="today-card">
-    <div style="display:flex;gap:14px;align-items:flex-start;margin-bottom:14px;">
-      <div class="today-ring-wrap">
-        <svg width="72" height="72" viewBox="0 0 72 72">
-          <circle cx="36" cy="36" r="${r}" fill="none" stroke="var(--border)" stroke-width="6"/>
-          <circle cx="36" cy="36" r="${r}" fill="none" stroke="${allComplete?'var(--green)':weekColor}" stroke-width="6"
-            stroke-dasharray="${dash.toFixed(1)} ${circ.toFixed(1)}" stroke-linecap="round"
-            style="transition:stroke-dasharray 0.5s ease;"/>
-        </svg>
-        <div class="today-ring-center">
-          <div class="today-ring-num" style="color:${allComplete?'var(--green)':weekColor};">${pct}%</div>
-          <div class="today-ring-total">${doneAll}/${totalAll}</div>
-        </div>
-      </div>
-      <div style="flex:1;min-width:0;">
-        <div style="font-size:13px;font-weight:800;color:var(--text);">Today — ${todayName}</div>
-        <div style="font-size:11px;color:${weekColor};font-weight:600;margin-top:2px;">${weekData?`Week ${currentWeek} · ${weekData.topic}`:noPlan?'Set up your study plan →':''}</div>
-        <div style="font-size:11px;color:var(--text2);margin-top:3px;">${allComplete?'🎉 All done today!':isRest?'Rest day 😴':`${totalAll-doneAll} task${totalAll-doneAll!==1?'s':''} left`}</div>
-      </div>
-      <button class="btn btn-xs btn-outline" onclick="openTargetModal()" style="flex-shrink:0;">＋</button>
-    </div>
-    ${isRest?'<div style="text-align:center;font-size:22px;padding:6px 0;">You deserve the rest 😴</div>':
-    noPlan?`<div style="font-size:12px;color:var(--text3);text-align:center;padding:8px 0;"><a onclick="nav('plan',document.querySelector('[data-page=plan]'))" style="color:var(--accent);cursor:pointer;font-weight:600;">Set up your 9-week study plan →</a></div>`:`
-    <div>
-      ${planTasks.length?`<div style="font-size:10px;font-weight:700;color:var(--text3);text-transform:uppercase;letter-spacing:0.08em;margin-bottom:6px;">📅 Study Plan</div>`:''}
-      ${planTasks.map((task,ti)=>{const done=isTaskDone(currentWeek,dayIdx,ti);return`<div class="today-task-item" onclick="toggleTask(${currentWeek},${dayIdx},${ti});renderTodayCard();">
-        <div class="today-task-check ${done?'done':''}">${done?'<svg width="8" height="6" viewBox="0 0 8 6"><polyline points="1,3 3,5 7,1" stroke="white" stroke-width="1.5" fill="none" stroke-linecap="round"/></svg>':''}</div>
-        <span class="today-task-text ${done?'done':''}">${esc(task)}</span>
-      </div>`;}).join('')}
-      ${manualTargets.length?`<div style="font-size:10px;font-weight:700;color:var(--text3);text-transform:uppercase;letter-spacing:0.08em;margin:${planTasks.length?'10px':0} 0 6px;">🎯 My targets</div>`:''}
-      ${manualTargets.map((t,i)=>`<div class="today-task-item" onclick="toggleTarget(${i});renderTodayCard();">
-        <div class="today-task-check ${t.done?'done':''}">${t.done?'<svg width="8" height="6" viewBox="0 0 8 6"><polyline points="1,3 3,5 7,1" stroke="white" stroke-width="1.5" fill="none" stroke-linecap="round"/></svg>':''}</div>
-        <span class="today-task-text ${t.done?'done':''}">${esc(t.text)}<span style="font-size:10px;color:var(--text3);margin-left:6px;">[${t.block}]</span></span>
-      </div>`).join('')}
-      ${totalAll===0?`<div style="font-size:12px;color:var(--text3);text-align:center;padding:10px 0;">No tasks today — add some targets above</div>`:''}
-    </div>`}
-  </div>`;
-}
 </script>
 </body>
 </html>
