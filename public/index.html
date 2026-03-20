@@ -298,6 +298,29 @@ label { font-size: 11px; color: var(--text2); font-weight: 600; display: block; 
 .subj-fill{height:100%;border-radius:99px;transition:width 0.6s ease;}
 .subj-pct{font-size:11px;color:var(--text3);width:34px;text-align:right;font-family:var(--mono);}
 
+/* ── AI PLANNER ── */
+.planner-msg{display:flex;gap:10px;align-items:flex-start;animation:fadeIn 0.2s ease;}
+.planner-msg.planner-user{flex-direction:row-reverse;}
+.planner-avatar{width:32px;height:32px;border-radius:8px;display:flex;align-items:center;justify-content:center;font-size:16px;flex-shrink:0;background:var(--navy);}
+.planner-msg.planner-user .planner-avatar{background:linear-gradient(135deg,var(--accent),var(--accent2));}
+.planner-bubble{background:var(--surface);border:1px solid var(--border);border-radius:12px;padding:12px 16px;font-size:13px;line-height:1.7;color:var(--text);max-width:85%;}
+.planner-msg.planner-user .planner-bubble{background:var(--navy);color:white;border-color:var(--navy);}
+.planner-bubble p{margin-bottom:6px;}.planner-bubble p:last-child{margin-bottom:0;}
+.planner-bubble ul{margin:4px 0 4px 16px;}
+.planner-bubble em{color:var(--accent);font-style:normal;}
+.planner-bubble strong{font-weight:700;}
+.planner-bubble .plan-change{background:rgba(6,182,212,0.08);border:1px solid rgba(6,182,212,0.2);border-radius:var(--r);padding:10px 14px;margin:8px 0;font-size:12px;}
+.planner-bubble .plan-change-title{font-size:10px;font-weight:700;color:var(--accent);text-transform:uppercase;letter-spacing:0.08em;margin-bottom:6px;}
+.planner-suggest{padding:6px 14px;border:1px solid var(--border2);border-radius:99px;background:var(--surface);color:var(--text2);font-size:12px;font-weight:500;cursor:pointer;font-family:var(--font);transition:all 0.15s;}
+.planner-suggest:hover{border-color:var(--accent);color:var(--accent);}
+.planner-thinking{display:flex;gap:4px;align-items:center;padding:4px 0;}
+.planner-dot{width:6px;height:6px;border-radius:50%;background:var(--text3);animation:plannerPulse 1.2s ease infinite;}
+.planner-dot:nth-child(2){animation-delay:0.2s;}
+.planner-dot:nth-child(3){animation-delay:0.4s;}
+@keyframes plannerPulse{0%,100%{opacity:0.3;transform:scale(0.8);}50%{opacity:1;transform:scale(1.1);}}
+.apply-btn{background:var(--accent);color:white;border:none;border-radius:6px;padding:6px 14px;font-size:12px;font-weight:700;cursor:pointer;font-family:var(--font);margin-top:8px;transition:all 0.15s;}
+.apply-btn:hover{background:#0597b3;}
+
 /* ── TODAY PLAN CARD ── */
 .today-card{background:var(--target-bg);border:1px solid var(--target-border);border-radius:var(--r2);padding:18px 20px;}
 .today-ring-wrap{position:relative;width:72px;height:72px;flex-shrink:0;}
@@ -428,6 +451,7 @@ label { font-size: 11px; color: var(--text2); font-weight: 600; display: block; 
     <div class="nav-section">Reference</div>
     <div style="padding:0 0 4px;">
       <div class="nav-item" data-page="plan" onclick="nav('plan',this)"><span class="nav-icon">📅</span>Study Plan</div>
+      <div class="nav-item" data-page="aiplanner" onclick="nav('aiplanner',this)"><span class="nav-icon">🤖</span>AI Planner</div>
       <div class="nav-item" data-page="drugs" onclick="nav('drugs',this)"><span class="nav-icon">💊</span>Drug Cards</div>
       <div class="nav-item" data-page="bugs" onclick="nav('bugs',this)"><span class="nav-icon">🦠</span>Bug Table</div>
     </div>
@@ -710,6 +734,62 @@ label { font-size: 11px; color: var(--text2); font-weight: 600; display: block; 
       <div class="g4 mb20" id="planStats"></div>
       <div style="display:flex;gap:0;margin-bottom:16px;background:var(--surface);border:1px solid var(--border);border-radius:var(--r);padding:3px;width:fit-content;box-shadow:var(--card-shadow);overflow-x:auto;max-width:100%;" id="weekTabs"></div>
       <div id="planWeekView"></div>
+    </div>
+   </div>
+
+   <!-- AI PLANNER -->
+   <div class="page" id="page-aiplanner" style="padding:0;display:none;flex-direction:column;height:calc(100vh - 0px);">
+    <div class="page-hero" style="flex-shrink:0;">
+      <div>
+        <div class="page-hero-title">AI Study Planner 🤖</div>
+        <div class="page-hero-sub">Tell me your schedule, exams, weak topics — I'll build and update your plan</div>
+      </div>
+      <button class="btn btn-danger btn-sm" onclick="clearPlannerChat()">🗑 Clear chat</button>
+    </div>
+    <div style="display:flex;flex:1;overflow:hidden;">
+      <!-- Chat area -->
+      <div style="flex:1;display:flex;flex-direction:column;overflow:hidden;">
+        <div id="plannerMessages" style="flex:1;overflow-y:auto;padding:20px 24px;display:flex;flex-direction:column;gap:12px;">
+          <!-- Welcome message -->
+          <div class="planner-msg planner-ai">
+            <div class="planner-avatar">🤖</div>
+            <div class="planner-bubble">
+              <p>Hey Abhinav! I'm your AI study planner. I can see your current 9-week schedule and I can:</p>
+              <ul style="margin:8px 0 0 16px;display:flex;flex-direction:column;gap:4px;">
+                <li>Build a completely new study plan for any duration</li>
+                <li>Move tasks between days or weeks</li>
+                <li>Add or remove topics from any day</li>
+                <li>Adjust the pace if you're falling behind</li>
+                <li>Plan around holidays, busy days or mock exams</li>
+              </ul>
+              <p style="margin-top:8px;">What would you like to do? You can say things like:<br>
+              <em>"I have a mock on Week 3 Friday, adjust the plan"</em><br>
+              <em>"I'm falling behind on GU, give me 2 extra days"</em><br>
+              <em>"Build me a plan for 6 weeks covering CVR and GI only"</em></p>
+            </div>
+          </div>
+        </div>
+        <!-- Quick suggestions -->
+        <div id="plannerSuggestions" style="padding:0 24px 12px;display:flex;gap:8px;flex-wrap:wrap;">
+          <button class="planner-suggest" onclick="plannerSuggest(this)">Show me this week\'s plan</button>
+          <button class="planner-suggest" onclick="plannerSuggest(this)">I\'m falling behind, help me catch up</button>
+          <button class="planner-suggest" onclick="plannerSuggest(this)">Add a rest day this week</button>
+          <button class="planner-suggest" onclick="plannerSuggest(this)">Build a new plan from scratch</button>
+          <button class="planner-suggest" onclick="plannerSuggest(this)">What should I study today?</button>
+        </div>
+        <!-- Input -->
+        <div style="padding:12px 24px 20px;border-top:1px solid var(--border);display:flex;gap:10px;background:var(--surface);flex-shrink:0;">
+          <textarea id="plannerInput" placeholder="Tell me what you need — I'll update your plan…" style="flex:1;min-height:44px;max-height:120px;resize:none;padding:10px 14px;font-size:13px;line-height:1.5;" onkeydown="if(event.key==='Enter'&&!event.shiftKey){event.preventDefault();sendPlannerMsg();}"></textarea>
+          <button class="btn btn-teal" id="plannerSendBtn" onclick="sendPlannerMsg()" style="align-self:flex-end;padding:10px 18px;">
+            <div class="spin"></div><span id="plannerSendTxt">Send</span>
+          </button>
+        </div>
+      </div>
+      <!-- Right panel: current plan summary -->
+      <div style="width:260px;border-left:1px solid var(--border);background:var(--surface);display:flex;flex-direction:column;overflow:hidden;flex-shrink:0;">
+        <div style="padding:14px 16px;border-bottom:1px solid var(--border);font-size:12px;font-weight:700;color:var(--text);">Current Plan</div>
+        <div id="plannerSideSummary" style="flex:1;overflow-y:auto;padding:12px 16px;"></div>
+      </div>
     </div>
    </div>
 
@@ -1045,21 +1125,21 @@ async function init(){
 }
 
 function nav(page,el){
-  document.querySelectorAll('.page').forEach(p=>p.classList.remove('active'));
+  document.querySelectorAll('.page').forEach(p=>{p.classList.remove('active');if(p.id==='page-aiplanner')p.style.display='none';});
   document.querySelectorAll('.nav-item').forEach(n=>n.classList.remove('active'));
-  document.getElementById('page-'+page).classList.add('active');
+  const pageEl=document.getElementById('page-'+page);
+  if(pageEl){pageEl.classList.add('active');if(page==='aiplanner')pageEl.style.display='flex';}
   if(el)el.classList.add('active');
   if(page==='plan')loadPlan();
+  if(page==='aiplanner')loadAIPlanner();
   if(page==='notes')loadNotes();
-  if(page==='mcq'){_notePickerAll=[];} // reset cache so fresh notes load
+  if(page==='mcq'){_notePickerAll=[];}
   if(page==='mock'){resetMockSetup();_notePickerAll=[];}
   if(page==='recall'){resetRecallSetup();_notePickerAll=[];}
   if(page==='dashboard')loadDash();
   if(page==='lectures')loadLecs();
   if(page==='drugs')loadDrugs();
   if(page==='bugs')loadBugs();
-  if(page==='mock')resetMockSetup();
-  if(page==='recall')resetRecallSetup();
 }
 
 function buildPills(){
@@ -2837,7 +2917,249 @@ function renderTodayCard(){renderTodayWidget();}
 function renderTomorrowCard(){renderTodayWidget();}
 function renderTodoList(){}
 
-function openModal(id){document.getElementById(id).classList.add('open');}
+// ── AI PLANNER ──
+const PLANNER_HISTORY_KEY='_ms_planner_history_';
+let plannerHistory=[];
+let plannerPending=null; // stores pending plan changes waiting for apply
+
+function loadAIPlanner(){
+  plannerHistory=JSON.parse(localStorage.getItem(PLANNER_HISTORY_KEY+yr)||'[]');
+  renderPlannerMessages();
+  renderPlannerSideSummary();
+}
+
+function clearPlannerChat(){
+  if(!confirm('Clear chat history?'))return;
+  plannerHistory=[];
+  localStorage.removeItem(PLANNER_HISTORY_KEY+yr);
+  const msgs=document.getElementById('plannerMessages');
+  msgs.innerHTML=`<div class="planner-msg planner-ai">
+    <div class="planner-avatar">🤖</div>
+    <div class="planner-bubble"><p>Chat cleared! What would you like to do with your study plan?</p></div>
+  </div>`;
+}
+
+function plannerSuggest(btn){
+  document.getElementById('plannerInput').value=btn.textContent;
+  sendPlannerMsg();
+}
+
+function renderPlannerMessages(){
+  const msgs=document.getElementById('plannerMessages');
+  if(!msgs)return;
+  if(!plannerHistory.length){
+    // Keep welcome message
+    return;
+  }
+  // Append any new messages not already shown
+  msgs.innerHTML=`<div class="planner-msg planner-ai">
+    <div class="planner-avatar">🤖</div>
+    <div class="planner-bubble">
+      <p>Welcome back! Your study plan is loaded. What would you like to change or plan?</p>
+    </div>
+  </div>`+plannerHistory.map(m=>renderPlannerMsg(m)).join('');
+  msgs.scrollTop=msgs.scrollHeight;
+}
+
+function renderPlannerMsg(m){
+  if(m.role==='user'){
+    return`<div class="planner-msg planner-user">
+      <div class="planner-avatar">AB</div>
+      <div class="planner-bubble">${esc(m.content)}</div>
+    </div>`;
+  }
+  return`<div class="planner-msg planner-ai">
+    <div class="planner-avatar">🤖</div>
+    <div class="planner-bubble">${formatPlannerResponse(m.content,m.changes)}</div>
+  </div>`;
+}
+
+function formatPlannerResponse(text,changes){
+  // Convert markdown-like to HTML
+  let html=text
+    .replace(/\*\*(.+?)\*\*/g,'<strong>$1</strong>')
+    .replace(/\*(.+?)\*/g,'<em>$1</em>')
+    .replace(/\n\n/g,'</p><p>')
+    .replace(/\n/g,'<br>');
+  html=`<p>${html}</p>`;
+  if(changes&&changes.length){
+    html+=`<div class="plan-change">
+      <div class="plan-change-title">📝 Proposed changes (${changes.length})</div>
+      ${changes.map(c=>`<div style="font-size:12px;margin-bottom:4px;">• <strong>Week ${c.week}, ${c.day}:</strong> ${esc(c.description)}</div>`).join('')}
+      <button class="apply-btn" onclick="applyPlanChanges()">✅ Apply these changes</button>
+    </div>`;
+  }
+  return html;
+}
+
+function renderPlannerSideSummary(){
+  const el=document.getElementById('plannerSideSummary');
+  if(!el)return;
+  const start=getPlanStartDate();
+  const currentWeek=getCurrentWeek();
+  el.innerHTML=STUDY_PLAN.map((w,i)=>{
+    const wNum=i+1;
+    const isCurrent=wNum===currentWeek;
+    let total=0,done=0;
+    w.days.forEach((d,di)=>{
+      const tasks=getDayTasks(wNum,di);
+      tasks.forEach((_,ti)=>{total++;if(isTaskDone(wNum,di,ti))done++;});
+    });
+    const pct=total?Math.round(done/total*100):0;
+    return`<div style="padding:8px 0;border-bottom:1px solid var(--border);${isCurrent?'':''}">
+      <div style="display:flex;align-items:center;gap:6px;margin-bottom:3px;">
+        <span style="width:8px;height:8px;border-radius:50%;background:${w.color};flex-shrink:0;"></span>
+        <span style="font-size:11px;font-weight:${isCurrent?700:600};color:${isCurrent?'var(--text)':'var(--text2)'};">W${wNum}: ${w.topic}</span>
+        ${isCurrent?'<span style="font-size:9px;background:var(--accent);color:white;border-radius:3px;padding:1px 5px;font-weight:700;">NOW</span>':''}
+      </div>
+      <div style="height:3px;background:var(--border);border-radius:99px;overflow:hidden;">
+        <div style="width:${pct}%;height:100%;background:${w.color};border-radius:99px;"></div>
+      </div>
+      <div style="font-size:10px;color:var(--text3);margin-top:2px;">${done}/${total} tasks · ${pct}%</div>
+    </div>`;
+  }).join('');
+}
+
+function getPlanAsText(){
+  const start=getPlanStartDate();
+  const currentWeek=getCurrentWeek();
+  const today=getTodayDayName();
+  let text=`CURRENT STUDY PLAN\nStart date: ${start?start.toLocaleDateString('en-GB'):'not set'}\nToday: ${today}, Week ${currentWeek}\nExam: ${localStorage.getItem(PLAN_KEY+'exam')||'not set'}\nDays to exam: ${localStorage.getItem(PLAN_KEY+'examdate')?Math.max(0,Math.ceil((new Date(localStorage.getItem(PLAN_KEY+'examdate'))-new Date())/(1000*60*60*24)))+'':'unknown'}\n\n`;
+  STUDY_PLAN.forEach((w,wi)=>{
+    text+=`WEEK ${w.week}: ${w.topic} (${w.pass} pass)\n`;
+    w.days.forEach((d,di)=>{
+      const tasks=getDayTasks(w.week,di);
+      const done=tasks.filter((_,ti)=>isTaskDone(w.week,di,ti)).length;
+      text+=`  ${d.day}: [${done}/${tasks.length} done] ${tasks.join(' | ')}\n`;
+    });
+    text+='\n';
+  });
+  return text;
+}
+
+async function sendPlannerMsg(){
+  const inp=document.getElementById('plannerInput');
+  const msg=inp.value.trim();
+  if(!msg)return;
+  inp.value='';
+
+  // Add user message
+  plannerHistory.push({role:'user',content:msg});
+  appendPlannerMsg({role:'user',content:msg});
+
+  // Show thinking
+  const thinkId='planner-think-'+Date.now();
+  const msgs=document.getElementById('plannerMessages');
+  msgs.innerHTML+=`<div class="planner-msg planner-ai" id="${thinkId}">
+    <div class="planner-avatar">🤖</div>
+    <div class="planner-bubble"><div class="planner-thinking"><div class="planner-dot"></div><div class="planner-dot"></div><div class="planner-dot"></div></div></div>
+  </div>`;
+  msgs.scrollTop=msgs.scrollHeight;
+
+  setBusy('plannerSendBtn','plannerSendTxt','...',true);
+
+  try{
+    const planText=getPlanAsText();
+    const systemPrompt=`You are an AI study planner for a UK Year 2 medical student named Abhinav. You have access to his current study plan and can modify it.
+
+CURRENT PLAN:
+${planText}
+
+Your job is to:
+1. Answer questions about the plan clearly
+2. Suggest specific changes when asked
+3. When making changes, output them in a special JSON block at the END of your response
+
+When proposing plan changes, always end your response with a JSON block like this (no markdown fences):
+PLAN_CHANGES_JSON:{"changes":[{"week":1,"dayIdx":0,"day":"Mon","tasks":["new task 1","new task 2"],"description":"Added MCQ session to Monday"}]}
+
+Rules:
+- dayIdx is 0-6 (0=first day of the week as defined in the plan, which starts Saturday)
+- Keep tasks concise and actionable
+- Maximum 4-5 tasks per day
+- Always explain what you're changing and why in plain text first
+- Be encouraging and practical
+- If someone is falling behind, redistribute workload sensibly
+- Sunday is always a rest day
+- If building a completely new plan, describe it fully then output all weeks in the JSON`;
+
+    const messages=[
+      ...plannerHistory.slice(-6).map(m=>({role:m.role,content:m.content})),
+    ];
+    messages[messages.length-1]={role:'user',content:msg};
+
+    const r=await fetch('https://mymedicinefriend.ranaabhinav23.workers.dev',{
+      method:'POST',
+      headers:{'Content-Type':'application/json'},
+      body:JSON.stringify({
+        model:'claude-sonnet-4-20250514',
+        max_tokens:2000,
+        system:systemPrompt,
+        messages
+      })
+    });
+    const d=await r.json();
+    let raw=(d.content?.[0]?.text||'').trim();
+
+    // Parse out plan changes if present
+    let changes=null;
+    const jsonMatch=raw.match(/PLAN_CHANGES_JSON:(\{[\s\S]*\})/);
+    if(jsonMatch){
+      try{
+        const parsed=JSON.parse(jsonMatch[1]);
+        changes=parsed.changes||null;
+        plannerPending=changes;
+        raw=raw.replace(/PLAN_CHANGES_JSON:[\s\S]*/,'').trim();
+      }catch(e){console.log('Parse error',e);}
+    }
+
+    // Remove thinking bubble
+    document.getElementById(thinkId)?.remove();
+
+    // Add AI response
+    const aiMsg={role:'assistant',content:raw,changes};
+    plannerHistory.push(aiMsg);
+    localStorage.setItem(PLANNER_HISTORY_KEY+yr,JSON.stringify(plannerHistory));
+    appendPlannerMsg(aiMsg);
+
+  }catch(e){
+    document.getElementById(thinkId)?.remove();
+    appendPlannerMsg({role:'assistant',content:'Sorry, something went wrong: '+e.message});
+  }finally{
+    setBusy('plannerSendBtn','plannerSendTxt','Send',false);
+  }
+}
+
+function appendPlannerMsg(m){
+  const msgs=document.getElementById('plannerMessages');
+  if(!msgs)return;
+  const div=document.createElement('div');
+  div.innerHTML=renderPlannerMsg(m);
+  msgs.appendChild(div.firstElementChild);
+  msgs.scrollTop=msgs.scrollHeight;
+}
+
+function applyPlanChanges(){
+  if(!plannerPending||!plannerPending.length)return;
+  let applied=0;
+  plannerPending.forEach(c=>{
+    if(c.week&&c.dayIdx!==undefined&&c.tasks){
+      setDayTasks(c.week,c.dayIdx,c.tasks);
+      applied++;
+    }
+  });
+  plannerPending=null;
+  // Remove apply button
+  document.querySelectorAll('.apply-btn').forEach(b=>{
+    b.textContent='✅ Applied!';
+    b.disabled=true;
+    b.style.background='var(--green)';
+  });
+  appendPlannerMsg({role:'assistant',content:`Done! I've applied ${applied} change${applied!==1?'s':''} to your plan. Head over to the Study Plan page to see them.`});
+  renderPlannerSideSummary();
+  // Refresh plan if it's visible
+  if(document.getElementById('page-plan').classList.contains('active'))loadPlan();
+}
 function closeModal(id){document.getElementById(id).classList.remove('open');}
 function showErr(id,m){const e=document.getElementById(id);e.textContent=m;e.style.display='block';}
 function hideErr(id){document.getElementById(id).style.display='none';}
