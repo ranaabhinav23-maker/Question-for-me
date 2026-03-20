@@ -702,7 +702,7 @@ label { font-size: 11px; color: var(--text2); font-weight: 600; display: block; 
       <div><div class="page-hero-title">Study Plan 📅</div><div class="page-hero-sub" id="planHeroSub">9-week exam schedule — track every lecture, every day</div></div>
       <div style="display:flex;gap:8px;">
         <button class="btn btn-outline btn-sm" id="planEditBtn" onclick="togglePlanEditMode()">✏ Edit</button>
-        <button class="btn btn-outline btn-sm" onclick="openModal('planSettingsModal')">⚙ Settings</button>
+        <button class="btn btn-outline btn-sm" onclick="openPlanSettings()">⚙ Settings</button>
         <button class="btn btn-teal btn-sm" onclick="goToToday()">📍 Today</button>
       </div>
     </div>
@@ -929,11 +929,9 @@ label { font-size: 11px; color: var(--text2); font-weight: 600; display: block; 
 <div class="modal-bg" id="planSettingsModal">
   <div class="modal">
     <div class="modal-title">Study Plan Settings</div>
-    <div class="mb12"><label>Start date (your Week 1 day 1)</label><input type="date" id="planStartDate"></div>
+    <div class="mb12"><label>Plan start date (your Week 1 Day 1)</label><input type="date" id="planStartDate"><div style="font-size:11px;color:var(--text3);margin-top:4px;">Your schedule starts Saturday 21st March → enter 2026-03-21</div></div>
+    <div class="mb12"><label>Exam date</label><input type="date" id="planExamDate"><div style="font-size:11px;color:var(--text3);margin-top:4px;">This is what the "Days to exam" counter counts down to</div></div>
     <div class="mb12"><label>Exam name</label><input type="text" id="planExamName" placeholder="e.g. Year 2 Finals"></div>
-    <div style="font-size:12px;color:var(--text2);margin-bottom:16px;background:var(--surface2);border-radius:var(--r);padding:10px 14px;">
-      Your schedule starts <strong>Saturday 21st March</strong> — set the date to <strong>2026-03-21</strong> to match your plan.
-    </div>
     <div class="row" style="gap:8px;"><button class="btn btn-primary flex1" onclick="savePlanSettings()">Save</button><button class="btn btn-outline" onclick="closeModal('planSettingsModal')">Cancel</button></div>
   </div>
 </div>
@@ -2256,100 +2254,100 @@ function setDayTasks(weekNum,dayIdx,tasks){
 const STUDY_PLAN=[
   {week:1,topic:'GU',pass:'2nd',type:'revision',lectures:33,hoursPerLec:1.25,color:'#ec4899',
     days:[
-      {day:'Sat',tasks:['GU lectures 1-3 (revision)','Generate MCQs after each lecture']},
-      {day:'Sun',tasks:['GU lectures 4-6 (revision)','Review wrong answers']},
-      {day:'Mon',tasks:['GU lectures 7-11 (revision)','Generate MCQs after each lecture']},
-      {day:'Tue',tasks:['GU lectures 12-16 (revision)','Generate MCQs after each lecture']},
-      {day:'Wed',tasks:['GU lectures 17-21 (revision)','Generate MCQs after each lecture']},
-      {day:'Thu',tasks:['GU lectures 22-26 (revision)','Generate MCQs after each lecture']},
-      {day:'Fri',tasks:['GU lectures 27-33 (finish)','Full GU mock exam','Review all wrong answers']},
+      {day:'Sat',tasks:['GU lectures 1-5 (revision) · 1.25hrs each','Generate MCQs after each lecture']},
+      {day:'Sun',tasks:['Off 😴']},
+      {day:'Mon',tasks:['GU lectures 6-10 (revision)','Generate MCQs after each lecture']},
+      {day:'Tue',tasks:['GU lectures 11-15 (revision)','Generate MCQs after each lecture']},
+      {day:'Wed',tasks:['GU lectures 16-20 (revision)','Generate MCQs after each lecture']},
+      {day:'Thu',tasks:['GU lectures 21-25 (revision)','Generate MCQs after each lecture']},
+      {day:'Fri',tasks:['GU lectures 26-30 (revision)','Generate MCQs after each lecture']},
     ]
   },
-  {week:2,topic:'Neurology',pass:'2nd',type:'revision',lectures:30,hoursPerLec:1.25,color:'#10b981',
+  {week:2,topic:'GU finish + Neuro start',pass:'2nd',type:'revision',lectures:33,hoursPerLec:1.25,color:'#ec4899',
     days:[
-      {day:'Sat',tasks:['Rest / catch up from Week 1 😴']},
-      {day:'Sun',tasks:['Neuro lectures 1-3 (revision)','Quick Recall on Neuro']},
-      {day:'Mon',tasks:['Neuro lectures 4-8 (revision)','Generate MCQs after each']},
-      {day:'Tue',tasks:['Neuro lectures 9-13 (revision)','Generate MCQs after each']},
-      {day:'Wed',tasks:['Neuro lectures 14-18 (revision)','Generate MCQs after each']},
-      {day:'Thu',tasks:['Neuro lectures 19-24 (revision)','Generate MCQs after each']},
-      {day:'Fri',tasks:['Neuro lectures 25-30 (finish)','Full Neuro mock exam','Review wrong answers']},
+      {day:'Sat',tasks:['GU lectures 31-33 (last 3)','Full GU MCQ test — all blocks','Review all GU wrong answers']},
+      {day:'Sun',tasks:['Off 😴']},
+      {day:'Mon',tasks:['Neuro lectures 1-5 (revision)','Generate MCQs after each']},
+      {day:'Tue',tasks:['Neuro lectures 6-10 (revision)','Generate MCQs after each']},
+      {day:'Wed',tasks:['Neuro lectures 11-15 (revision)','Generate MCQs after each']},
+      {day:'Thu',tasks:['Neuro lectures 16-20 (revision)','Generate MCQs after each']},
+      {day:'Fri',tasks:['Neuro lectures 21-25 (revision)','Generate MCQs after each']},
     ]
   },
-  {week:3,topic:'MSK + Core',pass:'2nd + 1st',type:'mixed',lectures:27,hoursPerLec:1.5,color:'#3b82f6',
+  {week:3,topic:'Neuro finish + MSK + Core start',pass:'2nd + 1st',type:'mixed',lectures:27,hoursPerLec:1.5,color:'#10b981',
     days:[
-      {day:'Sat',tasks:['Rest 😴']},
-      {day:'Sun',tasks:['3 MSK revision lectures','1 Core new lecture (2hrs)']},
-      {day:'Mon',tasks:['3 MSK revision lectures','1 Core new lecture']},
-      {day:'Tue',tasks:['3 MSK revision lectures','1 Core new lecture']},
-      {day:'Wed',tasks:['3 MSK revision lectures','1 Core new lecture']},
-      {day:'Thu',tasks:['2 MSK revision lectures','1 Core new lecture']},
-      {day:'Fri',tasks:['2 MSK + 1 Core','MCQ test on MSK','Review wrong answers']},
+      {day:'Sat',tasks:['Neuro lectures 26-30 (finish)','Full Neuro MCQ test','Review all Neuro wrong answers']},
+      {day:'Sun',tasks:['Off 😴']},
+      {day:'Mon',tasks:['3 MSK revision (1.25hrs each)','1 Core new lecture (2hrs)']},
+      {day:'Tue',tasks:['3 MSK revision','1 Core new lecture']},
+      {day:'Wed',tasks:['3 MSK revision','1 Core new lecture']},
+      {day:'Thu',tasks:['3 MSK revision','1 Core new lecture']},
+      {day:'Fri',tasks:['2 MSK revision','1 Core new lecture']},
     ]
   },
-  {week:4,topic:'Core + CVR',pass:'1st',type:'new',lectures:26,hoursPerLec:2,color:'#8b5cf6',
+  {week:4,topic:'MSK finish + Core + CVR start',pass:'2nd + 1st',type:'mixed',lectures:26,hoursPerLec:1.75,color:'#3b82f6',
     days:[
-      {day:'Sat',tasks:['Rest 😴']},
-      {day:'Sun',tasks:['2 Core new lectures','1 CVR new lecture']},
-      {day:'Mon',tasks:['2 Core new lectures','1 CVR new lecture']},
+      {day:'Sat',tasks:['2 MSK + 1 Core new','MCQ test on MSK','Review MSK wrong answers']},
+      {day:'Sun',tasks:['Off 😴']},
+      {day:'Mon',tasks:['2 Core new lectures (2hrs each)','1 CVR new lecture (2hrs)']},
       {day:'Tue',tasks:['2 Core new lectures','1 CVR new lecture']},
-      {day:'Wed',tasks:['1 Core new lecture','2 CVR new lectures']},
+      {day:'Wed',tasks:['2 Core new lectures','1 CVR new lecture']},
       {day:'Thu',tasks:['1 Core new lecture','2 CVR new lectures']},
-      {day:'Fri',tasks:['Last Core lecture','MCQs on Core block','Review wrong answers']},
+      {day:'Fri',tasks:['1 Core new lecture','2 CVR new lectures']},
     ]
   },
-  {week:5,topic:'CVR + GI',pass:'1st',type:'new',lectures:31,hoursPerLec:2,color:'#ef4444',
+  {week:5,topic:'Core finish + CVR + GI',pass:'1st',type:'new',lectures:31,hoursPerLec:2,color:'#8b5cf6',
     days:[
-      {day:'Sat',tasks:['Rest 😴']},
-      {day:'Sun',tasks:['3 CVR new lectures']},
-      {day:'Mon',tasks:['3 CVR new lectures']},
-      {day:'Tue',tasks:['2 CVR + 1 GI new lectures']},
-      {day:'Wed',tasks:['3 GI new lectures']},
+      {day:'Sat',tasks:['Last Core lecture','MCQ test on Core block','Review Core wrong answers']},
+      {day:'Sun',tasks:['Off 😴']},
+      {day:'Mon',tasks:['3 CVR new lectures (2hrs each)']},
+      {day:'Tue',tasks:['3 CVR new lectures']},
+      {day:'Wed',tasks:['2 CVR new + 1 GI new']},
       {day:'Thu',tasks:['3 GI new lectures']},
-      {day:'Fri',tasks:['Remaining CVR/GI','MCQ test on CVR','Review wrong answers']},
+      {day:'Fri',tasks:['3 GI new lectures']},
     ]
   },
-  {week:6,topic:'GU 2nd pass',pass:'2nd',type:'revision',lectures:33,hoursPerLec:1,color:'#ec4899',
+  {week:6,topic:'CVR finish + GI finish + GU 2nd pass',pass:'2nd',type:'revision',lectures:33,hoursPerLec:1,color:'#ef4444',
     days:[
-      {day:'Sat',tasks:['Rest 😴']},
-      {day:'Sun',tasks:['5 GU 2nd pass — blurt first, check notes','Quick Recall on GU']},
-      {day:'Mon',tasks:['5 GU 2nd pass','Quick Recall session']},
+      {day:'Sat',tasks:['Remaining CVR/GI lectures','MCQ test on CVR','Review CVR wrong answers']},
+      {day:'Sun',tasks:['Off 😴']},
+      {day:'Mon',tasks:['5 GU 2nd pass — blurt first then check notes','Quick Recall on GU']},
       {day:'Tue',tasks:['5 GU 2nd pass','Quick Recall session']},
       {day:'Wed',tasks:['5 GU 2nd pass','Quick Recall session']},
       {day:'Thu',tasks:['5 GU 2nd pass','Quick Recall session']},
-      {day:'Fri',tasks:['Last 8 GU + 2 Neuro 2nd pass start','Review all GU wrong answers']},
+      {day:'Fri',tasks:['5 GU 2nd pass','Quick Recall session']},
     ]
   },
-  {week:7,topic:'Neuro + MSK 2nd pass',pass:'2nd',type:'revision',lectures:32,hoursPerLec:1,color:'#10b981',
+  {week:7,topic:'GU finish + Neuro 2nd pass',pass:'2nd',type:'revision',lectures:30,hoursPerLec:1,color:'#10b981',
     days:[
-      {day:'Sat',tasks:['Rest 😴']},
-      {day:'Sun',tasks:['5 Neuro 2nd pass','Quick Recall on Neuro']},
+      {day:'Sat',tasks:['Last 8 GU 2nd pass + 2 Neuro start','Review all GU wrong answers']},
+      {day:'Sun',tasks:['Off 😴']},
       {day:'Mon',tasks:['5 Neuro 2nd pass','Quick Recall on Neuro']},
       {day:'Tue',tasks:['5 Neuro 2nd pass','Quick Recall on Neuro']},
       {day:'Wed',tasks:['5 Neuro 2nd pass','Quick Recall on Neuro']},
-      {day:'Thu',tasks:['Last 8 Neuro 2nd pass','Review all Neuro wrong answers']},
-      {day:'Fri',tasks:['4 MSK 2nd pass start','Mock exam — Neuro + GU combined']},
+      {day:'Thu',tasks:['5 Neuro 2nd pass','Quick Recall on Neuro']},
+      {day:'Fri',tasks:['Last 8 Neuro 2nd pass','Review all Neuro wrong answers']},
     ]
   },
   {week:8,topic:'MSK + CVR + GI 2nd pass',pass:'2nd',type:'revision',lectures:51,hoursPerLec:1,color:'#f59e0b',
     days:[
-      {day:'Sat',tasks:['Rest 😴']},
-      {day:'Sun',tasks:['5 MSK 2nd pass','Quick Recall on MSK']},
-      {day:'Mon',tasks:['Finish MSK 2nd pass','Review MSK wrong answers']},
+      {day:'Sat',tasks:['4 MSK 2nd pass start','Mock exam — Neuro + GU combined']},
+      {day:'Sun',tasks:['Off 😴']},
+      {day:'Mon',tasks:['Finish MSK 2nd pass (remaining)','Review MSK wrong answers']},
       {day:'Tue',tasks:['5 CVR 2nd pass','Quick Recall on CVR']},
       {day:'Wed',tasks:['5 CVR 2nd pass','Quick Recall on CVR']},
       {day:'Thu',tasks:['5 CVR 2nd pass','Quick Recall on CVR']},
       {day:'Fri',tasks:['Last 10 CVR + start GI 2nd pass','Review CVR wrong answers']},
     ]
   },
-  {week:9,topic:'Core 2nd pass + Finals prep',pass:'2nd',type:'exam-prep',lectures:23,hoursPerLec:1,color:'#06b6d4',
+  {week:9,topic:'GI finish + Core 2nd pass + Finals',pass:'2nd',type:'exam-prep',lectures:23,hoursPerLec:1,color:'#06b6d4',
     days:[
-      {day:'Sat',tasks:['Rest 😴']},
-      {day:'Sun',tasks:['Finish GI 2nd pass','Start Core 2nd pass']},
+      {day:'Sat',tasks:['Off 😴']},
+      {day:'Sun',tasks:['Finish GI 2nd pass','Core 2nd pass start']},
       {day:'Mon',tasks:['Core 2nd pass','Quick Recall on Core']},
-      {day:'Tue',tasks:['Core 2nd pass','Quick Recall on Core']},
+      {day:'Tue',tasks:['Core 2nd pass finish','Quick Recall on Core']},
       {day:'Wed',tasks:['Finish Core 2nd pass','Review ALL remaining wrong answers']},
-      {day:'Thu',tasks:['ALL wrong answers from 9 weeks','Pharmacology drug card review']},
+      {day:'Thu',tasks:['ALL wrong answers from the whole 9 weeks','Pharmacology drug card review']},
       {day:'Fri',tasks:['Past papers only 📝','Full 2-hour mock exam','No new content — you\'ve done the work 🎯']},
     ]
   }
@@ -2368,14 +2366,22 @@ function loadPlan(){
 
 function savePlanSettings(){
   const date=document.getElementById('planStartDate').value;
+  const examDate=document.getElementById('planExamDate')?.value;
   const name=document.getElementById('planExamName').value.trim();
   if(!date){closeModal('planSettingsModal');return;}
   localStorage.setItem(PLAN_KEY+'start',date);
   localStorage.setItem(PLAN_KEY+'exam',name||'Finals');
+  if(examDate)localStorage.setItem(PLAN_KEY+'examdate',examDate);
   closeModal('planSettingsModal');
   loadPlan();
-  renderTodayCard();
-  renderTomorrowCard();
+  renderTodayWidget();
+}
+
+function openPlanSettings(){
+  document.getElementById('planStartDate').value=localStorage.getItem(PLAN_KEY+'start')||'';
+  document.getElementById('planExamDate').value=localStorage.getItem(PLAN_KEY+'examdate')||'';
+  document.getElementById('planExamName').value=localStorage.getItem(PLAN_KEY+'exam')||'';
+  openModal('planSettingsModal');
 }
 
 function getPlanStartDate(){
@@ -2583,7 +2589,10 @@ function renderPlanStats(){
   const pct=totalTasks?Math.round(doneTasks/totalTasks*100):0;
   let daysLeft='?';
   if(start){
-    const examDate=new Date(start);examDate.setDate(examDate.getDate()+63);
+    // Use saved exam date if set, otherwise calculate 63 days (9 weeks) from start
+    const savedExamDate=localStorage.getItem(PLAN_KEY+'examdate');
+    const examDate=savedExamDate?new Date(savedExamDate):new Date(start);
+    if(!savedExamDate)examDate.setDate(examDate.getDate()+63);
     const today=new Date();today.setHours(0,0,0,0);
     daysLeft=Math.max(0,Math.ceil((examDate-today)/(1000*60*60*24)));
   }
@@ -2828,81 +2837,6 @@ function renderTodayCard(){renderTodayWidget();}
 function renderTomorrowCard(){renderTodayWidget();}
 function renderTodoList(){}
 
-function openModal(id){document.getElementById(id).classList.add('open');}
-function closeModal(id){document.getElementById(id).classList.remove('open');}
-function showErr(id,m){const e=document.getElementById(id);e.textContent=m;e.style.display='block';}
-function hideErr(id){document.getElementById(id).style.display='none';}
-function setBusy(bid,tid,txt,b){const btn=document.getElementById(bid);btn.disabled=b;btn.classList.toggle('loading',b);document.getElementById(tid).textContent=txt;}
-function esc(s){return String(s||'').replace(/&/g,'&amp;').replace(/</g,'&lt;').replace(/>/g,'&gt;').replace(/\n/g,'<br>');}
-function shuffle(a){for(let i=a.length-1;i>0;i--){const j=Math.floor(Math.random()*(i+1));[a[i],a[j]]=[a[j],a[i]];}return a;}
-let _pt={};
-function startProg(pid,fid){let p=0;document.getElementById(pid).style.display='block';_pt[pid]=setInterval(()=>{p=Math.min(p+Math.random()*4,88);document.getElementById(fid).style.width=p+'%';},300);}
-function endProg(pid,fid){clearInterval(_pt[pid]);document.getElementById(fid).style.width='100%';setTimeout(()=>{document.getElementById(pid).style.display='none';document.getElementById(fid).style.width='0%';},500);}
-</script>
-</body>
-</html>
-function getTodos(){return JSON.parse(localStorage.getItem(TODO_KEY+yr)||'[]');}
-function saveTodos(todos){localStorage.setItem(TODO_KEY+yr,JSON.stringify(todos));}
-
-function addTodo(){
-  const inp=document.getElementById('todoInput');
-  const val=inp.value.trim();
-  if(!val)return;
-  const priority=document.getElementById('todoPriority').value;
-  const todos=getTodos();
-  todos.unshift({id:Date.now(),text:val,done:false,priority,created:new Date().toISOString()});
-  saveTodos(todos);
-  inp.value='';
-  renderTodoList();
-}
-
-function toggleTodo(id){
-  const todos=getTodos();
-  const t=todos.find(t=>t.id===id);
-  if(t)t.done=!t.done;
-  saveTodos(todos);
-  renderTodoList();
-}
-
-function deleteTodo(id){
-  saveTodos(getTodos().filter(t=>t.id!==id));
-  renderTodoList();
-}
-
-function renderTodoList(){
-  const el=document.getElementById('todoList');
-  if(!el)return;
-  const todos=getTodos();
-  if(!todos.length){el.innerHTML='<div style="text-align:center;padding:20px;font-size:12px;color:var(--text3);">No to-dos yet — add one above</div>';return;}
-  const pending=todos.filter(t=>!t.done);
-  const done=todos.filter(t=>t.done);
-  const renderItem=t=>`<div style="display:flex;align-items:flex-start;gap:10px;padding:10px 12px;border:1px solid var(--border);border-radius:var(--r);margin-bottom:6px;background:var(--surface);${t.done?'opacity:0.5;':''}">
-    <div onclick="toggleTodo(${t.id})" style="width:16px;height:16px;border-radius:4px;border:1.5px solid ${t.done?'var(--green)':'var(--border2)'};background:${t.done?'var(--green)':'transparent'};flex-shrink:0;margin-top:1px;display:flex;align-items:center;justify-content:center;cursor:pointer;transition:all 0.15s;">
-      ${t.done?'<svg width="8" height="6" viewBox="0 0 8 6"><polyline points="1,3 3,5 7,1" stroke="white" stroke-width="1.5" fill="none" stroke-linecap="round"/></svg>':''}
-    </div>
-    <span style="flex:1;font-size:13px;color:var(--text);text-decoration:${t.done?'line-through':'none'};">${esc(t.text)}</span>
-    ${t.priority==='high'?'<span style="font-size:10px;">🔴</span>':t.priority==='low'?'<span style="font-size:10px;">🔵</span>':''}
-    <button onclick="deleteTodo(${t.id})" class="btn btn-xs btn-danger">✕</button>
-  </div>`;
-  el.innerHTML=(pending.length?pending.map(renderItem).join(''):'')+(done.length?`<div style="font-size:10px;font-weight:700;color:var(--text3);text-transform:uppercase;letter-spacing:0.08em;margin:12px 0 6px;">Done</div>`+done.map(renderItem).join(''):'');
-}
-
-// ── TOMORROW CARD ──
-function renderTomorrowCard(){
-  const el=document.getElementById('tomorrowPlanCard');
-  if(!el)return;
-  const tomorrowName=getDayNameForOffset(1);
-  const tomorrowWeek=getCurrentWeekForOffset(1);
-  const weekData=STUDY_PLAN[tomorrowWeek-1];
-  const dayIdx=weekData?.days.findIndex(d=>d.day===tomorrowName)??-1;
-  const tasks=dayIdx>=0?getDayTasks(tomorrowWeek,dayIdx):[];
-  if(!tasks.length){el.innerHTML='';return;}
-  const weekColor=weekData?.color||'var(--accent)';
-  el.innerHTML=`<div style="background:var(--surface);border:1px solid var(--border);border-radius:var(--r2);padding:14px 16px;margin-top:10px;">
-    <div style="font-size:11px;font-weight:700;color:var(--text2);margin-bottom:8px;">Tomorrow — ${tomorrowName} <span style="color:${weekColor};margin-left:4px;">${weekData?.topic||''}</span></div>
-    ${tasks.map(t=>`<div style="font-size:11px;color:var(--text2);padding:3px 0;display:flex;align-items:center;gap:6px;"><span style="width:4px;height:4px;border-radius:50%;background:${weekColor};flex-shrink:0;display:inline-block;"></span>${esc(t)}</div>`).join('')}
-  </div>`;
-}
 function openModal(id){document.getElementById(id).classList.add('open');}
 function closeModal(id){document.getElementById(id).classList.remove('open');}
 function showErr(id,m){const e=document.getElementById(id);e.textContent=m;e.style.display='block';}
