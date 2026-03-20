@@ -1,0 +1,4 @@
+https://mymedicinefriend.ranaabhinav23.workers.dev/*
+  Access-Control-Allow-Origin: *
+  Access-Control-Allow-Methods: POST, OPTIONS
+  Access-Control-Allow-Headers: Content-Type
