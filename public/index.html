@@ -2711,7 +2711,8 @@ function renderPlanWeek(weekNum){
   const weekStart=getWeekDates(weekNum);
   const todayName=getTodayDayName();
   const currentWeek=getCurrentWeek();
-  const dayNames=['Mon','Tue','Wed','Thu','Fri','Sat','Sun'];
+  // Week starts on Saturday (di=0=Sat, di=1=Sun, di=2=Mon...)
+  // So offset is simply di
 
   const dateStr=weekStart?weekStart.toLocaleDateString('en-GB',{day:'numeric',month:'short'}):'Set start date';
   let html=`
@@ -2734,8 +2735,8 @@ function renderPlanWeek(weekNum){
     const allDone=doneTasks===tasks.length&&tasks.length>0;
     let dayDate='';
     if(weekStart){
-      const dayOffset=dayNames.indexOf(day.day);
-      const d=new Date(weekStart);d.setDate(d.getDate()+dayOffset);
+      const d=new Date(weekStart);
+      d.setDate(d.getDate()+di); // di=0 is week start (Sat), di=1 is Sun, etc.
       dayDate=d.toLocaleDateString('en-GB',{day:'numeric',month:'short'});
     }
     html+=`
@@ -3081,15 +3082,17 @@ CRITICAL RULES FOR CHANGES:
 - Sun is ALWAYS rest day ["Off 😴"] - never add study tasks to Sunday
 - Max 4-5 tasks per day, keep them short and actionable
 - When outputting changes, use BOTH the "day" name AND "dayIdx" number
+- You can also change the plan start date and exam date
 
 When making changes to the plan, ALWAYS end your response with this exact format (no markdown, no code fences):
-PLAN_CHANGES_JSON:{"changes":[{"week":1,"dayIdx":2,"day":"Mon","tasks":["Task 1","Task 2","Task 3"],"description":"Short description of what changed"}]}
+PLAN_CHANGES_JSON:{"startDate":"2026-03-21","examDate":"2026-05-22","changes":[{"week":1,"dayIdx":2,"day":"Mon","tasks":["Task 1","Task 2","Task 3"],"description":"Short description of what changed"}]}
 
-Multiple changes go in the same array:
-PLAN_CHANGES_JSON:{"changes":[{"week":1,"dayIdx":2,"day":"Mon","tasks":["..."],"description":"..."},{"week":1,"dayIdx":3,"day":"Tue","tasks":["..."],"description":"..."}]}
+- startDate and examDate are optional — only include them if changing dates (format: YYYY-MM-DD)
+- changes array is optional — only include if changing tasks
+- Multiple task changes go in the same changes array
+- If you are NOT making any changes at all, do NOT include PLAN_CHANGES_JSON
 
-If you are NOT making changes (just answering a question), do NOT include PLAN_CHANGES_JSON at all.
-Respond conversationally first, then add the JSON at the very end if making changes.`;
+Respond conversationally first explaining what you're doing, then add the JSON at the very end.`;
 
     const messages=[
       ...plannerHistory.slice(-6).map(m=>({role:m.role,content:m.content})),
@@ -3111,14 +3114,21 @@ Respond conversationally first, then add the JSON at the very end if making chan
 
     // Parse out plan changes if present
     let changes=null;
-    const jsonMatch=raw.match(/PLAN_CHANGES_JSON:(\{[\s\S]*\})/);
+    const jsonMatch=raw.match(/PLAN_CHANGES_JSON:(\{[\s\S]*?\}(?=\s*$|\s*\n))/);
     if(jsonMatch){
       try{
         const parsed=JSON.parse(jsonMatch[1]);
-        changes=parsed.changes||null;
-        plannerPending=changes;
+        plannerPending=parsed; // store the whole object {startDate, examDate, changes}
+        const changeCount=(parsed.changes||[]).length+(parsed.startDate?1:0)+(parsed.examDate?1:0);
+        if(changeCount>0){
+          // Build changes summary for display
+          changes=[];
+          if(parsed.startDate)changes.push({week:'—',day:'—',description:`Set start date to ${parsed.startDate}`});
+          if(parsed.examDate)changes.push({week:'—',day:'—',description:`Set exam date to ${parsed.examDate}`});
+          (parsed.changes||[]).forEach(c=>changes.push(c));
+        }
         raw=raw.replace(/PLAN_CHANGES_JSON:[\s\S]*/,'').trim();
-      }catch(e){console.log('Parse error',e);}
+      }catch(e){console.log('JSON parse error',e);}
     }
 
     // Remove thinking bubble
@@ -3148,47 +3158,48 @@ function appendPlannerMsg(m){
 }
 
 function applyPlanChanges(){
-  if(!plannerPending||!plannerPending.length)return;
+  if(!plannerPending)return;
   let applied=0;
   const errors=[];
-  plannerPending.forEach(c=>{
+
+  // Handle date changes
+  if(plannerPending.startDate){
+    localStorage.setItem(PLAN_KEY+'start',plannerPending.startDate);
+    applied++;
+  }
+  if(plannerPending.examDate){
+    localStorage.setItem(PLAN_KEY+'examdate',plannerPending.examDate);
+    applied++;
+  }
+
+  // Handle task changes
+  const changes=plannerPending.changes||[];
+  changes.forEach(c=>{
     if(!c.week||!c.tasks)return;
     const weekNum=parseInt(c.week);
     if(weekNum<1||weekNum>9){errors.push(`Invalid week ${c.week}`);return;}
     const weekData=STUDY_PLAN[weekNum-1];
     let dayIdx=-1;
-    // Resolve by day name first (most reliable)
-    if(c.day){
-      dayIdx=weekData.days.findIndex(d=>d.day===c.day);
-    }
-    // Fall back to dayIdx if day name didn't work
-    if(dayIdx===-1&&c.dayIdx!==undefined){
-      dayIdx=parseInt(c.dayIdx);
-    }
+    if(c.day)dayIdx=weekData.days.findIndex(d=>d.day===c.day);
+    if(dayIdx===-1&&c.dayIdx!==undefined)dayIdx=parseInt(c.dayIdx);
     if(dayIdx<0||dayIdx>=weekData.days.length){
-      errors.push(`Could not find day "${c.day}" in Week ${weekNum}`);
-      return;
+      errors.push(`Can't find "${c.day}" in Week ${weekNum}`);return;
     }
     setDayTasks(weekNum,dayIdx,c.tasks);
     applied++;
   });
+
   plannerPending=null;
-  // Update apply buttons
   document.querySelectorAll('.apply-btn').forEach(b=>{
-    b.textContent='✅ Applied!';
-    b.disabled=true;
-    b.style.background='var(--green)';
+    b.textContent='✅ Applied!';b.disabled=true;b.style.background='var(--green)';
   });
-  const errMsg=errors.length?` (${errors.length} error${errors.length>1?'s':''}: ${errors.join(', ')})`:'';
-  appendPlannerMsg({role:'assistant',content:`Done! Applied ${applied} change${applied!==1?'s':''} to your plan${errMsg}. You can see them in the Study Plan page now.`});
+
+  const errMsg=errors.length?` (${errors.length} issue${errors.length>1?'s':''}: ${errors.join(', ')})`:' ';
+  appendPlannerMsg({role:'assistant',content:`Done! Applied ${applied} change${applied!==1?'s':''}${errMsg}Head to the Study Plan page to see them.`});
   renderPlannerSideSummary();
   renderTodayWidget();
-  // Always refresh plan page data so it's ready when navigated to
-  const custom=getPlanCustomData();
-  // Force re-render if plan page is visible
-  if(document.getElementById('page-plan')?.classList.contains('active')){
-    loadPlan();
-  }
+  renderPlanStats?.();
+  if(document.getElementById('page-plan')?.classList.contains('active'))loadPlan();
 }
 function closeModal(id){document.getElementById(id).classList.remove('open');}
 function showErr(id,m){const e=document.getElementById(id);e.textContent=m;e.style.display='block';}
