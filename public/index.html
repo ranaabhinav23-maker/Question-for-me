@@ -3024,13 +3024,15 @@ function getPlanAsText(){
   const start=getPlanStartDate();
   const currentWeek=getCurrentWeek();
   const today=getTodayDayName();
-  let text=`CURRENT STUDY PLAN\nStart date: ${start?start.toLocaleDateString('en-GB'):'not set'}\nToday: ${today}, Week ${currentWeek}\nExam: ${localStorage.getItem(PLAN_KEY+'exam')||'not set'}\nDays to exam: ${localStorage.getItem(PLAN_KEY+'examdate')?Math.max(0,Math.ceil((new Date(localStorage.getItem(PLAN_KEY+'examdate'))-new Date())/(1000*60*60*24)))+'':'unknown'}\n\n`;
-  STUDY_PLAN.forEach((w,wi)=>{
-    text+=`WEEK ${w.week}: ${w.topic} (${w.pass} pass)\n`;
+  let text=`Start: ${start?start.toLocaleDateString('en-GB'):'not set'} | Today: ${today} Week ${currentWeek} | Exam: ${localStorage.getItem(PLAN_KEY+'exam')||'not set'}\n\n`;
+  STUDY_PLAN.forEach((w)=>{
+    let total=0,done=0;
+    w.days.forEach((d,di)=>{const t=getDayTasks(w.week,di);t.forEach((_,ti)=>{total++;if(isTaskDone(w.week,di,ti))done++;});});
+    text+=`WEEK ${w.week} (${w.topic}, ${w.pass} pass) — ${done}/${total} done\n`;
     w.days.forEach((d,di)=>{
       const tasks=getDayTasks(w.week,di);
-      const done=tasks.filter((_,ti)=>isTaskDone(w.week,di,ti)).length;
-      text+=`  ${d.day}: [${done}/${tasks.length} done] ${tasks.join(' | ')}\n`;
+      const doneTasks=tasks.filter((_,ti)=>isTaskDone(w.week,di,ti)).length;
+      text+=`  [dayIdx:${di}] ${d.day}: ${doneTasks}/${tasks.length} done — ${tasks.join(' | ')}\n`;
     });
     text+='\n';
   });
@@ -3060,28 +3062,34 @@ async function sendPlannerMsg(){
 
   try{
     const planText=getPlanAsText();
-    const systemPrompt=`You are an AI study planner for a UK Year 2 medical student named Abhinav. You have access to his current study plan and can modify it.
 
-CURRENT PLAN:
+    // Build exact day map so AI knows exactly what to say
+    const dayMapLines=STUDY_PLAN.map((w,wi)=>
+      w.days.map((d,di)=>`W${w.week} ${d.day} (dayIdx:${di}): ${getDayTasks(w.week,di).join(' | ')}`).join('\n')
+    ).join('\n');
+
+    const systemPrompt=`You are an AI study planner for Abhinav, a UK Year 2 medical student. You can view and modify his study plan.
+
+PLAN OVERVIEW:
 ${planText}
 
-Your job is to:
-1. Answer questions about the plan clearly
-2. Suggest specific changes when asked
-3. When making changes, output them in a special JSON block at the END of your response
+EXACT DAY STRUCTURE (use these exact values in JSON):
+${dayMapLines}
 
-When proposing plan changes, always end your response with a JSON block like this (no markdown fences):
-PLAN_CHANGES_JSON:{"changes":[{"week":1,"dayIdx":0,"day":"Mon","tasks":["new task 1","new task 2"],"description":"Added MCQ session to Monday"}]}
+CRITICAL RULES FOR CHANGES:
+- Each week has days in this order: Sat(dayIdx:0), Sun(dayIdx:1), Mon(dayIdx:2), Tue(dayIdx:3), Wed(dayIdx:4), Thu(dayIdx:5), Fri(dayIdx:6)
+- Sun is ALWAYS rest day ["Off 😴"] - never add study tasks to Sunday
+- Max 4-5 tasks per day, keep them short and actionable
+- When outputting changes, use BOTH the "day" name AND "dayIdx" number
 
-Rules:
-- dayIdx is 0-6 (0=first day of the week as defined in the plan, which starts Saturday)
-- Keep tasks concise and actionable
-- Maximum 4-5 tasks per day
-- Always explain what you're changing and why in plain text first
-- Be encouraging and practical
-- If someone is falling behind, redistribute workload sensibly
-- Sunday is always a rest day
-- If building a completely new plan, describe it fully then output all weeks in the JSON`;
+When making changes to the plan, ALWAYS end your response with this exact format (no markdown, no code fences):
+PLAN_CHANGES_JSON:{"changes":[{"week":1,"dayIdx":2,"day":"Mon","tasks":["Task 1","Task 2","Task 3"],"description":"Short description of what changed"}]}
+
+Multiple changes go in the same array:
+PLAN_CHANGES_JSON:{"changes":[{"week":1,"dayIdx":2,"day":"Mon","tasks":["..."],"description":"..."},{"week":1,"dayIdx":3,"day":"Tue","tasks":["..."],"description":"..."}]}
+
+If you are NOT making changes (just answering a question), do NOT include PLAN_CHANGES_JSON at all.
+Respond conversationally first, then add the JSON at the very end if making changes.`;
 
     const messages=[
       ...plannerHistory.slice(-6).map(m=>({role:m.role,content:m.content})),
@@ -3142,23 +3150,45 @@ function appendPlannerMsg(m){
 function applyPlanChanges(){
   if(!plannerPending||!plannerPending.length)return;
   let applied=0;
+  const errors=[];
   plannerPending.forEach(c=>{
-    if(c.week&&c.dayIdx!==undefined&&c.tasks){
-      setDayTasks(c.week,c.dayIdx,c.tasks);
-      applied++;
+    if(!c.week||!c.tasks)return;
+    const weekNum=parseInt(c.week);
+    if(weekNum<1||weekNum>9){errors.push(`Invalid week ${c.week}`);return;}
+    const weekData=STUDY_PLAN[weekNum-1];
+    let dayIdx=-1;
+    // Resolve by day name first (most reliable)
+    if(c.day){
+      dayIdx=weekData.days.findIndex(d=>d.day===c.day);
     }
+    // Fall back to dayIdx if day name didn't work
+    if(dayIdx===-1&&c.dayIdx!==undefined){
+      dayIdx=parseInt(c.dayIdx);
+    }
+    if(dayIdx<0||dayIdx>=weekData.days.length){
+      errors.push(`Could not find day "${c.day}" in Week ${weekNum}`);
+      return;
+    }
+    setDayTasks(weekNum,dayIdx,c.tasks);
+    applied++;
   });
   plannerPending=null;
-  // Remove apply button
+  // Update apply buttons
   document.querySelectorAll('.apply-btn').forEach(b=>{
     b.textContent='✅ Applied!';
     b.disabled=true;
     b.style.background='var(--green)';
   });
-  appendPlannerMsg({role:'assistant',content:`Done! I've applied ${applied} change${applied!==1?'s':''} to your plan. Head over to the Study Plan page to see them.`});
+  const errMsg=errors.length?` (${errors.length} error${errors.length>1?'s':''}: ${errors.join(', ')})`:'';
+  appendPlannerMsg({role:'assistant',content:`Done! Applied ${applied} change${applied!==1?'s':''} to your plan${errMsg}. You can see them in the Study Plan page now.`});
   renderPlannerSideSummary();
-  // Refresh plan if it's visible
-  if(document.getElementById('page-plan').classList.contains('active'))loadPlan();
+  renderTodayWidget();
+  // Always refresh plan page data so it's ready when navigated to
+  const custom=getPlanCustomData();
+  // Force re-render if plan page is visible
+  if(document.getElementById('page-plan')?.classList.contains('active')){
+    loadPlan();
+  }
 }
 function closeModal(id){document.getElementById(id).classList.remove('open');}
 function showErr(id,m){const e=document.getElementById(id);e.textContent=m;e.style.display='block';}
