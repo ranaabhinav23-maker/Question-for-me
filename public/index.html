@@ -1634,6 +1634,20 @@ async function importNotionPage(){
   setBusy('notionImportBtn','notionImportTxt','Importing…',true);
   hideErr('notionLinkErr');
   try{
+    // First try as database, then fall back to page
+    const dbRes=await fetch(NOTION_WORKER,{
+      method:'POST',
+      headers:{'Content-Type':'application/json'},
+      body:JSON.stringify({pageId,mode:'database'})
+    });
+    const dbData=await dbRes.json();
+    // If it's a database with rows, show a picker
+    if(dbRes.ok&&dbData.rows&&dbData.rows.length){
+      setBusy('notionImportBtn','notionImportTxt','⬇ Import as MedStudy note',false);
+      showNotionDbPicker(dbData.rows,block,subject,url);
+      return;
+    }
+    // Otherwise fetch as a single page
     const r=await fetch(NOTION_WORKER,{
       method:'POST',
       headers:{'Content-Type':'application/json'},
@@ -1671,7 +1685,54 @@ async function importNotionPage(){
   }
 }
 
-function saveNotionLinkOnly(){
+function showNotionDbPicker(rows,block,subject,dbUrl){
+  // Show a list of pages from the database to import
+  const el=document.getElementById('notionLinkErr');
+  el.style.display='block';
+  el.style.background='var(--surface2)';
+  el.style.borderColor='var(--border)';
+  el.style.color='var(--text)';
+  el.innerHTML=`<div style="font-size:12px;font-weight:700;margin-bottom:10px;">Found ${rows.length} pages — click one to import:</div>`+
+    rows.map(r=>`<div onclick="importNotionRow('${r.id}','${esc(r.title)}','${block}','${subject}','${dbUrl}')" style="padding:8px 10px;border:1px solid var(--border);border-radius:6px;margin-bottom:6px;cursor:pointer;font-size:12px;font-weight:500;background:var(--surface);transition:all 0.12s;" onmouseover="this.style.borderColor='var(--accent)'" onmouseout="this.style.borderColor='var(--border)'">${esc(r.title)||'Untitled'}</div>`).join('')+
+    `<button class="btn btn-ghost btn-sm mt8" onclick="hideErr('notionLinkErr')">Cancel</button>`;
+}
+
+async function importNotionRow(pageId,title,block,subject,dbUrl){
+  hideErr('notionLinkErr');
+  setBusy('notionImportBtn','notionImportTxt','Importing…',true);
+  try{
+    const r=await fetch(NOTION_WORKER,{
+      method:'POST',
+      headers:{'Content-Type':'application/json'},
+      body:JSON.stringify({pageId})
+    });
+    const d=await r.json();
+    if(!r.ok||d.error)throw new Error(d.error||'Worker error');
+    const{data,error}=await sb.from('notes').insert({
+      year:yr,
+      title:d.title||title,
+      content:d.html||'',
+      block,subject,
+      lecture_ref:'',
+      updated_at:new Date().toISOString()
+    }).select().single();
+    if(error)throw new Error('Supabase error: '+error.message);
+    notionLinks.push({id:Date.now(),name:d.title||title,url:dbUrl,block,imported:true,noteId:data.id});
+    localStorage.setItem('_ms_notion_links',JSON.stringify(notionLinks));
+    closeModal('notionLinkModal');
+    document.getElementById('notionLinkUrl').value='';
+    allNotes.unshift(data);
+    renderNotesList();
+    renderNotionLinks();
+    openNote(data.id);
+    document.getElementById('noteSavingIndicator').textContent='✓ Imported from Notion!';
+    setTimeout(()=>{if(document.getElementById('noteSavingIndicator'))document.getElementById('noteSavingIndicator').textContent='';},3000);
+  }catch(e){
+    showErr('notionLinkErr','Import failed: '+e.message);
+  }finally{
+    setBusy('notionImportBtn','notionImportTxt','⬇ Import as MedStudy note',false);
+  }
+}
   const url=document.getElementById('notionLinkUrl').value.trim();
   if(!url){showErr('notionLinkErr','Paste a Notion page URL first.');return;}
   const block=document.getElementById('notionLinkBlock').value;
