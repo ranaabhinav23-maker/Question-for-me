@@ -298,6 +298,56 @@ label { font-size: 11px; color: var(--text2); font-weight: 600; display: block; 
 .subj-fill{height:100%;border-radius:99px;transition:width 0.6s ease;}
 .subj-pct{font-size:11px;color:var(--text3);width:34px;text-align:right;font-family:var(--mono);}
 
+/* ── NOTES HUB ── */
+.notes-layout{display:grid;grid-template-columns:240px 1fr;gap:0;height:calc(100vh - 57px);overflow:hidden;}
+.notes-sidebar{background:var(--surface);border-right:1px solid var(--border);display:flex;flex-direction:column;overflow:hidden;}
+.notes-sidebar-head{padding:14px 16px;border-bottom:1px solid var(--border);display:flex;align-items:center;justify-content:space-between;flex-shrink:0;}
+.notes-sidebar-title{font-size:13px;font-weight:700;color:var(--text);}
+.note-item{padding:10px 16px;cursor:pointer;border-bottom:1px solid var(--border);transition:background 0.12s;position:relative;}
+.note-item:hover{background:var(--surface2);}
+.note-item.active{background:rgba(6,182,212,0.08);border-left:3px solid var(--accent);}
+.note-item-title{font-size:13px;font-weight:600;color:var(--text);white-space:nowrap;overflow:hidden;text-overflow:ellipsis;}
+.note-item-meta{font-size:11px;color:var(--text3);margin-top:2px;display:flex;gap:6px;align-items:center;}
+.notes-list{flex:1;overflow-y:auto;}
+.note-editor-area{display:flex;flex-direction:column;overflow:hidden;}
+.note-toolbar{padding:10px 20px;border-bottom:1px solid var(--border);display:flex;align-items:center;gap:8px;flex-wrap:wrap;flex-shrink:0;background:var(--surface);}
+.note-toolbar-btn{padding:5px 10px;border:1px solid var(--border2);border-radius:6px;background:var(--surface);color:var(--text2);font-size:12px;font-weight:600;cursor:pointer;transition:all 0.12s;font-family:var(--font);}
+.note-toolbar-btn:hover{border-color:var(--accent);color:var(--accent);}
+.note-toolbar-sep{width:1px;height:18px;background:var(--border2);}
+.note-content-wrap{display:grid;grid-template-columns:1fr;flex:1;overflow:hidden;transition:grid-template-columns 0.2s;}
+.note-content-wrap.with-ai{grid-template-columns:1fr 300px;}
+.note-editor{padding:24px 32px;overflow-y:auto;flex:1;outline:none;font-size:14px;line-height:1.9;color:var(--text);background:var(--bg);}
+.note-editor:empty::before{content:attr(data-placeholder);color:var(--text3);pointer-events:none;}
+.note-editor h1{font-size:1.5rem;font-weight:800;margin:16px 0 8px;color:var(--text);}
+.note-editor h2{font-size:1.2rem;font-weight:700;margin:14px 0 6px;color:var(--text);}
+.note-editor h3{font-size:1rem;font-weight:700;margin:12px 0 5px;color:var(--text);}
+.note-editor ul,.note-editor ol{margin:8px 0 8px 24px;}
+.note-editor li{margin-bottom:4px;}
+.note-editor strong{font-weight:700;}
+.note-editor em{font-style:italic;}
+.note-ai-panel{border-left:1px solid var(--border);background:var(--surface);display:flex;flex-direction:column;overflow:hidden;}
+.note-ai-head{padding:12px 16px;border-bottom:1px solid var(--border);font-size:12px;font-weight:700;color:var(--accent);letter-spacing:0.06em;text-transform:uppercase;display:flex;align-items:center;justify-content:space-between;}
+.note-ai-btns{padding:12px 16px;display:flex;flex-direction:column;gap:8px;border-bottom:1px solid var(--border);}
+.note-ai-action{width:100%;padding:8px 12px;border:1px solid var(--border2);border-radius:var(--r);background:var(--surface2);color:var(--text2);font-size:12px;font-weight:600;cursor:pointer;transition:all 0.15s;text-align:left;font-family:var(--font);}
+.note-ai-action:hover{border-color:var(--accent);color:var(--accent);background:rgba(6,182,212,0.05);}
+.note-ai-response{flex:1;overflow-y:auto;padding:14px 16px;font-size:12px;line-height:1.75;color:var(--text2);}
+.note-ai-response:empty::before{content:"Select an action or highlight text and choose an option.";color:var(--text3);font-style:italic;}
+.note-empty-state{display:flex;flex-direction:column;align-items:center;justify-content:center;height:100%;color:var(--text3);gap:12px;}
+.note-empty-state .ico{font-size:3rem;opacity:0.3;}
+.notion-link-card{background:var(--surface2);border:1px solid var(--border);border-radius:var(--r2);padding:16px;margin-bottom:10px;display:flex;align-items:center;gap:12px;}
+.notion-link-card .notion-ico{font-size:20px;flex-shrink:0;}
+.notion-link-card-body{flex:1;min-width:0;}
+.notion-link-card-title{font-size:13px;font-weight:600;color:var(--text);white-space:nowrap;overflow:hidden;text-overflow:ellipsis;}
+.notion-link-card-url{font-size:11px;color:var(--text3);white-space:nowrap;overflow:hidden;text-overflow:ellipsis;margin-top:2px;}
+.highlight-tooltip{position:fixed;background:var(--navy);border:1px solid rgba(6,182,212,0.3);border-radius:8px;padding:6px 4px;display:flex;gap:4px;z-index:9000;box-shadow:0 8px 24px rgba(0,0,0,0.3);display:none;}
+.highlight-tooltip button{padding:4px 10px;border:none;border-radius:6px;background:rgba(255,255,255,0.08);color:white;font-size:11px;font-weight:600;cursor:pointer;font-family:var(--font);transition:background 0.12s;}
+.highlight-tooltip button:hover{background:rgba(6,182,212,0.3);}
+.notes-filter-bar{padding:10px 16px;border-bottom:1px solid var(--border);display:flex;gap:6px;flex-wrap:wrap;flex-shrink:0;}
+.note-filter-pill{padding:3px 10px;border-radius:99px;font-size:11px;font-weight:600;cursor:pointer;border:1px solid var(--border);background:transparent;color:var(--text3);transition:all 0.12s;font-family:var(--font);}
+.note-filter-pill.active{background:var(--navy);color:white;border-color:transparent;}
+.note-search{padding:10px 16px;border-bottom:1px solid var(--border);flex-shrink:0;}
+.note-search input{padding:7px 12px;font-size:12px;}
+
 .spin { width: 13px; height: 13px; border: 2px solid rgba(255,255,255,0.25); border-top-color: white; border-radius: 50%; animation: rot 0.6s linear infinite; display: none; flex-shrink: 0; }
 .loading .spin { display: inline-block; }
 @keyframes rot { to { transform: rotate(360deg); } }
@@ -355,6 +405,7 @@ label { font-size: 11px; color: var(--text2); font-weight: 600; display: block; 
     <div style="padding:0 0 4px;">
       <div class="nav-item active" data-page="dashboard" onclick="nav('dashboard',this)"><span class="nav-icon">⊞</span>Dashboard</div>
       <div class="nav-item" data-page="lectures" onclick="nav('lectures',this)"><span class="nav-icon">📖</span>Lectures</div>
+      <div class="nav-item" data-page="notes" onclick="nav('notes',this)"><span class="nav-icon">📓</span>Notes Hub</div>
       <div class="nav-item" data-page="mcq" onclick="nav('mcq',this)"><span class="nav-icon">❓</span>MCQ Generator</div>
       <div class="nav-item" data-page="mock" onclick="nav('mock',this)"><span class="nav-icon">📝</span>Mock Exam</div>
       <div class="nav-item" data-page="recall" onclick="nav('recall',this)"><span class="nav-icon">⚡</span>Quick Recall</div>
@@ -434,14 +485,27 @@ label { font-size: 11px; color: var(--text2); font-weight: 600; display: block; 
 
    <!-- MCQ -->
    <div class="page" id="page-mcq">
-    <div class="page-hero"><div class="page-hero-title">MCQ Generator</div><div class="page-hero-sub">Paste notes → AI generates exam-style questions → scores saved automatically</div></div>
+    <div class="page-hero"><div class="page-hero-title">MCQ Generator</div><div class="page-hero-sub">From your notes or paste text → AI generates exam-style questions → scores saved automatically</div></div>
     <div style="padding:24px 32px 0;">
       <div class="section-card mb16"><div class="section-head"><div class="section-title">Generate questions</div></div>
         <div class="section-body">
-          <label>Notes / lecture content</label>
-          <textarea id="mcqNotes" placeholder="Paste your lecture notes here..." style="min-height:150px;"></textarea>
+          <label>Source</label>
+          <div style="display:flex;gap:10px;margin-bottom:16px;flex-wrap:wrap;">
+            <label style="text-transform:none;font-size:13px;display:flex;align-items:center;gap:8px;cursor:pointer;font-weight:500;"><input type="radio" name="mcqSrc" value="text" checked style="width:auto;" onchange="mcqSrcChange()"> Paste text</label>
+            <label style="text-transform:none;font-size:13px;display:flex;align-items:center;gap:8px;cursor:pointer;font-weight:500;"><input type="radio" name="mcqSrc" value="note" style="width:auto;" onchange="mcqSrcChange()"> From a saved note</label>
+          </div>
+          <div id="mcqTextSrc">
+            <label>Notes / lecture content</label>
+            <textarea id="mcqNotes" placeholder="Paste your lecture notes here..." style="min-height:130px;"></textarea>
+          </div>
+          <div id="mcqNoteSrc" style="display:none;">
+            <label>Select note</label>
+            <select id="mcqNoteSelect" style="margin-bottom:8px;"><option value="">— pick a note —</option></select>
+            <div id="mcqNotePreview" style="font-size:12px;color:var(--text2);background:var(--surface2);border:1px solid var(--border);border-radius:var(--r);padding:10px 14px;max-height:80px;overflow:hidden;display:none;"></div>
+          </div>
           <div style="display:flex;flex-wrap:wrap;gap:14px;margin-top:16px;">
             <div style="min-width:130px;"><label>Block</label><select id="mcqBlock"><option>GU</option><option>MSK</option><option>Neurology</option><option>GI</option><option>CVR</option><option>Core</option></select></div>
+            <div style="min-width:150px;"><label>Subject</label><select id="mcqSubject"><option value="">Any subject</option><option>Anatomy</option><option>Physiology</option><option>Pharmacology</option><option>Microbiology</option><option>Immunology</option><option>Pathology</option><option>Biochemistry</option><option>Radiology</option><option>Haematology</option><option>General</option></select></div>
             <div style="min-width:90px;"><label>Questions</label><select id="mcqNum"><option value="5">5</option><option value="10" selected>10</option><option value="15">15</option><option value="20">20</option></select></div>
             <div style="min-width:170px;"><label>Difficulty</label><select id="mcqDiff"><option value="mixed" selected>Mixed</option><option value="easy">Recall / Easy</option><option value="medium">Applied / Medium</option><option value="hard">Clinical / Hard</option></select></div>
             <div style="margin-top:auto;"><button class="btn btn-primary" id="mcqBtn" onclick="genMCQ()"><div class="spin"></div><span id="mcqTxt">Generate questions</span></button></div>
@@ -545,11 +609,110 @@ label { font-size: 11px; color: var(--text2); font-weight: 600; display: block; 
       <div id="bugTest" style="display:none;"><div class="section-card mb16"><div class="section-head"><div class="section-title">Select blocks</div></div><div class="section-body"><div class="pill-row" id="bugTestPills"></div><button class="btn btn-primary mt8" onclick="startBugTest()">Start test</button></div></div><div id="bugTestArea"></div></div>
     </div>
    </div>
+   <!-- NOTES HUB -->
+   <div class="page" id="page-notes" style="padding:0;">
+    <div class="notes-layout">
+      <!-- Left sidebar: note list -->
+      <div class="notes-sidebar">
+        <div class="notes-sidebar-head">
+          <span class="notes-sidebar-title">My Notes</span>
+          <button class="btn btn-xs btn-teal" onclick="newNote()">＋ New</button>
+        </div>
+        <div class="note-search"><input type="text" id="noteSearch" placeholder="Search notes…" oninput="filterNotes()" style="padding:7px 12px;font-size:12px;"></div>
+        <div class="notes-filter-bar" id="notesFilterBar"></div>
+        <div class="notes-list" id="notesList">
+          <div class="empty" style="padding:32px 16px;font-size:12px;"><span class="empty-ico">📓</span>No notes yet.<br>Click + New to start.</div>
+        </div>
+        <!-- Notion links section -->
+        <div style="border-top:1px solid var(--border);flex-shrink:0;">
+          <div style="padding:10px 16px 6px;display:flex;align-items:center;justify-content:space-between;">
+            <span style="font-size:10px;font-weight:700;color:var(--text3);text-transform:uppercase;letter-spacing:0.1em;">Notion Links</span>
+            <button class="btn btn-xs btn-outline" onclick="openModal('notionLinkModal')" style="font-size:10px;padding:2px 8px;">＋ Add</button>
+          </div>
+          <div id="notionLinksList" style="padding:0 16px 12px;max-height:160px;overflow-y:auto;"></div>
+        </div>
+      </div>
+
+      <!-- Right: editor + AI panel -->
+      <div class="note-editor-area">
+        <div class="note-toolbar" id="noteToolbar" style="display:none;">
+          <span style="font-size:12px;font-weight:700;color:var(--text2);margin-right:4px;" id="noteSavingIndicator"></span>
+          <button class="note-toolbar-btn" onclick="noteCmd('bold')"><b>B</b></button>
+          <button class="note-toolbar-btn" onclick="noteCmd('italic')"><i>I</i></button>
+          <button class="note-toolbar-btn" onclick="noteCmd('underline')"><u>U</u></button>
+          <div class="note-toolbar-sep"></div>
+          <button class="note-toolbar-btn" onclick="noteCmd('formatBlock','h1')">H1</button>
+          <button class="note-toolbar-btn" onclick="noteCmd('formatBlock','h2')">H2</button>
+          <button class="note-toolbar-btn" onclick="noteCmd('insertUnorderedList')">• List</button>
+          <div class="note-toolbar-sep"></div>
+          <button class="note-toolbar-btn" onclick="genMCQFromNote()" title="Generate MCQs from this note" style="color:var(--accent);border-color:rgba(6,182,212,0.3);">❓ MCQs</button>
+          <button class="note-toolbar-btn" onclick="genRecallFromNote()" title="Quick recall from this note" style="color:var(--purple);border-color:rgba(139,92,246,0.3);">⚡ Recall</button>
+          <div class="note-toolbar-sep"></div>
+          <button class="note-toolbar-btn" id="aiToggleBtn" onclick="toggleAIPanel()" style="color:var(--accent);">✨ AI</button>
+          <button class="note-toolbar-btn" onclick="deleteNote()" style="color:var(--red);border-color:rgba(239,68,68,0.2);margin-left:auto;">🗑 Delete</button>
+        </div>
+
+        <div class="note-content-wrap" id="noteContentWrap">
+          <!-- Editor -->
+          <div style="display:flex;flex-direction:column;overflow:hidden;background:var(--bg);">
+            <!-- Note meta bar -->
+            <div id="noteMetaBar" style="display:none;padding:10px 32px;border-bottom:1px solid var(--border);background:var(--surface);display:flex;gap:12px;align-items:center;flex-wrap:wrap;">
+              <div style="display:flex;align-items:center;gap:6px;">
+                <label style="text-transform:none;font-size:11px;font-weight:600;color:var(--text2);margin:0;">Block:</label>
+                <select id="noteBlock" onchange="saveNoteMeta()" style="width:auto;padding:4px 8px;font-size:12px;">
+                  <option value="">—</option>
+                  <option>GU</option><option>MSK</option><option>Neurology</option><option>GI</option><option>CVR</option><option>Core</option>
+                </select>
+              </div>
+              <div style="display:flex;align-items:center;gap:6px;">
+                <label style="text-transform:none;font-size:11px;font-weight:600;color:var(--text2);margin:0;">Subject:</label>
+                <select id="noteSubject" onchange="saveNoteMeta()" style="width:auto;padding:4px 8px;font-size:12px;">
+                  <option value="">—</option>
+                  <option>Anatomy</option><option>Physiology</option><option>Pharmacology</option><option>Microbiology</option>
+                  <option>Immunology</option><option>Pathology</option><option>Biochemistry</option><option>Radiology</option>
+                  <option>Haematology</option><option>General</option>
+                </select>
+              </div>
+              <input type="text" id="noteLectureRef" placeholder="Lecture ref (e.g. GU Lecture 5)" onchange="saveNoteMeta()" style="width:200px;padding:4px 8px;font-size:12px;">
+            </div>
+            <div id="noteEditor" contenteditable="false" class="note-editor" data-placeholder="Start typing your note..."></div>
+          </div>
+
+          <!-- AI Panel (hidden by default) -->
+          <div class="note-ai-panel" id="noteAiPanel" style="display:none;">
+            <div class="note-ai-head">✨ AI Assistant <button onclick="toggleAIPanel()" style="background:none;border:none;color:var(--text3);cursor:pointer;font-size:14px;">✕</button></div>
+            <div class="note-ai-btns">
+              <button class="note-ai-action" onclick="aiNoteAction('summarise')">📋 Summarise this note</button>
+              <button class="note-ai-action" onclick="aiNoteAction('keypoints')">🎯 Key exam points</button>
+              <button class="note-ai-action" onclick="aiNoteAction('gaps')">🔍 What am I missing?</button>
+              <button class="note-ai-action" onclick="aiNoteAction('explain')">💡 Explain highlighted text</button>
+              <button class="note-ai-action" onclick="aiNoteAction('flashcard')">🃏 Make flashcard from highlight</button>
+            </div>
+            <div class="note-ai-response" id="noteAiResponse"></div>
+          </div>
+        </div>
+
+        <!-- Empty state when no note selected -->
+        <div class="note-empty-state" id="noteEmptyState">
+          <span class="ico">📓</span>
+          <span style="font-size:14px;font-weight:600;color:var(--text2);">Select a note or create a new one</span>
+          <span style="font-size:12px;">Your notes are saved to Supabase</span>
+          <button class="btn btn-teal" onclick="newNote()">＋ Create first note</button>
+        </div>
+      </div>
+    </div>
+   </div>
+
   </div>
  </div>
 </div>
 
-<!-- ALL MODALS — must be before </body> and before the script so DOMContentLoaded finds them -->
+<!-- HIGHLIGHT TOOLTIP -->
+<div class="highlight-tooltip" id="highlightTooltip">
+  <button onclick="aiFromHighlight('explain')">💡 Explain</button>
+  <button onclick="aiFromHighlight('flashcard')">🃏 Flashcard</button>
+  <button onclick="aiFromHighlight('mcq')">❓ MCQ</button>
+</div> — must be before </body> and before the script so DOMContentLoaded finds them -->
 <div class="modal-bg" id="yearModal">
   <div class="modal"><div class="modal-title">Year profiles</div><div id="yearList" class="mb16"></div><div class="divider"></div><div style="font-size:13px;font-weight:700;margin-bottom:10px;color:var(--text);">Add new profile</div><div class="row"><input type="text" id="newYearInput" placeholder="e.g. Year 3" style="flex:1;"><button class="btn btn-primary btn-sm" onclick="addYear()">Add</button></div><button class="btn btn-ghost mt12" onclick="closeModal('yearModal')">Close</button></div>
 </div>
@@ -579,6 +742,53 @@ label { font-size: 11px; color: var(--text2); font-weight: 600; display: block; 
     </div>
     <div id="impDateList" class="mb16"></div>
     <div class="row" style="gap:8px;"><button class="btn btn-primary flex1" onclick="saveExamDates()">Save</button><button class="btn btn-outline" onclick="closeModal('examModal')">Cancel</button></div>
+  </div>
+</div>
+
+<div class="modal-bg" id="notionLinkModal">
+  <div class="modal"><div class="modal-title">Import from Notion</div>
+    <div style="font-size:12px;color:var(--text2);margin-bottom:16px;line-height:1.8;background:var(--surface2);border:1px solid var(--border);border-radius:var(--r);padding:12px;">
+      <strong style="color:var(--text);">Before importing:</strong> Open Notion → your page → click <strong>...</strong> menu → <strong>Connections</strong> → add your MedStudy integration. Otherwise the import will fail.
+    </div>
+    <div class="mb12"><label>Notion page URL</label><input type="text" id="notionLinkUrl" placeholder="https://www.notion.so/Your-Page-abc123…"></div>
+    <div class="g2 mb12">
+      <div><label>Block (optional)</label><select id="notionLinkBlock"><option value="">— none —</option><option>GU</option><option>MSK</option><option>Neurology</option><option>GI</option><option>CVR</option><option>Core</option></select></div>
+      <div><label>Subject (optional)</label><select id="notionLinkSubject"><option value="">— none —</option><option>Anatomy</option><option>Physiology</option><option>Pharmacology</option><option>Microbiology</option><option>Immunology</option><option>Pathology</option><option>Biochemistry</option><option>Radiology</option><option>Haematology</option><option>General</option></select></div>
+    </div>
+    <div class="err-box" id="notionLinkErr"></div>
+    <div style="margin-bottom:10px;">
+      <button class="btn btn-teal" id="notionImportBtn" onclick="importNotionPage()" style="width:100%;justify-content:center;font-size:14px;padding:11px;">
+        <div class="spin"></div><span id="notionImportTxt">⬇ Import as MedStudy note</span>
+      </button>
+    </div>
+    <div style="text-align:center;font-size:11px;color:var(--text3);margin-bottom:12px;">— or just save as a view-only link —</div>
+    <div class="row" style="gap:8px;">
+      <button class="btn btn-outline flex1" onclick="saveNotionLinkOnly()">Save as link only</button>
+      <button class="btn btn-ghost" onclick="closeModal('notionLinkModal')">Cancel</button>
+    </div>
+  </div>
+</div>
+
+<div class="modal-bg" id="notionViewModal">
+  <div class="modal" style="width:90vw;max-width:1000px;height:85vh;display:flex;flex-direction:column;padding:0;overflow:hidden;">
+    <div style="padding:16px 20px;border-bottom:1px solid var(--border);display:flex;align-items:center;justify-content:space-between;flex-shrink:0;">
+      <div style="font-size:14px;font-weight:700;color:var(--text);" id="notionViewTitle">Notion page</div>
+      <button onclick="closeModal('notionViewModal')" style="background:none;border:none;color:var(--text2);cursor:pointer;font-size:18px;">✕</button>
+    </div>
+    <iframe id="notionViewFrame" src="" style="flex:1;border:none;width:100%;" allow="fullscreen"></iframe>
+  </div>
+</div>
+
+<div class="modal-bg" id="newNoteModal">
+  <div class="modal"><div class="modal-title">New note</div>
+    <div class="mb12"><label>Title</label><input type="text" id="newNoteTitle" placeholder="e.g. Renal tubular acidosis — GU Lecture 8"></div>
+    <div class="g2 mb12">
+      <div><label>Block</label><select id="newNoteBlock"><option value="">—</option><option>GU</option><option>MSK</option><option>Neurology</option><option>GI</option><option>CVR</option><option>Core</option></select></div>
+      <div><label>Subject</label><select id="newNoteSubject"><option value="">—</option><option>Anatomy</option><option>Physiology</option><option>Pharmacology</option><option>Microbiology</option><option>Immunology</option><option>Pathology</option><option>Biochemistry</option><option>Radiology</option><option>Haematology</option><option>General</option></select></div>
+    </div>
+    <div class="mb12"><label>Lecture ref (optional)</label><input type="text" id="newNoteLecture" placeholder="e.g. GU Lecture 5"></div>
+    <div class="err-box" id="newNoteErr"></div>
+    <div class="row" style="gap:8px;"><button class="btn btn-primary flex1" onclick="createNote()">Create note</button><button class="btn btn-outline" onclick="closeModal('newNoteModal')">Cancel</button></div>
   </div>
 </div>
 
@@ -695,6 +905,7 @@ function nav(page,el){
   document.querySelectorAll('.nav-item').forEach(n=>n.classList.remove('active'));
   document.getElementById('page-'+page).classList.add('active');
   if(el)el.classList.add('active');
+  if(page==='notes')loadNotes();
   if(page==='dashboard')loadDash();
   if(page==='lectures')loadLecs();
   if(page==='drugs')loadDrugs();
@@ -814,14 +1025,51 @@ async function addLec(){
 async function togglePass(id,pass,cur){await sb.from('lectures').update({[pass===1?'pass1':'pass2']:!cur}).eq('id',id);loadLecs();loadDash();}
 async function delLec(id){await sb.from('lectures').delete().eq('id',id);loadLecs();loadDash();}
 
+// ── MCQ SOURCE SWITCH ──
+function mcqSrcChange(){
+  const src=document.querySelector('input[name="mcqSrc"]:checked').value;
+  document.getElementById('mcqTextSrc').style.display=src==='text'?'block':'none';
+  document.getElementById('mcqNoteSrc').style.display=src==='note'?'block':'none';
+  if(src==='note')populateMcqNoteSelect();
+}
+async function populateMcqNoteSelect(){
+  const{data}=await sb.from('notes').select('id,title,block,subject').eq('year',yr).order('updated_at',{ascending:false});
+  const sel=document.getElementById('mcqNoteSelect');
+  sel.innerHTML='<option value="">— pick a note —</option>'+(data||[]).map(n=>`<option value="${n.id}">${esc(n.title)}${n.block?' ['+n.block+']':''}</option>`).join('');
+  sel.onchange=async function(){
+    const id=this.value;if(!id){document.getElementById('mcqNotePreview').style.display='none';return;}
+    const{data:nd}=await sb.from('notes').select('content,block,subject').eq('id',id).single();
+    if(nd){
+      const txt=(nd.content||'').replace(/<[^>]+>/g,' ').substring(0,200);
+      document.getElementById('mcqNotePreview').textContent=txt+'…';
+      document.getElementById('mcqNotePreview').style.display='block';
+      if(nd.block)document.getElementById('mcqBlock').value=nd.block;
+      if(nd.subject)document.getElementById('mcqSubject').value=nd.subject;
+    }
+  };
+}
+
 // ── MCQ ──
 async function genMCQ(){
-  const notes=document.getElementById('mcqNotes').value.trim();if(!notes||notes.length<20){showErr('mcqErr','Paste some notes first.');return;}
+  const src=document.querySelector('input[name="mcqSrc"]:checked')?.value||'text';
+  let notes='';
+  if(src==='note'){
+    const id=document.getElementById('mcqNoteSelect').value;
+    if(!id){showErr('mcqErr','Select a note first.');return;}
+    const{data:nd}=await sb.from('notes').select('content,title').eq('id',id).single();
+    notes=(nd?.content||'').replace(/<[^>]+>/g,' ');
+    if(notes.length<20){showErr('mcqErr','Note seems empty.');return;}
+  }else{
+    notes=document.getElementById('mcqNotes').value.trim();
+    if(!notes||notes.length<20){showErr('mcqErr','Paste some notes first.');return;}
+  }
   const num=document.getElementById('mcqNum').value,diff=document.getElementById('mcqDiff').value,block=document.getElementById('mcqBlock').value;
+  const subject=document.getElementById('mcqSubject').value;
   setBusy('mcqBtn','mcqTxt','Generating…',true);hideErr('mcqErr');startProg('mcqProg','mcqFill');
   mcqQs=[];mcqPk={};mcqDone=false;document.getElementById('mcqQs').innerHTML='';document.getElementById('mcqScoreBar').classList.remove('show');
   const dmap={mixed:'a mix of recall, applied and hard clinical reasoning',easy:'recall: definitions and key facts',medium:'applied: mechanisms and clinical application',hard:'hard clinical vignettes requiring differential diagnosis'};
-  const prompt=`UK Year 2 med student MCQs. Format: clinical vignette or knowledge stem then question ending with (mark: 1). 5 options, 1 correct, 4 plausible distractors. Difficulty: ${dmap[diff]}. Block: ${block}. Raw JSON only: {"questions":[{"vignette":"","question":"...(mark: 1)","options":["A","B","C","D","E"],"correct":0,"explanation":"..."}]}. Generate ${num} from: ${notes}`;
+  const subjectLine=subject?` Subject: ${subject}.`:'';
+  const prompt=`UK Year 2 med student MCQs. Format: clinical vignette or knowledge stem then question ending with (mark: 1). 5 options, 1 correct, 4 plausible distractors. Difficulty: ${dmap[diff]}. Block: ${block}.${subjectLine} Raw JSON only: {"questions":[{"vignette":"","question":"...(mark: 1)","options":["A","B","C","D","E"],"correct":0,"explanation":"..."}]}. Generate ${num} from: ${notes}`;
   try{
     const r=await fetch('/api/generate',{method:'POST',headers:{'Content-Type':'application/json'},body:JSON.stringify({model:'claude-haiku-4-5-20251001',max_tokens:4000,messages:[{role:'user',content:prompt}]})});
     if(!r.ok)throw new Error((await r.json()).error||'API error');
@@ -1124,6 +1372,353 @@ function saveExamDates(){
   if(!date){closeModal('examModal');return;}
   localStorage.setItem('_ms_exam_'+yr,JSON.stringify({name:name||'Exam',date,important:tmpImpDates,startDays:90}));
   closeModal('examModal');renderCountdown();
+}
+
+
+// ── NOTES HUB ──
+let allNotes=[],activeNoteId=null,noteAiOpen=false,noteSaveTimer=null;
+let notionLinks=JSON.parse(localStorage.getItem('_ms_notion_links')||'[]');
+let noteBlockFilter='all';
+
+async function loadNotes(){
+  renderNotionLinks();
+  buildNotesFilterBar();
+  const{data}=await sb.from('notes').select('*').eq('year',yr).order('updated_at',{ascending:false});
+  allNotes=data||[];
+  renderNotesList();
+  // If no active note, show empty state
+  if(!activeNoteId){
+    document.getElementById('noteEmptyState').style.display='flex';
+    document.getElementById('noteToolbar').style.display='none';
+    document.getElementById('noteMetaBar').style.display='none';
+    document.getElementById('noteContentWrap').style.display='none';
+  }
+}
+
+function buildNotesFilterBar(){
+  const bar=document.getElementById('notesFilterBar');
+  bar.innerHTML=`<button class="note-filter-pill ${noteBlockFilter==='all'?'active':''}" onclick="setNoteFilter('all',this)">All</button>`+
+    BLOCKS.map(b=>`<button class="note-filter-pill" style="${noteBlockFilter===b?'background:'+BLOCK_COLORS[b]+';color:white;border-color:transparent;':''}" onclick="setNoteFilter('${b}',this)">${b}</button>`).join('');
+}
+function setNoteFilter(block,el){
+  noteBlockFilter=block;
+  buildNotesFilterBar();
+  renderNotesList();
+}
+
+function renderNotesList(){
+  const q=(document.getElementById('noteSearch')?.value||'').toLowerCase();
+  let notes=allNotes;
+  if(noteBlockFilter!=='all')notes=notes.filter(n=>n.block===noteBlockFilter);
+  if(q)notes=notes.filter(n=>(n.title||'').toLowerCase().includes(q)||(n.content||'').toLowerCase().includes(q));
+  const el=document.getElementById('notesList');
+  if(!notes.length){el.innerHTML=`<div class="empty" style="padding:24px 16px;font-size:12px;"><span class="empty-ico">📓</span>No notes found.</div>`;return;}
+  el.innerHTML=notes.map(n=>{
+    const dot=n.block?`<span class="dot d-${BC[n.block]||''}" style="flex-shrink:0;"></span>`:'';
+    const ago=timeAgo(n.updated_at);
+    return`<div class="note-item ${n.id===activeNoteId?'active':''}" onclick="openNote('${n.id}')">
+      <div class="note-item-title">${esc(n.title||'Untitled')}</div>
+      <div class="note-item-meta">${dot}<span>${n.subject||''}</span><span style="margin-left:auto;">${ago}</span></div>
+    </div>`;
+  }).join('');
+}
+
+function filterNotes(){renderNotesList();}
+
+function newNote(){
+  // Populate note select in modal if needed
+  document.getElementById('newNoteTitle').value='';
+  document.getElementById('newNoteBlock').value='';
+  document.getElementById('newNoteSubject').value='';
+  document.getElementById('newNoteLecture').value='';
+  hideErr('newNoteErr');
+  openModal('newNoteModal');
+  setTimeout(()=>document.getElementById('newNoteTitle').focus(),100);
+}
+
+async function createNote(){
+  const title=document.getElementById('newNoteTitle').value.trim();
+  if(!title){showErr('newNoteErr','Please enter a title.');return;}
+  const block=document.getElementById('newNoteBlock').value;
+  const subject=document.getElementById('newNoteSubject').value;
+  const lecture_ref=document.getElementById('newNoteLecture').value.trim();
+  const{data,error}=await sb.from('notes').insert({year:yr,title,block,subject,lecture_ref,content:'',updated_at:new Date().toISOString()}).select().single();
+  if(error){showErr('newNoteErr','Save failed: '+error.message);return;}
+  closeModal('newNoteModal');
+  allNotes.unshift(data);
+  renderNotesList();
+  openNote(data.id);
+}
+
+async function openNote(id){
+  // Save current note first
+  if(activeNoteId&&activeNoteId!==id)await flushNoteSave();
+  activeNoteId=id;
+  const note=allNotes.find(n=>n.id===id);
+  if(!note)return;
+  // Show editor
+  document.getElementById('noteEmptyState').style.display='none';
+  document.getElementById('noteToolbar').style.display='flex';
+  document.getElementById('noteMetaBar').style.display='flex';
+  document.getElementById('noteContentWrap').style.display='grid';
+  // Set meta fields
+  document.getElementById('noteBlock').value=note.block||'';
+  document.getElementById('noteSubject').value=note.subject||'';
+  document.getElementById('noteLectureRef').value=note.lecture_ref||'';
+  // Set editor
+  const editor=document.getElementById('noteEditor');
+  editor.contentEditable='true';
+  editor.innerHTML=note.content||'';
+  editor.focus();
+  // Wire up auto-save
+  editor.oninput=()=>scheduleNoteSave();
+  // Highlight tooltip
+  editor.addEventListener('mouseup',showHighlightTooltip);
+  document.getElementById('noteSavingIndicator').textContent='';
+  renderNotesList();
+}
+
+function scheduleNoteSave(){
+  document.getElementById('noteSavingIndicator').textContent='saving…';
+  if(noteSaveTimer)clearTimeout(noteSaveTimer);
+  noteSaveTimer=setTimeout(flushNoteSave,1500);
+}
+async function flushNoteSave(){
+  if(!activeNoteId)return;
+  const content=document.getElementById('noteEditor').innerHTML;
+  await sb.from('notes').update({content,updated_at:new Date().toISOString()}).eq('id',activeNoteId);
+  const note=allNotes.find(n=>n.id===activeNoteId);
+  if(note){note.content=content;note.updated_at=new Date().toISOString();}
+  document.getElementById('noteSavingIndicator').textContent='saved ✓';
+  setTimeout(()=>{if(document.getElementById('noteSavingIndicator'))document.getElementById('noteSavingIndicator').textContent='';},2000);
+}
+async function saveNoteMeta(){
+  if(!activeNoteId)return;
+  const block=document.getElementById('noteBlock').value;
+  const subject=document.getElementById('noteSubject').value;
+  const lecture_ref=document.getElementById('noteLectureRef').value;
+  await sb.from('notes').update({block,subject,lecture_ref,updated_at:new Date().toISOString()}).eq('id',activeNoteId);
+  const note=allNotes.find(n=>n.id===activeNoteId);
+  if(note){note.block=block;note.subject=subject;note.lecture_ref=lecture_ref;}
+  renderNotesList();
+}
+
+async function deleteNote(){
+  if(!activeNoteId)return;
+  if(!confirm('Delete this note? This cannot be undone.'))return;
+  await sb.from('notes').delete().eq('id',activeNoteId);
+  allNotes=allNotes.filter(n=>n.id!==activeNoteId);
+  activeNoteId=null;
+  document.getElementById('noteEditor').innerHTML='';
+  document.getElementById('noteEmptyState').style.display='flex';
+  document.getElementById('noteToolbar').style.display='none';
+  document.getElementById('noteMetaBar').style.display='none';
+  document.getElementById('noteContentWrap').style.display='none';
+  renderNotesList();
+}
+
+function noteCmd(cmd,val){document.execCommand(cmd,false,val||null);}
+
+function toggleAIPanel(){
+  noteAiOpen=!noteAiOpen;
+  const panel=document.getElementById('noteAiPanel');
+  const wrap=document.getElementById('noteContentWrap');
+  panel.style.display=noteAiOpen?'flex':'none';
+  wrap.style.gridTemplateColumns=noteAiOpen?'1fr 300px':'1fr';
+}
+
+async function aiNoteAction(action){
+  if(!activeNoteId)return;
+  const content=document.getElementById('noteEditor').innerHTML.replace(/<[^>]+>/g,' ').trim();
+  if(!content||content.length<20){document.getElementById('noteAiResponse').textContent='Note is empty — write something first!';return;}
+  const sel=window.getSelection();
+  const highlighted=sel&&sel.toString().trim().length>10?sel.toString().trim():'';
+  const prompts={
+    summarise:`Summarise these UK Year 2 med student notes in 4-6 bullet points. Be concise and exam-focused:\n\n${content}`,
+    keypoints:`List the top 8 key exam points from these UK Year 2 med notes. Each point should be one clear, testable fact:\n\n${content}`,
+    gaps:`Review these UK Year 2 med student notes on this topic. What important concepts, conditions, or facts are missing that would likely come up in exams? Give 4-6 specific gaps:\n\n${content}`,
+    explain:`Explain this highlighted text simply for a UK Year 2 med student. Be clear and concise (3-4 sentences):\n\n${highlighted||content.substring(0,300)}`,
+    flashcard:`Create a Q&A flashcard from this text. Format as:\nQ: [question]\nA: [concise answer]\n\nText: ${highlighted||content.substring(0,300)}`
+  };
+  const respEl=document.getElementById('noteAiResponse');
+  respEl.textContent='Thinking…';
+  if(!noteAiOpen)toggleAIPanel();
+  try{
+    const r=await fetch('/api/generate',{method:'POST',headers:{'Content-Type':'application/json'},body:JSON.stringify({model:'claude-haiku-4-5-20251001',max_tokens:600,messages:[{role:'user',content:prompts[action]}]})});
+    const d=await r.json();
+    respEl.textContent=(d.content?.[0]?.text||'').trim();
+  }catch(e){respEl.textContent='Error: '+e.message;}
+}
+
+function showHighlightTooltip(e){
+  const sel=window.getSelection();
+  if(!sel||sel.toString().trim().length<3){document.getElementById('highlightTooltip').style.display='none';return;}
+  const rect=sel.getRangeAt(0).getBoundingClientRect();
+  const tip=document.getElementById('highlightTooltip');
+  tip.style.display='flex';
+  tip.style.top=(rect.top+window.scrollY-44)+'px';
+  tip.style.left=Math.max(8,rect.left+rect.width/2-80)+'px';
+}
+document.addEventListener('mousedown',e=>{if(!e.target.closest('#highlightTooltip')&&!e.target.closest('#noteEditor'))document.getElementById('highlightTooltip').style.display='none';});
+
+async function aiFromHighlight(action){
+  const sel=window.getSelection();
+  const text=sel?sel.toString().trim():'';
+  document.getElementById('highlightTooltip').style.display='none';
+  if(!text)return;
+  if(action==='explain'||action==='flashcard'){aiNoteAction(action);if(!noteAiOpen)toggleAIPanel();return;}
+  if(action==='mcq'){
+    // Navigate to MCQ page, pre-fill with highlighted text
+    await flushNoteSave();
+    document.querySelector('input[name="mcqSrc"][value="text"]').checked=true;
+    mcqSrcChange();
+    document.getElementById('mcqNotes').value=text;
+    nav('mcq',document.querySelector('[data-page="mcq"]'));
+  }
+}
+
+// ── GENERATE MCQ FROM NOTE TOOLBAR ──
+async function genMCQFromNote(){
+  if(!activeNoteId)return;
+  await flushNoteSave();
+  const note=allNotes.find(n=>n.id===activeNoteId);
+  // Switch to MCQ page with note pre-selected
+  document.querySelector('input[name="mcqSrc"][value="note"]').checked=true;
+  mcqSrcChange();
+  await populateMcqNoteSelect();
+  document.getElementById('mcqNoteSelect').value=activeNoteId;
+  document.getElementById('mcqNoteSelect').dispatchEvent(new Event('change'));
+  nav('mcq',document.querySelector('[data-page="mcq"]'));
+}
+
+async function genRecallFromNote(){
+  if(!activeNoteId)return;
+  await flushNoteSave();
+  const note=allNotes.find(n=>n.id===activeNoteId);
+  // Navigate to recall with note content pre-filled
+  document.querySelector('input[name="recallSrc"][value="notes"]').checked=true;
+  document.getElementById('recallNotesInput').style.display='block';
+  const content=(note?.content||'').replace(/<[^>]+>/g,' ');
+  document.getElementById('recallNotes').value=content;
+  nav('recall',document.querySelector('[data-page="recall"]'));
+}
+
+// ── NOTION LINKS ──
+const NOTION_WORKER='https://mymedicinefriendmymedicinefriend.ranaabhinav23.workers.dev';
+
+function extractNotionPageId(url){
+  // Handles formats:
+  // https://www.notion.so/Page-Title-abc123def456...
+  // https://www.notion.so/workspace/Page-Title-abc123def456...
+  // https://notion.so/abc123def456...
+  try{
+    const u=new URL(url);
+    const parts=u.pathname.split('/').filter(Boolean);
+    const last=parts[parts.length-1];
+    // Page ID is the last 32 hex chars (with or without hyphens)
+    const match=last.match(/([a-f0-9]{32}|[a-f0-9-]{36})$/i);
+    if(match)return match[1].replace(/-/g,'');
+    // Sometimes the ID is the whole last segment if no title
+    if(/^[a-f0-9]{32}$/i.test(last))return last;
+  }catch(e){}
+  return null;
+}
+
+async function importNotionPage(){
+  const url=document.getElementById('notionLinkUrl').value.trim();
+  if(!url){showErr('notionLinkErr','Paste a Notion page URL first.');return;}
+  const pageId=extractNotionPageId(url);
+  if(!pageId){showErr('notionLinkErr','Could not extract page ID from that URL. Make sure it\'s a full Notion page URL.');return;}
+  const block=document.getElementById('notionLinkBlock').value;
+  const subject=document.getElementById('notionLinkSubject').value;
+  setBusy('notionImportBtn','notionImportTxt','Importing…',true);
+  hideErr('notionLinkErr');
+  try{
+    const r=await fetch(NOTION_WORKER,{
+      method:'POST',
+      headers:{'Content-Type':'application/json'},
+      body:JSON.stringify({pageId})
+    });
+    const d=await r.json();
+    if(!r.ok||d.error)throw new Error(d.error||'Worker error');
+    // Save as a real note in Supabase
+    const{data,error}=await sb.from('notes').insert({
+      year:yr,
+      title:d.title||'Imported Notion Note',
+      content:d.html||'',
+      block,
+      subject,
+      lecture_ref:'',
+      updated_at:new Date().toISOString()
+    }).select().single();
+    if(error)throw new Error('Supabase error: '+error.message);
+    // Also save as a link for reference
+    notionLinks.push({id:Date.now(),name:d.title||'Imported Note',url,block,imported:true,noteId:data.id});
+    localStorage.setItem('_ms_notion_links',JSON.stringify(notionLinks));
+    closeModal('notionLinkModal');
+    document.getElementById('notionLinkUrl').value='';
+    allNotes.unshift(data);
+    renderNotesList();
+    renderNotionLinks();
+    openNote(data.id);
+    // Show success
+    document.getElementById('noteSavingIndicator').textContent='✓ Imported from Notion!';
+    setTimeout(()=>{if(document.getElementById('noteSavingIndicator'))document.getElementById('noteSavingIndicator').textContent='';},3000);
+  }catch(e){
+    showErr('notionLinkErr','Import failed: '+e.message+'. Make sure you connected your MedStudy integration to this page in Notion.');
+  }finally{
+    setBusy('notionImportBtn','notionImportTxt','⬇ Import as MedStudy note',false);
+  }
+}
+
+function saveNotionLinkOnly(){
+  const url=document.getElementById('notionLinkUrl').value.trim();
+  if(!url){showErr('notionLinkErr','Paste a Notion page URL first.');return;}
+  const block=document.getElementById('notionLinkBlock').value;
+  // Use URL as name fallback
+  const name=url.split('/').filter(Boolean).pop()?.replace(/-[a-f0-9]{32}$/i,'').replace(/-/g,' ')||'Notion page';
+  notionLinks.push({id:Date.now(),name,url,block,imported:false});
+  localStorage.setItem('_ms_notion_links',JSON.stringify(notionLinks));
+  document.getElementById('notionLinkUrl').value='';
+  hideErr('notionLinkErr');
+  closeModal('notionLinkModal');
+  renderNotionLinks();
+}
+
+function saveNotionLink(){saveNotionLinkOnly();}
+
+function renderNotionLinks(){
+  const el=document.getElementById('notionLinksList');
+  if(!notionLinks.length){el.innerHTML=`<div style="font-size:11px;color:var(--text3);text-align:center;padding:8px 0;">No Notion pages yet.<br>Click + Add to import.</div>`;return;}
+  el.innerHTML=notionLinks.map(l=>`<div class="notion-link-card">
+    <span class="notion-ico">${l.imported?'✅':'🔗'}</span>
+    <div class="notion-link-card-body" onclick="${l.imported&&l.noteId?`openNote('${l.noteId}')`:`viewNotionPage(${l.id})`}" style="cursor:pointer;">
+      <div class="notion-link-card-title">${esc(l.name)}</div>
+      <div class="notion-link-card-url">${l.imported?'<span style="color:var(--green);font-size:10px;">Imported as note</span>':'View only · '+esc(l.url.substring(0,35))+'…'}</div>
+    </div>
+    <button class="btn btn-xs btn-danger" onclick="removeNotionLink(${l.id})">✕</button>
+  </div>`).join('');
+}
+
+function viewNotionPage(id){
+  const link=notionLinks.find(l=>l.id===id);if(!link)return;
+  document.getElementById('notionViewTitle').textContent=link.name;
+  document.getElementById('notionViewFrame').src=link.url;
+  openModal('notionViewModal');
+}
+function removeNotionLink(id){
+  notionLinks=notionLinks.filter(l=>l.id!==id);
+  localStorage.setItem('_ms_notion_links',JSON.stringify(notionLinks));
+  renderNotionLinks();
+}
+
+function timeAgo(dateStr){
+  if(!dateStr)return'';
+  const diff=Date.now()-new Date(dateStr).getTime();
+  const m=Math.floor(diff/60000);
+  if(m<1)return'just now';if(m<60)return m+'m ago';
+  const h=Math.floor(m/60);if(h<24)return h+'h ago';
+  const d=Math.floor(h/24);return d+'d ago';
 }
 
 // ── UTILS ──
