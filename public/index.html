@@ -454,7 +454,10 @@ label { font-size: 11px; color: var(--text2); font-weight: 600; display: block; 
         <div class="page-hero-title">Welcome back, Abhinav 👋</div>
         <div class="page-hero-sub" id="dashSub">Year 2 · Keep going — you've got this.</div>
       </div>
-      <button class="btn btn-outline btn-sm" onclick="openTargetModal()">＋ Today's targets</button>
+      <div style="display:flex;gap:8px;">
+        <button class="btn btn-outline btn-sm" onclick="openModal('todoModal');renderTodoList()">📋 To-do</button>
+        <button class="btn btn-outline btn-sm" onclick="openTargetModal()">＋ Today's targets</button>
+      </div>
     </div>
     <div style="padding:24px 32px 0;">
       <div class="g4 mb20">
@@ -475,6 +478,7 @@ label { font-size: 11px; color: var(--text2); font-weight: 600; display: block; 
             <div id="cdImportantDates"></div>
           </div>
           <div id="todayPlanCard"></div>
+          <div id="tomorrowPlanCard"></div>
         </div>
       </div>
       <div class="g2 mt16">
@@ -673,18 +677,22 @@ label { font-size: 11px; color: var(--text2); font-weight: 600; display: block; 
    <!-- STUDY PLAN -->
    <div class="page" id="page-plan">
     <div class="page-hero">
-      <div><div class="page-hero-title">Study Plan 📅</div><div class="page-hero-sub">9-week exam schedule — track every lecture, every day</div></div>
+      <div><div class="page-hero-title">Study Plan 📅</div><div class="page-hero-sub" id="planHeroSub">9-week exam schedule — track every lecture, every day</div></div>
       <div style="display:flex;gap:8px;">
-        <button class="btn btn-outline btn-sm" id="planEditBtn" onclick="togglePlanEditMode()">✏ Edit</button>
+        <button class="btn btn-outline btn-sm" id="planEditBtn" onclick="togglePlanEditMode()">✏ Edit plan</button>
         <button class="btn btn-outline btn-sm" onclick="openModal('planSettingsModal')">⚙ Settings</button>
-        <button class="btn btn-teal btn-sm" onclick="goToToday()">Today</button>
+        <button class="btn btn-teal btn-sm" onclick="goToToday()">📍 Today</button>
       </div>
     </div>
     <div style="padding:24px 32px 0;">
-      <!-- Overall progress -->
       <div class="g4 mb20" id="planStats"></div>
+      <!-- Calendar mini strip -->
+      <div class="section-card mb16">
+        <div class="section-head"><div class="section-title">Calendar</div><div style="display:flex;gap:8px;align-items:center;"><button class="btn btn-xs btn-ghost" onclick="shiftCalMonth(-1)">‹</button><span id="calMonthLabel" style="font-size:12px;font-weight:700;color:var(--text2);min-width:100px;text-align:center;"></span><button class="btn btn-xs btn-ghost" onclick="shiftCalMonth(1)">›</button></div></div>
+        <div style="padding:14px 16px;"><div style="display:grid;grid-template-columns:repeat(7,1fr);gap:3px;" id="calGrid"></div></div>
+      </div>
       <!-- Week tabs -->
-      <div style="display:flex;gap:0;margin-bottom:20px;background:var(--surface);border:1px solid var(--border);border-radius:var(--r);padding:3px;width:fit-content;box-shadow:var(--card-shadow);overflow-x:auto;max-width:100%;" id="weekTabs"></div>
+      <div style="display:flex;gap:0;margin-bottom:16px;background:var(--surface);border:1px solid var(--border);border-radius:var(--r);padding:3px;width:fit-content;box-shadow:var(--card-shadow);overflow-x:auto;max-width:100%;" id="weekTabs"></div>
       <!-- Week view -->
       <div id="planWeekView"></div>
     </div>
@@ -873,11 +881,44 @@ label { font-size: 11px; color: var(--text2); font-weight: 600; display: block; 
   </div>
 </div>
 
+<div class="modal-bg" id="editDayModal">
+  <div class="modal" style="width:560px;">
+    <div class="modal-title" id="editDayModalTitle">Edit Day</div>
+    <div id="editDayTaskList" style="margin-bottom:14px;display:flex;flex-direction:column;gap:6px;"></div>
+    <div style="display:flex;gap:8px;margin-bottom:16px;">
+      <input type="text" id="editDayNewTask" placeholder="Add a new task…" style="flex:1;" onkeydown="if(event.key==='Enter')addEditDayTask()">
+      <button class="btn btn-primary btn-sm" onclick="addEditDayTask()">Add</button>
+    </div>
+    <div style="font-size:11px;color:var(--text3);margin-bottom:14px;">💡 Tip: drag tasks between days in the week view when in edit mode</div>
+    <div class="row" style="gap:8px;"><button class="btn btn-primary flex1" onclick="saveEditDay()">Save</button><button class="btn btn-outline" onclick="closeModal('editDayModal')">Cancel</button></div>
+  </div>
+</div>
+
+<div class="modal-bg" id="todoModal">
+  <div class="modal">
+    <div class="modal-title">To-Do List 📋</div>
+    <div style="display:flex;gap:8px;margin-bottom:14px;">
+      <input type="text" id="todoInput" placeholder="Add a to-do…" style="flex:1;" onkeydown="if(event.key==='Enter')addTodo()">
+      <select id="todoPriority" style="width:auto;padding:8px 10px;font-size:12px;">
+        <option value="normal">Normal</option>
+        <option value="high">🔴 High</option>
+        <option value="low">🔵 Low</option>
+      </select>
+      <button class="btn btn-primary btn-sm" onclick="addTodo()">Add</button>
+    </div>
+    <div id="todoList" style="max-height:350px;overflow-y:auto;"></div>
+    <button class="btn btn-ghost mt12" onclick="closeModal('todoModal')">Close</button>
+  </div>
+</div>
+
 <div class="modal-bg" id="planSettingsModal">
   <div class="modal">
     <div class="modal-title">Study Plan Settings</div>
-    <div class="mb12"><label>Exam start date (Monday of Week 1)</label><input type="date" id="planStartDate"></div>
+    <div class="mb12"><label>Start date (your Week 1 day 1)</label><input type="date" id="planStartDate"></div>
     <div class="mb12"><label>Exam name</label><input type="text" id="planExamName" placeholder="e.g. Year 2 Finals"></div>
+    <div style="font-size:12px;color:var(--text2);margin-bottom:16px;background:var(--surface2);border-radius:var(--r);padding:10px 14px;">
+      Your schedule starts <strong>Saturday 21st March</strong> — set the date to <strong>2026-03-21</strong> to match your plan.
+    </div>
     <div class="row" style="gap:8px;"><button class="btn btn-primary flex1" onclick="savePlanSettings()">Save</button><button class="btn btn-outline" onclick="closeModal('planSettingsModal')">Cancel</button></div>
   </div>
 </div>
@@ -1017,7 +1058,7 @@ function buildPills(){
   document.getElementById('mockBlockPills').innerHTML=BLOCKS.map(b=>`<span class="pill pill-${BC[b]} active" onclick="this.classList.toggle('active')">${b}</span>`).join('');
   document.getElementById('mockSubjectPills').innerHTML=`<span class="pill pill-all active" onclick="toggleMockSubjectPill('all',this)">All subjects</span>`+SUBJECTS.map(s=>`<span class="pill" onclick="toggleMockSubjectPill('${s}',this)">${s}</span>`).join('');
   document.querySelectorAll('input[name="recallSrc"]').forEach(r=>r.addEventListener('change',()=>{
-    document.getElementById('recallNotesInput').style.display=r.value==='notes'&&r.checked?'block':'none';
+    document.getElementById('recallTextSrc').style.display=r.value==='notes'&&r.checked?'block':'none';
   }));
 }
 
@@ -1068,6 +1109,7 @@ async function loadDash(){
   renderTargets();
   renderCountdown();
   renderTodayCard();
+  renderTomorrowCard();
 }
 
 function updateWrongBadge(n){
@@ -1861,7 +1903,7 @@ async function genRecallFromNote(){
   const note=allNotes.find(n=>n.id===activeNoteId);
   // Navigate to recall with note content pre-filled
   document.querySelector('input[name="recallSrc"][value="notes"]').checked=true;
-  document.getElementById('recallNotesInput').style.display='block';
+  document.getElementById('recallTextSrc').style.display='block';
   const content=(note?.content||'').replace(/<[^>]+>/g,' ');
   document.getElementById('recallNotes').value=content;
   nav('recall',document.querySelector('[data-page="recall"]'));
@@ -2178,363 +2220,541 @@ function timeAgo(dateStr){
 // ── STUDY PLAN ──
 const PLAN_KEY = '_ms_plan_';
 const PLAN_CUSTOM_KEY = '_ms_plan_custom_';
+let _planEditMode = false;
+let _calMonthOffset = 0;
+let _editingWeek = null, _editingDay = null;
+let _editDayTasks = [];
 
-function getPlanCustomData() {
-  return JSON.parse(localStorage.getItem(PLAN_CUSTOM_KEY + yr) || '{}');
+function getPlanCustomData(){return JSON.parse(localStorage.getItem(PLAN_CUSTOM_KEY+yr)||'{}');}
+function savePlanCustomData(data){localStorage.setItem(PLAN_CUSTOM_KEY+yr,JSON.stringify(data));}
+function getDayTasks(weekNum,dayIdx){
+  const custom=getPlanCustomData();
+  const key=`w${weekNum}_d${dayIdx}`;
+  if(custom[key])return custom[key];
+  return STUDY_PLAN[weekNum-1]?.days[dayIdx]?.tasks||[];
 }
-function savePlanCustomData(data) {
-  localStorage.setItem(PLAN_CUSTOM_KEY + yr, JSON.stringify(data));
-}
-
-// Get tasks for a day — custom overrides default
-function getDayTasks(weekNum, dayIdx) {
-  const custom = getPlanCustomData();
-  const key = `w${weekNum}_d${dayIdx}`;
-  if (custom[key]) return custom[key];
-  return STUDY_PLAN[weekNum - 1]?.days[dayIdx]?.tasks || [];
-}
-
-function setDayTasks(weekNum, dayIdx, tasks) {
-  const custom = getPlanCustomData();
-  custom[`w${weekNum}_d${dayIdx}`] = tasks;
+function setDayTasks(weekNum,dayIdx,tasks){
+  const custom=getPlanCustomData();
+  custom[`w${weekNum}_d${dayIdx}`]=tasks;
   savePlanCustomData(custom);
 }
 
-let _planEditMode = false;
-const STUDY_PLAN = [
-  { week: 1, topic: 'GU', pass: '2nd', type: 'revision', lectures: 33, hoursPerLec: 1.25, color: '#ec4899',
-    days: [
-      { day: 'Mon', tasks: ['GU lectures 1-5 (revision)', 'Generate MCQs after each lecture'] },
-      { day: 'Tue', tasks: ['GU lectures 6-10 (revision)', 'Generate MCQs after each lecture'] },
-      { day: 'Wed', tasks: ['GU lectures 11-15 (revision)', 'Generate MCQs after each lecture'] },
-      { day: 'Thu', tasks: ['GU lectures 16-20 (revision)', 'Generate MCQs after each lecture'] },
-      { day: 'Fri', tasks: ['GU lectures 21-25 (revision)', 'Generate MCQs after each lecture'] },
-      { day: 'Sat', tasks: ['GU lectures 26-28 (last 3)', 'Full GU mock exam — all blocks', 'Review all wrong answers'] },
-      { day: 'Sun', tasks: ['Rest 🌟'] }
+const STUDY_PLAN=[
+  {week:1,topic:'GU',pass:'2nd',type:'revision',lectures:33,hoursPerLec:1.25,color:'#ec4899',
+    days:[
+      {day:'Sat',tasks:['GU lectures 1-3 (revision)','Generate MCQs after each lecture']},
+      {day:'Sun',tasks:['GU lectures 4-6 (revision)','Review wrong answers']},
+      {day:'Mon',tasks:['GU lectures 7-11 (revision)','Generate MCQs after each lecture']},
+      {day:'Tue',tasks:['GU lectures 12-16 (revision)','Generate MCQs after each lecture']},
+      {day:'Wed',tasks:['GU lectures 17-21 (revision)','Generate MCQs after each lecture']},
+      {day:'Thu',tasks:['GU lectures 22-26 (revision)','Generate MCQs after each lecture']},
+      {day:'Fri',tasks:['GU lectures 27-33 (finish)','Full GU mock exam','Review all wrong answers']},
     ]
   },
-  { week: 2, topic: 'Neurology', pass: '2nd', type: 'revision', lectures: 30, hoursPerLec: 1.25, color: '#10b981',
-    days: [
-      { day: 'Mon', tasks: ['Neuro lectures 1-5 (revision)', 'MCQs after each'] },
-      { day: 'Tue', tasks: ['Neuro lectures 6-10 (revision)', 'MCQs after each'] },
-      { day: 'Wed', tasks: ['Neuro lectures 11-15 (revision)', 'MCQs after each'] },
-      { day: 'Thu', tasks: ['Neuro lectures 16-20 (revision)', 'MCQs after each'] },
-      { day: 'Fri', tasks: ['Neuro lectures 21-25 (revision)', 'MCQs after each'] },
-      { day: 'Sat', tasks: ['Neuro lectures 26-30 (finish)', 'Full Neuro mock exam', 'Review wrong answers'] },
-      { day: 'Sun', tasks: ['Rest 🌟'] }
+  {week:2,topic:'Neurology',pass:'2nd',type:'revision',lectures:30,hoursPerLec:1.25,color:'#10b981',
+    days:[
+      {day:'Sat',tasks:['Rest / catch up from Week 1 😴']},
+      {day:'Sun',tasks:['Neuro lectures 1-3 (revision)','Quick Recall on Neuro']},
+      {day:'Mon',tasks:['Neuro lectures 4-8 (revision)','Generate MCQs after each']},
+      {day:'Tue',tasks:['Neuro lectures 9-13 (revision)','Generate MCQs after each']},
+      {day:'Wed',tasks:['Neuro lectures 14-18 (revision)','Generate MCQs after each']},
+      {day:'Thu',tasks:['Neuro lectures 19-24 (revision)','Generate MCQs after each']},
+      {day:'Fri',tasks:['Neuro lectures 25-30 (finish)','Full Neuro mock exam','Review wrong answers']},
     ]
   },
-  { week: 3, topic: 'MSK + Core', pass: '2nd + 1st', type: 'mixed', lectures: 27, hoursPerLec: 1.5, color: '#3b82f6',
-    days: [
-      { day: 'Mon', tasks: ['3 MSK revision lectures', '1 Core new lecture (2hrs)'] },
-      { day: 'Tue', tasks: ['3 MSK revision lectures', '1 Core new lecture (2hrs)'] },
-      { day: 'Wed', tasks: ['3 MSK revision lectures', '1 Core new lecture (2hrs)'] },
-      { day: 'Thu', tasks: ['3 MSK revision lectures', '1 Core new lecture (2hrs)'] },
-      { day: 'Fri', tasks: ['2 MSK revision lectures', '1 Core new lecture (2hrs)'] },
-      { day: 'Sat', tasks: ['2 MSK revision + 1 Core new', 'MCQ test on MSK', 'Review wrong answers'] },
-      { day: 'Sun', tasks: ['Rest 🌟'] }
+  {week:3,topic:'MSK + Core',pass:'2nd + 1st',type:'mixed',lectures:27,hoursPerLec:1.5,color:'#3b82f6',
+    days:[
+      {day:'Sat',tasks:['Rest 😴']},
+      {day:'Sun',tasks:['3 MSK revision lectures','1 Core new lecture (2hrs)']},
+      {day:'Mon',tasks:['3 MSK revision lectures','1 Core new lecture']},
+      {day:'Tue',tasks:['3 MSK revision lectures','1 Core new lecture']},
+      {day:'Wed',tasks:['3 MSK revision lectures','1 Core new lecture']},
+      {day:'Thu',tasks:['2 MSK revision lectures','1 Core new lecture']},
+      {day:'Fri',tasks:['2 MSK + 1 Core','MCQ test on MSK','Review wrong answers']},
     ]
   },
-  { week: 4, topic: 'Core + CVR', pass: '1st', type: 'new', lectures: 26, hoursPerLec: 2, color: '#8b5cf6',
-    days: [
-      { day: 'Mon', tasks: ['2 Core new lectures', '1 CVR new lecture'] },
-      { day: 'Tue', tasks: ['2 Core new lectures', '1 CVR new lecture'] },
-      { day: 'Wed', tasks: ['2 Core new lectures', '1 CVR new lecture'] },
-      { day: 'Thu', tasks: ['1 Core new lecture', '2 CVR new lectures'] },
-      { day: 'Fri', tasks: ['1 Core new lecture', '2 CVR new lectures'] },
-      { day: 'Sat', tasks: ['Last Core lecture', 'MCQs on Core block', 'Review wrong answers'] },
-      { day: 'Sun', tasks: ['Rest 🌟'] }
+  {week:4,topic:'Core + CVR',pass:'1st',type:'new',lectures:26,hoursPerLec:2,color:'#8b5cf6',
+    days:[
+      {day:'Sat',tasks:['Rest 😴']},
+      {day:'Sun',tasks:['2 Core new lectures','1 CVR new lecture']},
+      {day:'Mon',tasks:['2 Core new lectures','1 CVR new lecture']},
+      {day:'Tue',tasks:['2 Core new lectures','1 CVR new lecture']},
+      {day:'Wed',tasks:['1 Core new lecture','2 CVR new lectures']},
+      {day:'Thu',tasks:['1 Core new lecture','2 CVR new lectures']},
+      {day:'Fri',tasks:['Last Core lecture','MCQs on Core block','Review wrong answers']},
     ]
   },
-  { week: 5, topic: 'CVR + GI', pass: '1st', type: 'new', lectures: 31, hoursPerLec: 2, color: '#ef4444',
-    days: [
-      { day: 'Mon', tasks: ['3 CVR new lectures'] },
-      { day: 'Tue', tasks: ['3 CVR new lectures'] },
-      { day: 'Wed', tasks: ['2 CVR new lectures', '1 GI new lecture'] },
-      { day: 'Thu', tasks: ['3 GI new lectures'] },
-      { day: 'Fri', tasks: ['3 GI new lectures'] },
-      { day: 'Sat', tasks: ['Remaining CVR/GI lectures', 'MCQ test on CVR', 'Review wrong answers'] },
-      { day: 'Sun', tasks: ['Rest 🌟'] }
+  {week:5,topic:'CVR + GI',pass:'1st',type:'new',lectures:31,hoursPerLec:2,color:'#ef4444',
+    days:[
+      {day:'Sat',tasks:['Rest 😴']},
+      {day:'Sun',tasks:['3 CVR new lectures']},
+      {day:'Mon',tasks:['3 CVR new lectures']},
+      {day:'Tue',tasks:['2 CVR + 1 GI new lectures']},
+      {day:'Wed',tasks:['3 GI new lectures']},
+      {day:'Thu',tasks:['3 GI new lectures']},
+      {day:'Fri',tasks:['Remaining CVR/GI','MCQ test on CVR','Review wrong answers']},
     ]
   },
-  { week: 6, topic: 'GU 2nd pass', pass: '2nd', type: 'revision', lectures: 33, hoursPerLec: 1, color: '#ec4899',
-    days: [
-      { day: 'Mon', tasks: ['5 GU 2nd pass — blurt first, then check notes', 'Quick Recall session on GU'] },
-      { day: 'Tue', tasks: ['5 GU 2nd pass', 'Quick Recall session'] },
-      { day: 'Wed', tasks: ['5 GU 2nd pass', 'Quick Recall session'] },
-      { day: 'Thu', tasks: ['5 GU 2nd pass', 'Quick Recall session'] },
-      { day: 'Fri', tasks: ['5 GU 2nd pass', 'Quick Recall session'] },
-      { day: 'Sat', tasks: ['Last 8 GU 2nd pass', 'Start 2 Neuro 2nd pass', 'Review all GU wrong answers'] },
-      { day: 'Sun', tasks: ['Rest 🌟'] }
+  {week:6,topic:'GU 2nd pass',pass:'2nd',type:'revision',lectures:33,hoursPerLec:1,color:'#ec4899',
+    days:[
+      {day:'Sat',tasks:['Rest 😴']},
+      {day:'Sun',tasks:['5 GU 2nd pass — blurt first, check notes','Quick Recall on GU']},
+      {day:'Mon',tasks:['5 GU 2nd pass','Quick Recall session']},
+      {day:'Tue',tasks:['5 GU 2nd pass','Quick Recall session']},
+      {day:'Wed',tasks:['5 GU 2nd pass','Quick Recall session']},
+      {day:'Thu',tasks:['5 GU 2nd pass','Quick Recall session']},
+      {day:'Fri',tasks:['Last 8 GU + 2 Neuro 2nd pass start','Review all GU wrong answers']},
     ]
   },
-  { week: 7, topic: 'Neuro + MSK 2nd pass', pass: '2nd', type: 'revision', lectures: 32, hoursPerLec: 1, color: '#10b981',
-    days: [
-      { day: 'Mon', tasks: ['5 Neuro 2nd pass', 'Quick Recall on Neuro'] },
-      { day: 'Tue', tasks: ['5 Neuro 2nd pass', 'Quick Recall on Neuro'] },
-      { day: 'Wed', tasks: ['5 Neuro 2nd pass', 'Quick Recall on Neuro'] },
-      { day: 'Thu', tasks: ['5 Neuro 2nd pass', 'Quick Recall on Neuro'] },
-      { day: 'Fri', tasks: ['Last 8 Neuro 2nd pass', 'Review all Neuro wrong answers'] },
-      { day: 'Sat', tasks: ['4 MSK 2nd pass start', 'Mock exam — Neuro + GU combined'] },
-      { day: 'Sun', tasks: ['Rest 🌟'] }
+  {week:7,topic:'Neuro + MSK 2nd pass',pass:'2nd',type:'revision',lectures:32,hoursPerLec:1,color:'#10b981',
+    days:[
+      {day:'Sat',tasks:['Rest 😴']},
+      {day:'Sun',tasks:['5 Neuro 2nd pass','Quick Recall on Neuro']},
+      {day:'Mon',tasks:['5 Neuro 2nd pass','Quick Recall on Neuro']},
+      {day:'Tue',tasks:['5 Neuro 2nd pass','Quick Recall on Neuro']},
+      {day:'Wed',tasks:['5 Neuro 2nd pass','Quick Recall on Neuro']},
+      {day:'Thu',tasks:['Last 8 Neuro 2nd pass','Review all Neuro wrong answers']},
+      {day:'Fri',tasks:['4 MSK 2nd pass start','Mock exam — Neuro + GU combined']},
     ]
   },
-  { week: 8, topic: 'MSK + CVR + GI 2nd pass', pass: '2nd', type: 'revision', lectures: 51, hoursPerLec: 1, color: '#f59e0b',
-    days: [
-      { day: 'Mon', tasks: ['5 MSK 2nd pass', 'Quick Recall on MSK'] },
-      { day: 'Tue', tasks: ['Finish MSK 2nd pass (remaining)', 'Review MSK wrong answers'] },
-      { day: 'Wed', tasks: ['5 CVR 2nd pass', 'Quick Recall on CVR'] },
-      { day: 'Thu', tasks: ['5 CVR 2nd pass', 'Quick Recall on CVR'] },
-      { day: 'Fri', tasks: ['5 CVR 2nd pass', 'Quick Recall on CVR'] },
-      { day: 'Sat', tasks: ['Last 10 CVR 2nd pass', 'Start GI 2nd pass', 'Review CVR wrong answers'] },
-      { day: 'Sun', tasks: ['Rest 🌟'] }
+  {week:8,topic:'MSK + CVR + GI 2nd pass',pass:'2nd',type:'revision',lectures:51,hoursPerLec:1,color:'#f59e0b',
+    days:[
+      {day:'Sat',tasks:['Rest 😴']},
+      {day:'Sun',tasks:['5 MSK 2nd pass','Quick Recall on MSK']},
+      {day:'Mon',tasks:['Finish MSK 2nd pass','Review MSK wrong answers']},
+      {day:'Tue',tasks:['5 CVR 2nd pass','Quick Recall on CVR']},
+      {day:'Wed',tasks:['5 CVR 2nd pass','Quick Recall on CVR']},
+      {day:'Thu',tasks:['5 CVR 2nd pass','Quick Recall on CVR']},
+      {day:'Fri',tasks:['Last 10 CVR + start GI 2nd pass','Review CVR wrong answers']},
     ]
   },
-  { week: 9, topic: 'Core 2nd pass + Finals prep', pass: '2nd', type: 'exam-prep', lectures: 23, hoursPerLec: 1, color: '#06b6d4',
-    days: [
-      { day: 'Mon', tasks: ['Finish GI 2nd pass', 'Start Core 2nd pass'] },
-      { day: 'Tue', tasks: ['Core 2nd pass', 'Quick Recall on Core'] },
-      { day: 'Wed', tasks: ['Core 2nd pass', 'Quick Recall on Core'] },
-      { day: 'Thu', tasks: ['Finish Core 2nd pass', 'Review ALL remaining wrong answers'] },
-      { day: 'Fri', tasks: ['ALL wrong answers from 9 weeks', 'Pharmacology drug card review'] },
-      { day: 'Sat', tasks: ['Past papers only 📝', 'Full 2-hour mock exam', 'No new content'] },
-      { day: 'Sun', tasks: ['Rest. You\'ve done the work. 🎯'] }
+  {week:9,topic:'Core 2nd pass + Finals prep',pass:'2nd',type:'exam-prep',lectures:23,hoursPerLec:1,color:'#06b6d4',
+    days:[
+      {day:'Sat',tasks:['Rest 😴']},
+      {day:'Sun',tasks:['Finish GI 2nd pass','Start Core 2nd pass']},
+      {day:'Mon',tasks:['Core 2nd pass','Quick Recall on Core']},
+      {day:'Tue',tasks:['Core 2nd pass','Quick Recall on Core']},
+      {day:'Wed',tasks:['Finish Core 2nd pass','Review ALL remaining wrong answers']},
+      {day:'Thu',tasks:['ALL wrong answers from 9 weeks','Pharmacology drug card review']},
+      {day:'Fri',tasks:['Past papers only 📝','Full 2-hour mock exam','No new content — you\'ve done the work 🎯']},
     ]
   }
 ];
 
-let planCurrentWeek = 1;
+let planCurrentWeek=1;
 
-function loadPlan() {
+function loadPlan(){
   renderPlanStats();
   buildWeekTabs();
   renderPlanWeek(planCurrentWeek);
+  renderCalendar();
+  const btn=document.getElementById('planEditBtn');
+  if(btn)btn.textContent=_planEditMode?'✅ Done editing':'✏ Edit plan';
 }
 
-function savePlanSettings() {
-  const date = document.getElementById('planStartDate').value;
-  const name = document.getElementById('planExamName').value.trim();
-  if (!date) { closeModal('planSettingsModal'); return; }
-  localStorage.setItem(PLAN_KEY + 'start', date);
-  localStorage.setItem(PLAN_KEY + 'exam', name || 'Finals');
+function savePlanSettings(){
+  const date=document.getElementById('planStartDate').value;
+  const name=document.getElementById('planExamName').value.trim();
+  if(!date){closeModal('planSettingsModal');return;}
+  localStorage.setItem(PLAN_KEY+'start',date);
+  localStorage.setItem(PLAN_KEY+'exam',name||'Finals');
   closeModal('planSettingsModal');
   loadPlan();
+  renderTodayCard();
+  renderTomorrowCard();
 }
 
-function getPlanStartDate() {
-  const saved = localStorage.getItem(PLAN_KEY + 'start');
-  return saved ? new Date(saved) : null;
+function getPlanStartDate(){
+  const saved=localStorage.getItem(PLAN_KEY+'start');
+  return saved?new Date(saved):null;
 }
 
-function getWeekDates(weekNum) {
-  const start = getPlanStartDate();
-  if (!start) return null;
-  const weekStart = new Date(start);
-  weekStart.setDate(weekStart.getDate() + (weekNum - 1) * 7);
+function getWeekDates(weekNum){
+  const start=getPlanStartDate();
+  if(!start)return null;
+  const weekStart=new Date(start);
+  weekStart.setDate(weekStart.getDate()+(weekNum-1)*7);
   return weekStart;
 }
 
-function getCurrentWeek() {
-  const start = getPlanStartDate();
-  if (!start) return 1;
-  const today = new Date();
-  today.setHours(0, 0, 0, 0);
-  const diff = Math.floor((today - start) / (7 * 24 * 60 * 60 * 1000));
-  return Math.max(1, Math.min(9, diff + 1));
+function getCurrentWeek(){
+  const start=getPlanStartDate();
+  if(!start)return 1;
+  const today=new Date();today.setHours(0,0,0,0);
+  const diff=Math.floor((today-start)/(7*24*60*60*1000));
+  return Math.max(1,Math.min(9,diff+1));
 }
 
-function getTaskKey(week, dayIdx, taskIdx) {
-  return `${PLAN_KEY}${yr}_w${week}_d${dayIdx}_t${taskIdx}`;
-}
-
-function isTaskDone(week, dayIdx, taskIdx) {
-  return localStorage.getItem(getTaskKey(week, dayIdx, taskIdx)) === '1';
-}
-
-function toggleTask(week, dayIdx, taskIdx) {
-  const key = getTaskKey(week, dayIdx, taskIdx);
-  const done = localStorage.getItem(key) === '1';
-  localStorage.setItem(key, done ? '0' : '1');
+function getTaskKey(week,dayIdx,taskIdx){return`${PLAN_KEY}${yr}_w${week}_d${dayIdx}_t${taskIdx}`;}
+function isTaskDone(week,dayIdx,taskIdx){return localStorage.getItem(getTaskKey(week,dayIdx,taskIdx))==='1';}
+function toggleTask(week,dayIdx,taskIdx){
+  const key=getTaskKey(week,dayIdx,taskIdx);
+  const done=localStorage.getItem(key)==='1';
+  localStorage.setItem(key,done?'0':'1');
   renderPlanWeek(planCurrentWeek);
   renderPlanStats();
+  renderTodayCard();
+  renderTomorrowCard();
 }
 
-function getTodayDayName() {
-  return ['Sun', 'Mon', 'Tue', 'Wed', 'Thu', 'Fri', 'Sat'][new Date().getDay()];
+function getTodayDayName(){return['Sun','Mon','Tue','Wed','Thu','Fri','Sat'][new Date().getDay()];}
+
+function getDayNameForOffset(offset){
+  const d=new Date();d.setDate(d.getDate()+offset);
+  return['Sun','Mon','Tue','Wed','Thu','Fri','Sat'][d.getDay()];
 }
 
-function goToToday() {
-  const week = getCurrentWeek();
-  planCurrentWeek = week;
+function getWeekForDate(d){
+  const start=getPlanStartDate();
+  if(!start)return null;
+  const date=new Date(d);date.setHours(0,0,0,0);
+  const diff=Math.floor((date-start)/(7*24*60*60*1000));
+  if(diff<0||diff>=9)return null;
+  return diff+1;
+}
+
+function getDayIdxForDate(d,weekNum){
+  const start=getPlanStartDate();
+  if(!start)return -1;
+  const weekStart=new Date(start);
+  weekStart.setDate(weekStart.getDate()+(weekNum-1)*7);
+  const date=new Date(d);date.setHours(0,0,0,0);
+  weekStart.setHours(0,0,0,0);
+  const diff=Math.floor((date-weekStart)/(24*60*60*1000));
+  return diff>=0&&diff<7?diff:-1;
+}
+
+function goToToday(){
+  const week=getCurrentWeek();
+  planCurrentWeek=week;
   buildWeekTabs();
   renderPlanWeek(week);
-  // Scroll to today's day
-  setTimeout(() => {
-    const todayEl = document.querySelector('.plan-day-card.today');
-    if (todayEl) todayEl.scrollIntoView({ behavior: 'smooth', block: 'center' });
-  }, 100);
+  setTimeout(()=>{
+    const todayEl=document.querySelector('.plan-day-card.today');
+    if(todayEl)todayEl.scrollIntoView({behavior:'smooth',block:'center'});
+  },100);
 }
 
-function renderPlanStats() {
-  const start = getPlanStartDate();
-  const currentWeek = getCurrentWeek();
-  const weekData = STUDY_PLAN[currentWeek - 1];
+function togglePlanEditMode(){
+  _planEditMode=!_planEditMode;
+  const btn=document.getElementById('planEditBtn');
+  if(btn){btn.textContent=_planEditMode?'✅ Done editing':'✏ Edit plan';btn.className=_planEditMode?'btn btn-teal btn-sm':'btn btn-outline btn-sm';}
+  renderPlanWeek(planCurrentWeek);
+}
 
-  // Count total tasks done across all weeks
-  let totalTasks = 0, doneTasks = 0;
-  STUDY_PLAN.forEach((w, wi) => {
-    w.days.forEach((d, di) => {
-      d.tasks.forEach((t, ti) => {
-        totalTasks++;
-        if (isTaskDone(wi + 1, di, ti)) doneTasks++;
-      });
+// ── OPEN DAY EDITOR ──
+function openDayEditor(weekNum,dayIdx){
+  _editingWeek=weekNum;_editingDay=dayIdx;
+  _editDayTasks=[...getDayTasks(weekNum,dayIdx)];
+  const week=STUDY_PLAN[weekNum-1];
+  const day=week.days[dayIdx];
+  document.getElementById('editDayModalTitle').textContent=`Edit ${day.day} — Week ${weekNum} (${week.topic})`;
+  renderEditDayTaskList();
+  openModal('editDayModal');
+}
+
+function renderEditDayTaskList(){
+  const el=document.getElementById('editDayTaskList');
+  if(!el)return;
+  if(!_editDayTasks.length){el.innerHTML='<div style="font-size:12px;color:var(--text3);padding:8px 0;">No tasks — add one below</div>';return;}
+  el.innerHTML=_editDayTasks.map((task,i)=>`
+    <div style="display:flex;align-items:center;gap:8px;padding:8px 10px;border:1px solid var(--border);border-radius:var(--r);background:var(--surface);">
+      <span style="font-size:12px;flex:1;">${esc(task)}</span>
+      <button onclick="editDayTaskInline(${i})" class="btn btn-xs btn-outline">✏</button>
+      <button onclick="moveEditTask(${i},-1)" class="btn btn-xs btn-ghost" ${i===0?'disabled':''}>↑</button>
+      <button onclick="moveEditTask(${i},1)" class="btn btn-xs btn-ghost" ${i===_editDayTasks.length-1?'disabled':''}>↓</button>
+      <button onclick="removeEditTask(${i})" class="btn btn-xs btn-danger">✕</button>
+    </div>
+  `).join('');
+}
+
+function editDayTaskInline(i){
+  const newText=prompt('Edit task:',_editDayTasks[i]);
+  if(newText!==null&&newText.trim()){_editDayTasks[i]=newText.trim();renderEditDayTaskList();}
+}
+
+function moveEditTask(i,dir){
+  const j=i+dir;
+  if(j<0||j>=_editDayTasks.length)return;
+  [_editDayTasks[i],_editDayTasks[j]]=[_editDayTasks[j],_editDayTasks[i]];
+  renderEditDayTaskList();
+}
+
+function removeEditTask(i){
+  _editDayTasks.splice(i,1);
+  renderEditDayTaskList();
+}
+
+function addEditDayTask(){
+  const inp=document.getElementById('editDayNewTask');
+  const val=inp.value.trim();
+  if(!val)return;
+  _editDayTasks.push(val);
+  inp.value='';
+  renderEditDayTaskList();
+}
+
+function saveEditDay(){
+  if(_editingWeek===null)return;
+  setDayTasks(_editingWeek,_editingDay,_editDayTasks);
+  closeModal('editDayModal');
+  renderPlanWeek(planCurrentWeek);
+  renderTodayCard();
+  renderTomorrowCard();
+}
+
+// ── CALENDAR ──
+let _calYear=new Date().getFullYear(),_calMonth=new Date().getMonth();
+
+function shiftCalMonth(dir){
+  _calMonth+=dir;
+  if(_calMonth>11){_calMonth=0;_calYear++;}
+  if(_calMonth<0){_calMonth=11;_calYear--;}
+  renderCalendar();
+}
+
+function renderCalendar(){
+  const el=document.getElementById('calGrid');
+  const label=document.getElementById('calMonthLabel');
+  if(!el||!label)return;
+  const start=getPlanStartDate();
+  const today=new Date();today.setHours(0,0,0,0);
+  const monthNames=['January','February','March','April','May','June','July','August','September','October','November','December'];
+  label.textContent=`${monthNames[_calMonth]} ${_calYear}`;
+  const firstDay=new Date(_calYear,_calMonth,1);
+  const lastDay=new Date(_calYear,_calMonth+1,0);
+  // Day headers
+  let html='<div style="display:contents;">';
+  ['Mon','Tue','Wed','Thu','Fri','Sat','Sun'].forEach(d=>{
+    html+=`<div style="text-align:center;font-size:10px;font-weight:700;color:var(--text3);padding:4px 0;">${d}</div>`;
+  });
+  // Empty cells before first day
+  let startDow=(firstDay.getDay()+6)%7; // Mon=0
+  for(let i=0;i<startDow;i++) html+=`<div></div>`;
+  // Days
+  for(let d=1;d<=lastDay.getDate();d++){
+    const date=new Date(_calYear,_calMonth,d);date.setHours(0,0,0,0);
+    const isToday=date.getTime()===today.getTime();
+    const weekNum=start?getWeekForDate(date):null;
+    const weekData=weekNum?STUDY_PLAN[weekNum-1]:null;
+    const dayIdx=weekNum?getDayIdxForDate(date,weekNum):-1;
+    const tasks=weekNum&&dayIdx>=0?getDayTasks(weekNum,dayIdx):[];
+    const doneTasks=tasks.filter((_,ti)=>isTaskDone(weekNum,dayIdx,ti)).length;
+    const allDone=tasks.length>0&&doneTasks===tasks.length;
+    const color=weekData?.color||null;
+    html+=`<div onclick="${weekNum?`switchPlanWeek(${weekNum})`:''}planCurrentWeek=${weekNum||1};buildWeekTabs();renderPlanWeek(${weekNum||1});"
+      style="aspect-ratio:1;display:flex;align-items:center;justify-content:center;border-radius:6px;font-size:12px;font-weight:${isToday?800:500};cursor:${weekNum?'pointer':'default'};position:relative;
+      background:${isToday?color||'var(--accent)':color&&tasks.length?color+'18':'transparent'};
+      color:${isToday?'white':weekNum?'var(--text)':'var(--text3)'};
+      border:${isToday?`2px solid ${color||'var(--accent)'}`:allDone?`1px solid var(--green)`:'1px solid transparent'};
+      transition:all 0.12s;" ${weekNum?`title="Week ${weekNum}: ${weekData.topic}"`:''}>
+      ${d}
+      ${allDone?`<span style="position:absolute;bottom:2px;right:2px;width:5px;height:5px;border-radius:50%;background:var(--green);"></span>`:''}
+    </div>`;
+  }
+  el.innerHTML=html;
+}
+
+function renderPlanStats(){
+  const start=getPlanStartDate();
+  const currentWeek=getCurrentWeek();
+  const weekData=STUDY_PLAN[currentWeek-1];
+  let totalTasks=0,doneTasks=0;
+  STUDY_PLAN.forEach((w,wi)=>{
+    w.days.forEach((d,di)=>{
+      const tasks=getDayTasks(wi+1,di);
+      tasks.forEach((_,ti)=>{totalTasks++;if(isTaskDone(wi+1,di,ti))doneTasks++;});
     });
   });
-
-  const pct = totalTasks ? Math.round(doneTasks / totalTasks * 100) : 0;
-
-  // Days until exam
-  let daysLeft = '?';
-  if (start) {
-    const examDate = new Date(start);
-    examDate.setDate(examDate.getDate() + 63); // 9 weeks
-    const today = new Date(); today.setHours(0, 0, 0, 0);
-    daysLeft = Math.max(0, Math.ceil((examDate - today) / (1000 * 60 * 60 * 24)));
+  const pct=totalTasks?Math.round(doneTasks/totalTasks*100):0;
+  let daysLeft='?';
+  if(start){
+    const examDate=new Date(start);examDate.setDate(examDate.getDate()+63);
+    const today=new Date();today.setHours(0,0,0,0);
+    daysLeft=Math.max(0,Math.ceil((examDate-today)/(1000*60*60*24)));
   }
-
-  // Today's tasks
-  const todayName = getTodayDayName();
-  const todayDayData = weekData?.days.find(d => d.day === todayName);
-  const todayDone = todayDayData ? todayDayData.tasks.filter((t, ti) => {
-    const di = weekData.days.findIndex(d => d.day === todayName);
-    return isTaskDone(currentWeek, di, ti);
-  }).length : 0;
-  const todayTotal = todayDayData?.tasks.length || 0;
-
-  document.getElementById('planStats').innerHTML = `
-    <div class="stat-card"><div class="stat-card-bar" style="background:linear-gradient(90deg,var(--accent),transparent);"></div><div class="stat-icon" style="background:rgba(6,182,212,0.1);color:var(--accent);">📅</div><div class="stat-num">${daysLeft}</div><div class="stat-label">Days to exam</div><div class="stat-hint">9-week plan</div></div>
-    <div class="stat-card"><div class="stat-card-bar" style="background:linear-gradient(90deg,var(--green),transparent);"></div><div class="stat-icon" style="background:rgba(16,185,129,0.1);color:var(--green);">✅</div><div class="stat-num">${pct}%</div><div class="stat-label">Plan complete</div><div class="stat-hint">${doneTasks} of ${totalTasks} tasks</div></div>
-    <div class="stat-card"><div class="stat-card-bar" style="background:linear-gradient(90deg,var(--purple),transparent);"></div><div class="stat-icon" style="background:rgba(139,92,246,0.1);color:var(--purple);">📖</div><div class="stat-num">Week ${currentWeek}</div><div class="stat-label">Current week</div><div class="stat-hint">${weekData?.topic || ''}</div></div>
-    <div class="stat-card"><div class="stat-card-bar" style="background:linear-gradient(90deg,var(--orange),transparent);"></div><div class="stat-icon" style="background:rgba(245,158,11,0.1);color:var(--orange);">🎯</div><div class="stat-num">${todayDone}/${todayTotal}</div><div class="stat-label">Today's tasks</div><div class="stat-hint">${todayName === 'Sun' ? 'Rest day!' : todayDone === todayTotal && todayTotal > 0 ? 'All done! 🎉' : 'Keep going'}</div></div>
+  const todayName=getTodayDayName();
+  const dayIdx=weekData?.days.findIndex(d=>d.day===todayName)??-1;
+  const todayTasks=dayIdx>=0?getDayTasks(currentWeek,dayIdx):[];
+  const todayDone=todayTasks.filter((_,ti)=>isTaskDone(currentWeek,dayIdx,ti)).length;
+  document.getElementById('planStats').innerHTML=`
+    <div class="stat-card"><div class="stat-card-bar" style="background:linear-gradient(90deg,var(--accent),transparent);"></div><div class="stat-icon" style="background:rgba(6,182,212,0.1);color:var(--accent);">📅</div><div class="stat-num">${daysLeft}</div><div class="stat-label">Days to exam</div><div class="stat-hint">${localStorage.getItem(PLAN_KEY+'exam')||'Set exam date'}</div></div>
+    <div class="stat-card"><div class="stat-card-bar" style="background:linear-gradient(90deg,var(--green),transparent);"></div><div class="stat-icon" style="background:rgba(16,185,129,0.1);color:var(--green);">✅</div><div class="stat-num">${pct}%</div><div class="stat-label">Plan complete</div><div class="stat-hint">${doneTasks}/${totalTasks} tasks</div></div>
+    <div class="stat-card"><div class="stat-card-bar" style="background:linear-gradient(90deg,var(--purple),transparent);"></div><div class="stat-icon" style="background:rgba(139,92,246,0.1);color:var(--purple);">📖</div><div class="stat-num">Week ${currentWeek}</div><div class="stat-label">Current week</div><div class="stat-hint">${weekData?.topic||''}</div></div>
+    <div class="stat-card"><div class="stat-card-bar" style="background:linear-gradient(90deg,var(--orange),transparent);"></div><div class="stat-icon" style="background:rgba(245,158,11,0.1);color:var(--orange);">🎯</div><div class="stat-num">${todayDone}/${todayTasks.length}</div><div class="stat-label">Today done</div><div class="stat-hint">${todayDone===todayTasks.length&&todayTasks.length>0?'All done! 🎉':'Keep going'}</div></div>
   `;
 }
 
-function buildWeekTabs() {
-  const currentWeek = getCurrentWeek();
-  document.getElementById('weekTabs').innerHTML = STUDY_PLAN.map((w, i) => {
-    const wNum = i + 1;
-    const isActive = wNum === planCurrentWeek;
-    const isCurrent = wNum === currentWeek;
-    return `<div onclick="switchPlanWeek(${wNum})" style="padding:7px 14px;cursor:pointer;font-size:12px;font-weight:${isActive ? '700' : '600'};color:${isActive ? 'white' : 'var(--text2)'};border-radius:6px;background:${isActive ? w.color : 'transparent'};transition:all 0.15s;white-space:nowrap;position:relative;">
-      W${wNum}${isCurrent ? '<span style="position:absolute;top:3px;right:3px;width:6px;height:6px;border-radius:50%;background:var(--green);"></span>' : ''}
+function buildWeekTabs(){
+  const currentWeek=getCurrentWeek();
+  document.getElementById('weekTabs').innerHTML=STUDY_PLAN.map((w,i)=>{
+    const wNum=i+1;
+    const isActive=wNum===planCurrentWeek;
+    const isCurrent=wNum===currentWeek;
+    return`<div onclick="switchPlanWeek(${wNum})" style="padding:7px 14px;cursor:pointer;font-size:12px;font-weight:${isActive?700:600};color:${isActive?'white':'var(--text2)'};border-radius:6px;background:${isActive?w.color:'transparent'};transition:all 0.15s;white-space:nowrap;position:relative;">
+      W${wNum}${isCurrent?`<span style="position:absolute;top:3px;right:3px;width:6px;height:6px;border-radius:50%;background:var(--green);"></span>`:''}
     </div>`;
   }).join('');
 }
 
-function switchPlanWeek(week) {
-  planCurrentWeek = week;
+function switchPlanWeek(week){
+  planCurrentWeek=week;
   buildWeekTabs();
   renderPlanWeek(week);
 }
 
-function renderPlanWeek(weekNum) {
-  const week = STUDY_PLAN[weekNum - 1];
-  const weekStart = getWeekDates(weekNum);
-  const todayName = getTodayDayName();
-  const currentWeek = getCurrentWeek();
+function renderPlanWeek(weekNum){
+  const week=STUDY_PLAN[weekNum-1];
+  const weekStart=getWeekDates(weekNum);
+  const todayName=getTodayDayName();
+  const currentWeek=getCurrentWeek();
+  const dayNames=['Mon','Tue','Wed','Thu','Fri','Sat','Sun'];
 
-  const dateStr = weekStart ? weekStart.toLocaleDateString('en-GB', { day: 'numeric', month: 'short' }) : 'Set start date in Settings';
-
-  let html = `
-    <div style="background:linear-gradient(135deg,${week.color}15,${week.color}05);border:1px solid ${week.color}30;border-radius:var(--r2);padding:16px 20px;margin-bottom:20px;display:flex;align-items:center;justify-content:space-between;flex-wrap:wrap;gap:10px;">
+  const dateStr=weekStart?weekStart.toLocaleDateString('en-GB',{day:'numeric',month:'short'}):'Set start date';
+  let html=`
+    <div style="background:linear-gradient(135deg,${week.color}15,${week.color}05);border:1px solid ${week.color}30;border-radius:var(--r2);padding:16px 20px;margin-bottom:16px;display:flex;align-items:center;justify-content:space-between;flex-wrap:wrap;gap:10px;">
       <div>
         <div style="font-size:10px;color:${week.color};font-weight:700;text-transform:uppercase;letter-spacing:0.1em;margin-bottom:4px;">Week ${weekNum} · ${week.pass} pass</div>
         <div style="font-size:1.3rem;font-weight:800;color:var(--text);">${week.topic}</div>
         <div style="font-size:12px;color:var(--text2);margin-top:3px;">${week.lectures} lectures · ~${week.hoursPerLec}h each · from ${dateStr}</div>
       </div>
-      <div style="text-align:right;">
-        ${getWeekProgress(weekNum, week)}
-      </div>
+      <div style="text-align:right;">${getWeekProgress(weekNum,week)}</div>
     </div>
     <div style="display:grid;grid-template-columns:repeat(7,1fr);gap:10px;">
   `;
 
-  week.days.forEach((day, di) => {
-    const isToday = day.day === todayName && weekNum === currentWeek;
-    const isRest = day.day === 'Sun';
-    const doneTasks = day.tasks.filter((t, ti) => isTaskDone(weekNum, di, ti)).length;
-    const allDone = doneTasks === day.tasks.length;
-
-    // Get actual date for this day
-    let dayDate = '';
-    if (weekStart) {
-      const dayNames = ['Mon', 'Tue', 'Wed', 'Thu', 'Fri', 'Sat', 'Sun'];
-      const offset = dayNames.indexOf(day.day);
-      const d = new Date(weekStart);
-      d.setDate(d.getDate() + offset);
-      dayDate = d.toLocaleDateString('en-GB', { day: 'numeric', month: 'short' });
+  week.days.forEach((day,di)=>{
+    const isToday=day.day===todayName&&weekNum===currentWeek;
+    const isTomorrow=day.day===getDayNameForOffset(1)&&weekNum===getCurrentWeekForOffset(1);
+    const tasks=getDayTasks(weekNum,di);
+    const doneTasks=tasks.filter((_,ti)=>isTaskDone(weekNum,di,ti)).length;
+    const allDone=doneTasks===tasks.length&&tasks.length>0;
+    let dayDate='';
+    if(weekStart){
+      const dayOffset=dayNames.indexOf(day.day);
+      const d=new Date(weekStart);d.setDate(d.getDate()+dayOffset);
+      dayDate=d.toLocaleDateString('en-GB',{day:'numeric',month:'short'});
     }
-
-    html += `
-      <div class="plan-day-card ${isToday ? 'today' : ''}" style="background:${isToday ? `${week.color}12` : 'var(--surface)'};border:${isToday ? `2px solid ${week.color}` : '1px solid var(--border)'};border-radius:var(--r2);padding:12px;display:flex;flex-direction:column;gap:6px;min-height:120px;${allDone && !isRest ? 'opacity:0.7;' : ''}">
+    html+=`
+      <div class="plan-day-card ${isToday?'today':''}" style="background:${isToday?`${week.color}12`:'var(--surface)'};border:${isToday?`2px solid ${week.color}`:'1px solid var(--border)'};border-radius:var(--r2);padding:12px;display:flex;flex-direction:column;gap:5px;min-height:130px;${allDone?'opacity:0.65;':''}">
         <div style="display:flex;align-items:center;justify-content:space-between;margin-bottom:4px;">
           <div>
-            <div style="font-size:12px;font-weight:800;color:${isToday ? week.color : 'var(--text)'};">${day.day}${isToday ? ' ← Today' : ''}</div>
-            ${dayDate ? `<div style="font-size:10px;color:var(--text3);">${dayDate}</div>` : ''}
+            <div style="font-size:12px;font-weight:800;color:${isToday?week.color:'var(--text)'};">${day.day}${isToday?' ← Today':isTomorrow?' ← Tomorrow':''}</div>
+            ${dayDate?`<div style="font-size:10px;color:var(--text3);">${dayDate}</div>`:''}
           </div>
-          ${!isRest ? `<div style="font-size:10px;font-weight:700;color:${allDone ? 'var(--green)' : 'var(--text3)'};">${doneTasks}/${day.tasks.length}</div>` : ''}
+          <div style="display:flex;align-items:center;gap:4px;">
+            <div style="font-size:10px;font-weight:700;color:${allDone?'var(--green)':'var(--text3)'};">${doneTasks}/${tasks.length}</div>
+            ${_planEditMode?`<button onclick="openDayEditor(${weekNum},${di})" style="background:${week.color};border:none;border-radius:4px;padding:2px 6px;font-size:10px;font-weight:700;color:white;cursor:pointer;">✏</button>`:''}
+          </div>
         </div>
-        ${isRest ? `<div style="font-size:20px;text-align:center;margin:auto;">😴</div>` :
-          day.tasks.map((task, ti) => {
-            const done = isTaskDone(weekNum, di, ti);
-            return `<div onclick="toggleTask(${weekNum},${di},${ti})" style="display:flex;align-items:flex-start;gap:6px;cursor:pointer;padding:4px 6px;border-radius:5px;transition:background 0.1s;" onmouseover="this.style.background='var(--surface2)'" onmouseout="this.style.background='transparent'">
-              <div style="width:14px;height:14px;border-radius:4px;border:1.5px solid ${done ? 'var(--green)' : 'var(--border2)'};background:${done ? 'var(--green)' : 'transparent'};flex-shrink:0;margin-top:1px;display:flex;align-items:center;justify-content:center;transition:all 0.15s;">
-                ${done ? '<svg width="8" height="6" viewBox="0 0 8 6"><polyline points="1,3 3,5 7,1" stroke="white" stroke-width="1.5" fill="none" stroke-linecap="round"/></svg>' : ''}
-              </div>
-              <span style="font-size:11px;line-height:1.5;color:${done ? 'var(--text3)' : 'var(--text)'};text-decoration:${done ? 'line-through' : 'none'};">${esc(task)}</span>
-            </div>`;
-          }).join('')
-        }
+        ${tasks.map((task,ti)=>{
+          const done=isTaskDone(weekNum,di,ti);
+          return`<div onclick="toggleTask(${weekNum},${di},${ti})" style="display:flex;align-items:flex-start;gap:5px;cursor:pointer;padding:3px 5px;border-radius:4px;transition:background 0.1s;" onmouseover="this.style.background='var(--surface2)'" onmouseout="this.style.background='transparent'">
+            <div style="width:13px;height:13px;border-radius:3px;border:1.5px solid ${done?'var(--green)':'var(--border2)'};background:${done?'var(--green)':'transparent'};flex-shrink:0;margin-top:1px;display:flex;align-items:center;justify-content:center;transition:all 0.15s;">
+              ${done?'<svg width="7" height="5" viewBox="0 0 7 5"><polyline points="1,2.5 2.5,4 6,1" stroke="white" stroke-width="1.5" fill="none" stroke-linecap="round"/></svg>':''}
+            </div>
+            <span style="font-size:11px;line-height:1.5;color:${done?'var(--text3)':'var(--text)'};text-decoration:${done?'line-through':'none'};">${esc(task)}</span>
+          </div>`;
+        }).join('')}
+        ${tasks.length===0?`<div style="font-size:11px;color:var(--text3);text-align:center;margin:auto;">${_planEditMode?'Click ✏ to add tasks':'No tasks'}</div>`:''}
       </div>
     `;
   });
 
-  html += `</div>`;
+  html+=`</div>`;
 
-  // Pharmacology reminder
-  if (week.type === 'new' || week.type === 'mixed') {
-    html += `
-      <div style="margin-top:16px;background:rgba(245,158,11,0.08);border:1px solid rgba(245,158,11,0.25);border-radius:var(--r2);padding:14px 18px;display:flex;align-items:center;gap:12px;">
-        <span style="font-size:20px;">💊</span>
-        <div>
-          <div style="font-size:13px;font-weight:700;color:var(--text);">Pharmacology reminder</div>
-          <div style="font-size:12px;color:var(--text2);margin-top:2px;">When you hit a pharm lecture this week — spend the full 2hrs, add drugs to your Drug Cards, and use MCQs after. One line per drug: mechanism + use + side effect.</div>
-        </div>
-        <button class="btn btn-sm btn-outline" onclick="nav('drugs',document.querySelector('[data-page=drugs]'))" style="flex-shrink:0;">Open Drug Cards →</button>
-      </div>
-    `;
+  if(week.type==='new'||week.type==='mixed'){
+    html+=`<div style="margin-top:16px;background:rgba(245,158,11,0.08);border:1px solid rgba(245,158,11,0.25);border-radius:var(--r2);padding:14px 18px;display:flex;align-items:center;gap:12px;">
+      <span style="font-size:20px;">💊</span>
+      <div style="flex:1;"><div style="font-size:13px;font-weight:700;color:var(--text);">Pharmacology reminder</div><div style="font-size:12px;color:var(--text2);margin-top:2px;">When you hit a pharm lecture — spend the full 2hrs, add drugs to your Drug Cards, and use MCQs after.</div></div>
+      <button class="btn btn-sm btn-outline" onclick="nav('drugs',document.querySelector('[data-page=drugs]'))" style="flex-shrink:0;">Drug Cards →</button>
+    </div>`;
   }
 
-  document.getElementById('planWeekView').innerHTML = html;
+  document.getElementById('planWeekView').innerHTML=html;
 }
 
-function getWeekProgress(weekNum, week) {
-  let total = 0, done = 0;
-  week.days.forEach((d, di) => {
-    if (d.day === 'Sun') return;
-    d.tasks.forEach((t, ti) => {
-      total++;
-      if (isTaskDone(weekNum, di, ti)) done++;
-    });
+function getCurrentWeekForOffset(offset){
+  const start=getPlanStartDate();
+  if(!start)return getCurrentWeek();
+  const d=new Date();d.setDate(d.getDate()+offset);d.setHours(0,0,0,0);
+  const diff=Math.floor((d-start)/(7*24*60*60*1000));
+  return Math.max(1,Math.min(9,diff+1));
+}
+
+function getWeekProgress(weekNum,week){
+  let total=0,done=0;
+  week.days.forEach((d,di)=>{
+    const tasks=getDayTasks(weekNum,di);
+    tasks.forEach((_,ti)=>{total++;if(isTaskDone(weekNum,di,ti))done++;});
   });
-  const pct = total ? Math.round(done / total * 100) : 0;
-  return `
-    <div style="font-size:1.5rem;font-weight:800;color:var(--text);">${pct}%</div>
-    <div style="font-size:11px;color:var(--text2);">${done}/${total} tasks done</div>
-    <div style="width:80px;height:4px;background:var(--border);border-radius:99px;overflow:hidden;margin-top:6px;">
-      <div style="width:${pct}%;height:100%;background:${week.color};border-radius:99px;transition:width 0.4s;"></div>
+  const pct=total?Math.round(done/total*100):0;
+  return`<div style="font-size:1.4rem;font-weight:800;color:var(--text);">${pct}%</div><div style="font-size:11px;color:var(--text2);">${done}/${total} done</div><div style="width:80px;height:4px;background:var(--border);border-radius:99px;overflow:hidden;margin-top:6px;"><div style="width:${pct}%;height:100%;background:${week.color};border-radius:99px;transition:width 0.4s;"></div></div>`;
+}
+
+// ── TO-DO LIST ──
+const TODO_KEY='_ms_todo_';
+function getTodos(){return JSON.parse(localStorage.getItem(TODO_KEY+yr)||'[]');}
+function saveTodos(todos){localStorage.setItem(TODO_KEY+yr,JSON.stringify(todos));}
+
+function addTodo(){
+  const inp=document.getElementById('todoInput');
+  const val=inp.value.trim();
+  if(!val)return;
+  const priority=document.getElementById('todoPriority').value;
+  const todos=getTodos();
+  todos.unshift({id:Date.now(),text:val,done:false,priority,created:new Date().toISOString()});
+  saveTodos(todos);
+  inp.value='';
+  renderTodoList();
+}
+
+function toggleTodo(id){
+  const todos=getTodos();
+  const t=todos.find(t=>t.id===id);
+  if(t)t.done=!t.done;
+  saveTodos(todos);
+  renderTodoList();
+}
+
+function deleteTodo(id){
+  saveTodos(getTodos().filter(t=>t.id!==id));
+  renderTodoList();
+}
+
+function renderTodoList(){
+  const el=document.getElementById('todoList');
+  if(!el)return;
+  const todos=getTodos();
+  if(!todos.length){el.innerHTML='<div style="text-align:center;padding:20px;font-size:12px;color:var(--text3);">No to-dos yet — add one above</div>';return;}
+  const pending=todos.filter(t=>!t.done);
+  const done=todos.filter(t=>t.done);
+  const renderItem=t=>`<div style="display:flex;align-items:flex-start;gap:10px;padding:10px 12px;border:1px solid var(--border);border-radius:var(--r);margin-bottom:6px;background:var(--surface);${t.done?'opacity:0.5;':''}">
+    <div onclick="toggleTodo(${t.id})" style="width:16px;height:16px;border-radius:4px;border:1.5px solid ${t.done?'var(--green)':'var(--border2)'};background:${t.done?'var(--green)':'transparent'};flex-shrink:0;margin-top:1px;display:flex;align-items:center;justify-content:center;cursor:pointer;transition:all 0.15s;">
+      ${t.done?'<svg width="8" height="6" viewBox="0 0 8 6"><polyline points="1,3 3,5 7,1" stroke="white" stroke-width="1.5" fill="none" stroke-linecap="round"/></svg>':''}
     </div>
-  `;
+    <span style="flex:1;font-size:13px;color:var(--text);text-decoration:${t.done?'line-through':'none'};">${esc(t.text)}</span>
+    ${t.priority==='high'?'<span style="font-size:10px;">🔴</span>':t.priority==='low'?'<span style="font-size:10px;">🔵</span>':''}
+    <button onclick="deleteTodo(${t.id})" class="btn btn-xs btn-danger">✕</button>
+  </div>`;
+  el.innerHTML=(pending.length?pending.map(renderItem).join(''):'')+(done.length?`<div style="font-size:10px;font-weight:700;color:var(--text3);text-transform:uppercase;letter-spacing:0.08em;margin:12px 0 6px;">Done</div>`+done.map(renderItem).join(''):'');
+}
+
+// ── TOMORROW CARD ──
+function renderTomorrowCard(){
+  const el=document.getElementById('tomorrowPlanCard');
+  if(!el)return;
+  const tomorrowName=getDayNameForOffset(1);
+  const tomorrowWeek=getCurrentWeekForOffset(1);
+  const weekData=STUDY_PLAN[tomorrowWeek-1];
+  const dayIdx=weekData?.days.findIndex(d=>d.day===tomorrowName)??-1;
+  const tasks=dayIdx>=0?getDayTasks(tomorrowWeek,dayIdx):[];
+  if(!tasks.length){el.innerHTML='';return;}
+  const weekColor=weekData?.color||'var(--accent)';
+  el.innerHTML=`<div style="background:var(--surface);border:1px solid var(--border);border-radius:var(--r2);padding:14px 16px;margin-top:10px;">
+    <div style="font-size:11px;font-weight:700;color:var(--text2);margin-bottom:8px;">Tomorrow — ${tomorrowName} <span style="color:${weekColor};margin-left:4px;">${weekData?.topic||''}</span></div>
+    ${tasks.map(t=>`<div style="font-size:11px;color:var(--text2);padding:3px 0;display:flex;align-items:center;gap:6px;"><span style="width:4px;height:4px;border-radius:50%;background:${weekColor};flex-shrink:0;display:inline-block;"></span>${esc(t)}</div>`).join('')}
+  </div>`;
 }
 function openModal(id){document.getElementById(id).classList.add('open');}
 function closeModal(id){document.getElementById(id).classList.remove('open');}
