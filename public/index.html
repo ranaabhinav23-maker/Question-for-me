@@ -3,7 +3,7 @@
 <head>
 <meta charset="UTF-8">
 <meta name="viewport" content="width=device-width, initial-scale=1.0">
-<title>Meduvita Medic</title>
+<title>Medic Meduvita</title>
 <link href="https://fonts.googleapis.com/css2?family=DM+Sans:ital,opsz,wght@0,9..40,300;0,9..40,400;0,9..40,500;0,9..40,600;0,9..40,700;0,9..40,800;1,9..40,400&family=JetBrains+Mono:wght@400;500&display=swap" rel="stylesheet">
 <script src="https://cdn.jsdelivr.net/npm/@supabase/supabase-js@2"></script>
 <style>
@@ -413,8 +413,8 @@ label { font-size: 11px; color: var(--text2); font-weight: 600; display: block; 
 <div id="lock">
   <div class="lock-card">
     <div class="lock-icon">🧬</div>
-    <div class="lock-logo">Med<span>Study</span></div>
-    <div class="lock-sub">Personal revision tool · UK Medicine</div>
+    <div class="lock-logo">Medic <span>Meduvita</span></div>
+    <div class="lock-sub">Meduvita · AI-powered revision</div>
     <input type="password" id="pwInput" placeholder="••••••••" autocomplete="off" onkeydown="if(event.key==='Enter')tryUnlock()">
     <button class="btn btn-teal" style="width:100%;justify-content:center;padding:12px;font-size:14px;" id="lockBtn" onclick="tryUnlock()">
       <div class="spin"></div>Unlock
@@ -428,8 +428,8 @@ label { font-size: 11px; color: var(--text2); font-weight: 600; display: block; 
  <div class="layout">
   <div class="sidebar">
     <div class="sidebar-logo">
-      <div class="logo-mark">M</div>
-      <div class="logo-name">Med<span>Study</span></div>
+      <div class="logo-mark">MM/div>
+      <div class="logo-name">Medic <span>Meduvita</span></div>
     </div>
     <div class="sidebar-user">
       <div class="user-avatar">AB</div>
@@ -932,7 +932,7 @@ label { font-size: 11px; color: var(--text2); font-weight: 600; display: block; 
 <div class="modal-bg" id="notionLinkModal">
   <div class="modal"><div class="modal-title">Import from Notion</div>
     <div style="font-size:12px;color:var(--text2);margin-bottom:16px;line-height:1.8;background:var(--surface2);border:1px solid var(--border);border-radius:var(--r);padding:12px;">
-      <strong style="color:var(--text);">Before importing:</strong> Open Notion → your page → click <strong>...</strong> menu → <strong>Connections</strong> → add your Meduvita Medic integration. Otherwise the import will fail.
+      <strong style="color:var(--text);">Before importing:</strong> Open Notion → your page → click <strong>...</strong> menu → <strong>Connections</strong> → add your Medic Meduvita integration. Otherwise the import will fail.
     </div>
     <div class="mb12"><label>Notion page URL</label><input type="text" id="notionLinkUrl" placeholder="https://www.notion.so/Your-Page-abc123…"></div>
     <div class="g2 mb12">
@@ -942,7 +942,7 @@ label { font-size: 11px; color: var(--text2); font-weight: 600; display: block; 
     <div class="err-box" id="notionLinkErr"></div>
     <div style="margin-bottom:10px;">
       <button class="btn btn-teal" id="notionImportBtn" onclick="importNotionPage()" style="width:100%;justify-content:center;font-size:14px;padding:11px;">
-        <div class="spin"></div><span id="notionImportTxt">⬇ Import as Meduvita Medic note</span>
+        <div class="spin"></div><span id="notionImportTxt">⬇ Import as Medic Meduvita note</span>
       </button>
     </div>
     <div style="text-align:center;font-size:11px;color:var(--text3);margin-bottom:12px;">— or just save as a view-only link —</div>
@@ -1061,7 +1061,7 @@ function applyTheme(){
 
 // ── AUTH ──
 const PW_HASH='53376799f4948971998e519f778678f7434ccfecd9574a7bded2f9c65a01d2c6';
-const PW_SALT='Meduvita Medic_2025_salt';
+const PW_SALT='medstudy_2025_salt';
 async function sha256str(s){
   const buf=await crypto.subtle.digest('SHA-256',new TextEncoder().encode(s));
   return Array.from(new Uint8Array(buf)).map(b=>b.toString(16).padStart(2,'0')).join('');
@@ -2041,7 +2041,7 @@ async function importNotionPage(){
     const dbData=await dbRes.json();
     // If it's a database with rows, show a picker
     if(dbRes.ok&&dbData.rows&&dbData.rows.length){
-      setBusy('notionImportBtn','notionImportTxt','⬇ Import as Meduvita Medic note',false);
+      setBusy('notionImportBtn','notionImportTxt','⬇ Import as Medic Meduvita note',false);
       showNotionDbPicker(dbData.rows,block,subject,url);
       return;
     }
@@ -2077,9 +2077,9 @@ async function importNotionPage(){
     document.getElementById('noteSavingIndicator').textContent='✓ Imported from Notion!';
     setTimeout(()=>{if(document.getElementById('noteSavingIndicator'))document.getElementById('noteSavingIndicator').textContent='';},3000);
   }catch(e){
-    showErr('notionLinkErr','Import failed: '+e.message+'. Make sure you connected your Meduvita Medic integration to this page in Notion.');
+    showErr('notionLinkErr','Import failed: '+e.message+'. Make sure you connected your Medic Meduvita integration to this page in Notion.');
   }finally{
-    setBusy('notionImportBtn','notionImportTxt','⬇ Import as Meduvita Medic note',false);
+    setBusy('notionImportBtn','notionImportTxt','⬇ Import as Medic Meduvita note',false);
   }
 }
 
@@ -2257,7 +2257,7 @@ async function importNotionRow(pageId,title,block,subject,dbUrl){
   }catch(e){
     showErr('notionLinkErr','Import failed: '+e.message);
   }finally{
-    setBusy('notionImportBtn','notionImportTxt','⬇ Import as Meduvita Medic note',false);
+    setBusy('notionImportBtn','notionImportTxt','⬇ Import as Medic Meduvita note',false);
   }
 }
 function saveNotionLinkOnly(){
