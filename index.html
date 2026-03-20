@@ -1,0 +1,1737 @@
+<!DOCTYPE html>
+<html lang="en" data-theme="light">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>MedStudy</title>
+<link href="https://fonts.googleapis.com/css2?family=DM+Sans:ital,opsz,wght@0,9..40,300;0,9..40,400;0,9..40,500;0,9..40,600;0,9..40,700;0,9..40,800;1,9..40,400&family=JetBrains+Mono:wght@400;500&display=swap" rel="stylesheet">
+<script src="https://cdn.jsdelivr.net/npm/@supabase/supabase-js@2"></script>
+<style>
+[data-theme="light"] {
+  --navy:       #0f1c2e;
+  --navy2:      #162438;
+  --navy3:      #1d2f45;
+  --navy-light: #243752;
+  --bg:         #f1f5f9;
+  --surface:    #ffffff;
+  --surface2:   #f8fafc;
+  --border:     #e2e8f0;
+  --border2:    #cbd5e1;
+  --text:       #0f172a;
+  --text2:      #475569;
+  --text3:      #94a3b8;
+  --input-bg:   #ffffff;
+  --card-shadow: 0 1px 3px rgba(0,0,0,0.07), 0 1px 2px rgba(0,0,0,0.04);
+  --card-shadow-md: 0 4px 16px rgba(0,0,0,0.09), 0 1px 4px rgba(0,0,0,0.04);
+  --modal-bg:   #ffffff;
+  --hero-bg:    #ffffff;
+  --opt-bg:     #fafcff;
+  --expl-bg:    #f0f9ff;
+  --target-bg:  linear-gradient(135deg,#f0f9ff,#ecfdf5);
+  --target-border: #bae6fd;
+  --ai-sug-bg:  #f0f9ff;
+  --ai-sug-border: #bae6fd;
+}
+[data-theme="dark"] {
+  --navy:       #0a1628;
+  --navy2:      #0f1e35;
+  --navy3:      #152540;
+  --navy-light: #1c2f4a;
+  --bg:         #080f1c;
+  --surface:    #0d1929;
+  --surface2:   #111f33;
+  --border:     #1a2d45;
+  --border2:    #223650;
+  --text:       #e2e8f0;
+  --text2:      #7e9ab5;
+  --text3:      #3d5470;
+  --input-bg:   #0d1929;
+  --card-shadow: 0 1px 3px rgba(0,0,0,0.3), 0 1px 2px rgba(0,0,0,0.2);
+  --card-shadow-md: 0 4px 16px rgba(0,0,0,0.4);
+  --modal-bg:   #0d1929;
+  --hero-bg:    #0d1929;
+  --opt-bg:     #0f1e33;
+  --expl-bg:    rgba(6,182,212,0.06);
+  --target-bg:  linear-gradient(135deg,rgba(6,182,212,0.06),rgba(16,185,129,0.04));
+  --target-border: rgba(6,182,212,0.2);
+  --ai-sug-bg:  rgba(6,182,212,0.06);
+  --ai-sug-border: rgba(6,182,212,0.2);
+}
+:root {
+  --sidebar-w: 248px;
+  --accent:    #06b6d4;
+  --accent2:   #10b981;
+  --red:       #ef4444;
+  --orange:    #f59e0b;
+  --green:     #10b981;
+  --purple:    #8b5cf6;
+  --font: 'DM Sans', sans-serif;
+  --mono: 'JetBrains Mono', monospace;
+  --r: 8px; --r2: 12px; --r3: 16px;
+}
+* { box-sizing: border-box; margin: 0; padding: 0; }
+body { font-family: var(--font); background: var(--bg); color: var(--text); min-height: 100vh; font-size: 14px; -webkit-font-smoothing: antialiased; transition: background 0.25s, color 0.25s; }
+::-webkit-scrollbar { width: 5px; }
+::-webkit-scrollbar-track { background: transparent; }
+::-webkit-scrollbar-thumb { background: var(--border2); border-radius: 99px; }
+
+#lock { position: fixed; inset: 0; z-index: 9999; background: var(--navy); display: flex; align-items: center; justify-content: center; }
+#lock::before{content:'';position:absolute;inset:0;pointer-events:none;background:radial-gradient(ellipse 60% 50% at 20% 40%,rgba(6,182,212,0.08) 0%,transparent 60%),radial-gradient(ellipse 40% 40% at 80% 70%,rgba(16,185,129,0.06) 0%,transparent 50%);}
+.lock-card { background: var(--navy2); border: 1px solid var(--navy-light); border-radius: 20px; padding: 48px 44px; width: 400px; text-align: center; box-shadow: 0 40px 80px rgba(0,0,0,0.5); }
+.lock-icon { width: 56px; height: 56px; background: linear-gradient(135deg,var(--accent),var(--accent2)); border-radius: 14px; margin: 0 auto 20px; display: flex; align-items: center; justify-content: center; font-size: 22px; }
+.lock-logo { font-size: 1.5rem; font-weight: 800; color: white; margin-bottom: 4px; letter-spacing: -0.03em; }
+.lock-logo span { color: var(--accent); }
+.lock-sub { font-size: 12px; color: rgba(255,255,255,0.4); margin-bottom: 32px; }
+.lock-card input { width: 100%; background: rgba(255,255,255,0.06); border: 1px solid rgba(255,255,255,0.1); border-radius: var(--r2); padding: 13px 16px; font-family: var(--mono); font-size: 14px; color: white; outline: none; margin-bottom: 12px; letter-spacing: 0.1em; text-align: center; transition: border-color 0.2s; }
+.lock-card input:focus { border-color: var(--accent); }
+.lock-card input.shake { animation: shake 0.4s ease; border-color: var(--red); }
+@keyframes shake { 0%,100%{transform:translateX(0)} 20%{transform:translateX(-7px)} 40%{transform:translateX(7px)} 60%{transform:translateX(-4px)} 80%{transform:translateX(4px)} }
+.lock-err { font-size: 11px; color: #f87171; margin-top: 8px; min-height: 16px; }
+
+#app { display: none; }
+.layout { display: flex; min-height: 100vh; }
+
+.sidebar { width: var(--sidebar-w); background: var(--navy); display: flex; flex-direction: column; position: fixed; height: 100vh; z-index: 20; overflow-y: auto; transition: background 0.25s; }
+.sidebar::after{content:'';position:absolute;top:0;right:0;width:1px;height:100%;background:linear-gradient(180deg,rgba(6,182,212,0.2),transparent 40%,transparent 70%,rgba(6,182,212,0.08));}
+.sidebar-logo { padding: 22px 20px 18px; display: flex; align-items: center; gap: 10px; border-bottom: 1px solid rgba(255,255,255,0.06); }
+.logo-mark { width: 32px; height: 32px; background: linear-gradient(135deg,var(--accent),var(--accent2)); border-radius: 8px; display: flex; align-items: center; justify-content: center; font-size: 14px; font-weight: 800; color: white; flex-shrink: 0; }
+.logo-name { font-size: 1rem; font-weight: 800; color: white; letter-spacing: -0.02em; }
+.logo-name span { color: var(--accent); }
+.sidebar-user { margin: 12px 12px 4px; padding: 10px 12px; background: rgba(255,255,255,0.05); border-radius: var(--r); display: flex; align-items: center; gap: 10px; }
+.user-avatar { width: 30px; height: 30px; background: linear-gradient(135deg,var(--accent),var(--purple)); border-radius: 8px; display: flex; align-items: center; justify-content: center; font-size: 11px; font-weight: 700; color: white; flex-shrink: 0; }
+.user-name { font-size: 12px; font-weight: 600; color: white; }
+.user-year { font-size: 10px; color: rgba(255,255,255,0.4); margin-top: 1px; }
+.nav-section { padding: 16px 20px 5px; font-size: 9px; color: rgba(255,255,255,0.3); font-weight: 700; letter-spacing: 0.12em; text-transform: uppercase; }
+.nav-item { display: flex; align-items: center; gap: 10px; padding: 8px 12px; margin: 1px 8px; cursor: pointer; color: rgba(255,255,255,0.5); font-size: 13px; font-weight: 500; transition: all 0.15s; border-radius: var(--r); border: 1px solid transparent; }
+.nav-item:hover { color: rgba(255,255,255,0.85); background: rgba(255,255,255,0.05); }
+.nav-item.active { color: white; background: rgba(6,182,212,0.15); border-color: rgba(6,182,212,0.2); }
+.nav-item.active .nav-icon { color: var(--accent); }
+.nav-icon { font-size: 15px; width: 20px; text-align: center; flex-shrink: 0; }
+.nav-badge { margin-left: auto; background: var(--red); color: white; border-radius: 99px; padding: 1px 7px; font-size: 10px; font-weight: 700; }
+.sidebar-bottom { margin-top: auto; padding: 14px 12px; border-top: 1px solid rgba(255,255,255,0.06); }
+
+.theme-toggle { display: flex; align-items: center; justify-content: space-between; padding: 9px 12px; background: rgba(255,255,255,0.05); border-radius: var(--r); margin-bottom: 10px; cursor: pointer; }
+.theme-toggle-label { font-size: 11px; color: rgba(255,255,255,0.5); font-weight: 500; }
+.toggle-track { width: 36px; height: 20px; background: rgba(255,255,255,0.15); border-radius: 99px; position: relative; transition: background 0.2s; }
+.toggle-track.on { background: var(--accent); }
+.toggle-thumb { width: 14px; height: 14px; background: white; border-radius: 50%; position: absolute; top: 3px; left: 3px; transition: left 0.2s; box-shadow: 0 1px 3px rgba(0,0,0,0.3); }
+.toggle-track.on .toggle-thumb { left: 19px; }
+.year-btn { width: 100%; background: rgba(6,182,212,0.12); border: 1px solid rgba(6,182,212,0.25); border-radius: var(--r); padding: 10px 14px; cursor: pointer; transition: all 0.2s; display: flex; align-items: center; justify-content: space-between; font-family: var(--font); }
+.year-btn:hover { background: rgba(6,182,212,0.2); }
+.year-btn-label { font-size: 10px; color: rgba(255,255,255,0.4); text-transform: uppercase; letter-spacing: 0.08em; margin-bottom: 2px; }
+.year-btn-name { font-size: 13px; font-weight: 700; color: white; }
+
+.main { margin-left: var(--sidebar-w); flex: 1; }
+.page { display: none; padding: 28px 32px 60px; }
+.page.active { display: block; animation: fadeIn 0.2s ease; }
+@keyframes fadeIn { from { opacity: 0; transform: translateY(5px); } to { opacity: 1; transform: translateY(0); } }
+
+.page-hero { background: var(--hero-bg); border-bottom: 1px solid var(--border); padding: 20px 32px; display: flex; align-items: center; justify-content: space-between; transition: background 0.25s; }
+.page-hero-title { font-size: 1.2rem; font-weight: 800; color: var(--text); letter-spacing: -0.02em; }
+.page-hero-sub { font-size: 13px; color: var(--text2); margin-top: 3px; }
+
+.stat-card { background: var(--surface); border: 1px solid var(--border); border-radius: var(--r2); padding: 20px 22px; box-shadow: var(--card-shadow); position: relative; overflow: hidden; transition: all 0.2s; }
+.stat-card:hover { box-shadow: var(--card-shadow-md); transform: translateY(-1px); }
+.stat-card-bar { position: absolute; top: 0; left: 0; right: 0; height: 3px; }
+.stat-icon { width: 36px; height: 36px; border-radius: var(--r); display: flex; align-items: center; justify-content: center; font-size: 16px; margin-bottom: 14px; }
+.stat-num { font-size: 2rem; font-weight: 800; letter-spacing: -0.04em; line-height: 1; color: var(--text); margin-bottom: 4px; }
+.stat-label { font-size: 12px; color: var(--text2); font-weight: 500; }
+.stat-hint { font-size: 11px; color: var(--text3); margin-top: 3px; }
+
+.section-card { background: var(--surface); border: 1px solid var(--border); border-radius: var(--r2); box-shadow: var(--card-shadow); overflow: hidden; transition: background 0.25s, border-color 0.25s; }
+.section-head { padding: 15px 20px; border-bottom: 1px solid var(--border); display: flex; align-items: center; justify-content: space-between; }
+.section-title { font-size: 14px; font-weight: 700; color: var(--text); letter-spacing: -0.01em; }
+.section-sub { font-size: 12px; color: var(--text2); margin-top: 2px; }
+.section-body { padding: 20px; }
+
+.g2 { display: grid; grid-template-columns: 1fr 1fr; gap: 16px; }
+.g3 { display: grid; grid-template-columns: 1fr 1fr 1fr; gap: 16px; }
+.g4 { display: grid; grid-template-columns: repeat(4,1fr); gap: 14px; }
+
+.btn { display: inline-flex; align-items: center; gap: 6px; padding: 8px 16px; border-radius: var(--r); font-family: var(--font); font-size: 13px; font-weight: 600; cursor: pointer; border: none; transition: all 0.15s; white-space: nowrap; letter-spacing: -0.01em; }
+.btn-primary { background: var(--navy); color: white; }
+.btn-primary:hover { background: var(--navy2); box-shadow: 0 4px 12px rgba(15,28,46,0.25); }
+.btn-primary:disabled { opacity: 0.4; cursor: not-allowed; }
+.btn-teal { background: var(--accent); color: white; }
+.btn-teal:hover { background: #0597b3; }
+.btn-green { background: var(--green); color: white; }
+.btn-green:hover { background: #0d9e6e; }
+.btn-outline { background: transparent; color: var(--text); border: 1px solid var(--border2); }
+.btn-outline:hover { border-color: var(--navy); color: var(--navy); }
+[data-theme="dark"] .btn-outline:hover { border-color: var(--accent); color: var(--accent); }
+.btn-ghost { background: transparent; color: var(--text2); border: none; }
+.btn-ghost:hover { color: var(--text); }
+.btn-danger { background: rgba(239,68,68,0.1); color: var(--red); border: 1px solid rgba(239,68,68,0.2); }
+.btn-danger:hover { background: rgba(239,68,68,0.18); }
+.btn-success { background: rgba(16,185,129,0.1); color: var(--green); border: 1px solid rgba(16,185,129,0.2); }
+.btn-success:hover { background: rgba(16,185,129,0.18); }
+.btn-sm { padding: 6px 12px; font-size: 12px; }
+.btn-xs { padding: 3px 9px; font-size: 11px; border-radius: 6px; }
+
+input[type=text], input[type=password], input[type=number], input[type=date], textarea, select { background: var(--input-bg); border: 1px solid var(--border2); border-radius: var(--r); padding: 10px 14px; font-family: var(--font); font-size: 13px; color: var(--text); outline: none; transition: all 0.15s; width: 100%; }
+input:focus, textarea:focus, select:focus { border-color: var(--accent); box-shadow: 0 0 0 3px rgba(6,182,212,0.12); }
+textarea { resize: vertical; line-height: 1.65; min-height: 120px; }
+select option { background: var(--input-bg); color: var(--text); }
+label { font-size: 11px; color: var(--text2); font-weight: 600; display: block; margin-bottom: 5px; letter-spacing: 0.04em; text-transform: uppercase; }
+
+.badge { display: inline-flex; align-items: center; padding: 2px 8px; border-radius: 99px; font-size: 11px; font-weight: 600; }
+.badge-teal { background: rgba(6,182,212,0.12); color: #0e9bbf; border: 1px solid rgba(6,182,212,0.25); }
+.badge-green { background: rgba(16,185,129,0.12); color: #0d9e6e; border: 1px solid rgba(16,185,129,0.25); }
+.badge-red { background: rgba(239,68,68,0.1); color: var(--red); border: 1px solid rgba(239,68,68,0.2); }
+.badge-orange { background: rgba(245,158,11,0.1); color: #d97706; border: 1px solid rgba(245,158,11,0.2); }
+.badge-blue { background: rgba(59,130,246,0.1); color: #2563eb; border: 1px solid rgba(59,130,246,0.2); }
+.badge-muted { background: var(--surface2); color: var(--text2); border: 1px solid var(--border); }
+
+.dot { width: 8px; height: 8px; border-radius: 50%; display: inline-block; flex-shrink: 0; }
+.d-gu{background:#ec4899;} .d-msk{background:#3b82f6;} .d-neuro{background:#10b981;}
+.d-gi{background:#f97316;} .d-cvr{background:#ef4444;} .d-core{background:#8b5cf6;}
+.c-gu{color:#ec4899;} .c-msk{color:#3b82f6;} .c-neuro{color:#10b981;}
+.c-gi{color:#f97316;} .c-cvr{color:#ef4444;} .c-core{color:#8b5cf6;}
+
+.prog-track { height: 6px; background: var(--surface2); border-radius: 99px; overflow: hidden; border: 1px solid var(--border); }
+.prog-fill { height: 100%; border-radius: 99px; transition: width 0.5s ease; }
+
+.pill-row { display: flex; flex-wrap: wrap; gap: 6px; margin-bottom: 18px; }
+.pill { padding: 5px 13px; border-radius: 99px; font-size: 12px; font-weight: 600; cursor: pointer; border: 1px solid var(--border2); background: var(--surface); color: var(--text2); transition: all 0.15s; font-family: var(--font); box-shadow: var(--card-shadow); }
+.pill:hover { border-color: var(--navy); color: var(--text); }
+.pill.active { color: white !important; border-color: transparent !important; box-shadow: 0 2px 8px rgba(0,0,0,0.15); }
+.pill-all.active { background: var(--navy); }
+.pill-gu.active{background:#ec4899;} .pill-msk.active{background:#3b82f6;} .pill-neuro.active{background:#10b981;}
+.pill-gi.active{background:#f97316;} .pill-cvr.active{background:#ef4444;} .pill-core.active{background:#8b5cf6;}
+.subj-pill { padding: 4px 11px; border-radius: 99px; font-size: 11px; font-weight: 500; cursor: pointer; border: 1px solid var(--border); background: var(--surface); color: var(--text3); transition: all 0.15s; font-family: var(--font); }
+.subj-pill:hover { color: var(--text2); border-color: var(--border2); }
+.subj-pill.active { background: var(--surface2); border-color: var(--border2); color: var(--text); font-weight: 600; }
+
+.q-card { background: var(--surface); border: 1px solid var(--border); border-radius: var(--r2); padding: 22px 24px; margin-bottom: 12px; box-shadow: var(--card-shadow); animation: fadeIn 0.2s ease both; transition: background 0.25s; }
+.q-num { font-size: 10px; color: var(--accent); font-weight: 700; letter-spacing: 0.1em; text-transform: uppercase; margin-bottom: 10px; }
+.q-text { font-size: 13.5px; line-height: 1.85; color: var(--text); margin-bottom: 16px; }
+.opt { display: flex; align-items: flex-start; gap: 10px; padding: 10px 14px; border-radius: var(--r); border: 1px solid var(--border); background: var(--opt-bg); cursor: pointer; transition: all 0.12s; font-size: 13px; line-height: 1.55; margin-bottom: 7px; color: var(--text); }
+.opt:hover:not(.locked) { border-color: var(--accent); background: var(--expl-bg); }
+.opt input[type=radio] { margin-top: 2px; accent-color: var(--navy); flex-shrink: 0; }
+.opt.correct { border-color: var(--green); background: rgba(16,185,129,0.08); color: #0d9e6e; }
+.opt.incorrect { border-color: var(--red); background: rgba(239,68,68,0.08); color: var(--red); }
+.opt.reveal { border-color: var(--green); background: rgba(16,185,129,0.08); color: #0d9e6e; }
+.expl { margin-top: 12px; padding: 12px 16px; background: var(--expl-bg); border-left: 3px solid var(--accent); border-radius: 0 var(--r) var(--r) 0; font-size: 12px; line-height: 1.75; color: var(--text2); display: none; }
+.expl.show { display: block; }
+
+.data-card { background: var(--surface); border: 1px solid var(--border); border-radius: var(--r2); padding: 18px 20px; margin-bottom: 10px; box-shadow: var(--card-shadow); transition: all 0.15s; }
+.data-card:hover { box-shadow: var(--card-shadow-md); }
+.field-label { font-size: 10px; color: var(--text3); font-weight: 700; letter-spacing: 0.08em; text-transform: uppercase; margin-bottom: 3px; }
+.field-val { font-size: 13px; color: var(--text); line-height: 1.5; }
+
+.btable { width: 100%; border-collapse: collapse; font-size: 13px; }
+.btable th { background: var(--surface2); color: var(--text2); padding: 10px 14px; text-align: left; font-weight: 600; font-size: 11px; text-transform: uppercase; letter-spacing: 0.06em; border-bottom: 1px solid var(--border); }
+.btable td { padding: 11px 14px; border-bottom: 1px solid var(--border); color: var(--text); vertical-align: top; }
+.btable tr:last-child td { border-bottom: none; }
+.btable tbody tr:hover td { background: var(--surface2); }
+
+.lec-row { display: flex; align-items: center; gap: 10px; padding: 11px 16px; border-radius: var(--r); border: 1px solid var(--border); margin-bottom: 6px; background: var(--surface); transition: all 0.15s; box-shadow: var(--card-shadow); }
+.lec-row:hover { border-color: var(--border2); box-shadow: var(--card-shadow-md); }
+.lec-row.p1 { border-left: 3px solid var(--orange); }
+.lec-row.p2 { border-left: 3px solid var(--green); }
+.lec-title { flex: 1; font-size: 13px; font-weight: 500; color: var(--text); }
+
+.target-card { background: var(--target-bg); border: 1px solid var(--target-border); border-radius: var(--r2); padding: 18px; }
+.target-item { display: flex; align-items: center; gap: 10px; padding: 8px 0; border-bottom: 1px solid var(--border); cursor: pointer; transition: all 0.12s; }
+.target-item:last-child { border-bottom: none; }
+.target-item:hover { padding-left: 4px; }
+.target-check { width: 18px; height: 18px; border-radius: 5px; border: 1.5px solid var(--border2); display: flex; align-items: center; justify-content: center; flex-shrink: 0; transition: all 0.15s; }
+.target-check.done { background: var(--green); border-color: var(--green); }
+.target-text { font-size: 12px; font-weight: 500; color: var(--text); flex: 1; }
+.target-text.done { text-decoration: line-through; color: var(--text3); }
+
+.score-bar { background: var(--surface); border: 1px solid var(--border); border-radius: var(--r2); padding: 16px 22px; margin-bottom: 16px; display: none; align-items: center; justify-content: space-between; box-shadow: var(--card-shadow); }
+.score-bar.show { display: flex; }
+.score-num { font-size: 2rem; font-weight: 800; letter-spacing: -0.03em; color: var(--text); }
+
+.tab-row { display: flex; gap: 0; margin-bottom: 20px; background: var(--surface); border: 1px solid var(--border); border-radius: var(--r); padding: 3px; width: fit-content; box-shadow: var(--card-shadow); }
+.tab { padding: 7px 18px; cursor: pointer; font-size: 13px; font-weight: 600; color: var(--text2); border-radius: 6px; transition: all 0.15s; }
+.tab.active { background: var(--navy); color: white; box-shadow: 0 2px 8px rgba(15,28,46,0.2); }
+
+.exam-timer { font-family: var(--mono); font-size: 2rem; font-weight: 700; letter-spacing: 0.05em; color: var(--text); }
+.exam-timer.warning { color: var(--orange); }
+.exam-timer.danger { color: var(--red); animation: pulse 1s ease infinite; }
+@keyframes pulse { 0%,100%{opacity:1} 50%{opacity:0.5} }
+.exam-progress-wrap { background: var(--surface2); border: 1px solid var(--border); border-radius: var(--r2); padding: 16px 20px; margin-bottom: 16px; display: flex; align-items: center; gap: 20px; }
+
+.recall-card { background: var(--surface); border: 1px solid var(--border); border-radius: var(--r2); padding: 28px; box-shadow: var(--card-shadow); text-align: center; }
+.recall-term { font-size: 1.4rem; font-weight: 800; color: var(--text); letter-spacing: -0.02em; margin-bottom: 8px; }
+.recall-hint { font-size: 12px; color: var(--text2); margin-bottom: 24px; }
+.recall-input { font-size: 14px; min-height: 80px; text-align: left; }
+.recall-score-bar { display: flex; gap: 4px; margin-bottom: 12px; }
+.recall-score-dot { width: 10px; height: 10px; border-radius: 50%; background: var(--border2); transition: background 0.3s; }
+.recall-score-dot.hit { background: var(--green); }
+.recall-score-dot.miss { background: var(--red); }
+
+.ai-feedback { border-radius: var(--r); padding: 14px 16px; margin-top: 14px; font-size: 13px; line-height: 1.7; display: none; }
+.ai-feedback.show { display: block; }
+.ai-fb-good { background: rgba(16,185,129,0.08); border-left: 3px solid var(--green); color: var(--text2); }
+.ai-fb-ok { background: rgba(245,158,11,0.08); border-left: 3px solid var(--orange); color: var(--text2); }
+.ai-fb-bad { background: rgba(239,68,68,0.08); border-left: 3px solid var(--red); color: var(--text2); }
+
+.countdown-card{background:linear-gradient(135deg,var(--navy),var(--navy3));border:1px solid rgba(6,182,212,0.25);border-radius:var(--r2);padding:20px 22px;position:relative;overflow:hidden;box-shadow:var(--card-shadow),0 0 40px rgba(6,182,212,0.06);}
+.countdown-card::before{content:'';position:absolute;top:0;left:0;right:0;height:2px;background:linear-gradient(90deg,var(--accent),var(--accent2),transparent);}
+.countdown-card::after{content:'';position:absolute;top:-30px;right:-30px;width:100px;height:100px;background:radial-gradient(circle,rgba(6,182,212,0.1) 0%,transparent 70%);pointer-events:none;}
+.cd-label{font-size:9px;color:rgba(255,255,255,0.35);font-weight:700;letter-spacing:0.12em;text-transform:uppercase;margin-bottom:5px;}
+.cd-exam-name{font-size:13px;font-weight:700;color:rgba(255,255,255,0.9);margin-bottom:14px;display:flex;align-items:center;justify-content:space-between;gap:8px;}
+.cd-days{font-size:3rem;font-weight:800;color:white;letter-spacing:-0.05em;line-height:1;}
+.cd-days span{font-size:1rem;font-weight:400;color:rgba(255,255,255,0.45);margin-left:8px;letter-spacing:0;}
+.cd-sub{font-size:11px;color:rgba(255,255,255,0.4);margin-top:5px;}
+.cd-edit-btn{font-size:10px;color:rgba(255,255,255,0.45);background:rgba(255,255,255,0.08);border:1px solid rgba(255,255,255,0.12);border-radius:6px;padding:3px 10px;cursor:pointer;font-family:var(--font);transition:all 0.15s;white-space:nowrap;flex-shrink:0;}
+.cd-edit-btn:hover{color:white;background:rgba(255,255,255,0.14);border-color:rgba(255,255,255,0.25);}
+.cd-bar{height:4px;background:rgba(255,255,255,0.1);border-radius:99px;overflow:hidden;margin-top:14px;}
+.cd-bar-fill{height:100%;background:linear-gradient(90deg,var(--accent),var(--accent2));border-radius:99px;transition:width 0.6s ease;}
+.cd-divider{height:1px;background:rgba(255,255,255,0.07);margin:14px 0;}
+.imp-date-row{display:flex;align-items:center;gap:9px;padding:7px 0;}
+.imp-date-row:last-child{padding-bottom:0;}
+.imp-dot{width:7px;height:7px;border-radius:50%;flex-shrink:0;}
+.imp-date-name{font-size:12px;color:rgba(255,255,255,0.75);flex:1;font-weight:500;}
+.imp-date-badge{font-size:10px;font-weight:700;padding:2px 8px;border-radius:99px;}
+.imp-soon{background:rgba(239,68,68,0.2);color:#fca5a5;}
+.imp-near{background:rgba(245,158,11,0.15);color:#fcd34d;}
+.imp-far{background:rgba(6,182,212,0.15);color:#67e8f9;}
+
+.subj-row{display:flex;align-items:center;gap:10px;margin-bottom:11px;}
+.subj-row:last-child{margin-bottom:0;}
+.subj-label{font-size:12px;color:var(--text2);width:115px;flex-shrink:0;font-weight:500;}
+.subj-track{flex:1;height:6px;background:var(--surface2);border-radius:99px;overflow:hidden;border:1px solid var(--border);}
+.subj-fill{height:100%;border-radius:99px;transition:width 0.6s ease;}
+.subj-pct{font-size:11px;color:var(--text3);width:34px;text-align:right;font-family:var(--mono);}
+
+/* ── NOTES HUB ── */
+.notes-layout{display:grid;grid-template-columns:240px 1fr;gap:0;height:calc(100vh - 57px);overflow:hidden;}
+.notes-sidebar{background:var(--surface);border-right:1px solid var(--border);display:flex;flex-direction:column;overflow:hidden;}
+.notes-sidebar-head{padding:14px 16px;border-bottom:1px solid var(--border);display:flex;align-items:center;justify-content:space-between;flex-shrink:0;}
+.notes-sidebar-title{font-size:13px;font-weight:700;color:var(--text);}
+.note-item{padding:10px 16px;cursor:pointer;border-bottom:1px solid var(--border);transition:background 0.12s;position:relative;}
+.note-item:hover{background:var(--surface2);}
+.note-item.active{background:rgba(6,182,212,0.08);border-left:3px solid var(--accent);}
+.note-item-title{font-size:13px;font-weight:600;color:var(--text);white-space:nowrap;overflow:hidden;text-overflow:ellipsis;}
+.note-item-meta{font-size:11px;color:var(--text3);margin-top:2px;display:flex;gap:6px;align-items:center;}
+.notes-list{flex:1;overflow-y:auto;}
+.note-editor-area{display:flex;flex-direction:column;overflow:hidden;}
+.note-toolbar{padding:10px 20px;border-bottom:1px solid var(--border);display:flex;align-items:center;gap:8px;flex-wrap:wrap;flex-shrink:0;background:var(--surface);}
+.note-toolbar-btn{padding:5px 10px;border:1px solid var(--border2);border-radius:6px;background:var(--surface);color:var(--text2);font-size:12px;font-weight:600;cursor:pointer;transition:all 0.12s;font-family:var(--font);}
+.note-toolbar-btn:hover{border-color:var(--accent);color:var(--accent);}
+.note-toolbar-sep{width:1px;height:18px;background:var(--border2);}
+.note-content-wrap{display:grid;grid-template-columns:1fr;flex:1;overflow:hidden;transition:grid-template-columns 0.2s;}
+.note-content-wrap.with-ai{grid-template-columns:1fr 300px;}
+.note-editor{padding:24px 32px;overflow-y:auto;flex:1;outline:none;font-size:14px;line-height:1.9;color:var(--text);background:var(--bg);}
+.note-editor:empty::before{content:attr(data-placeholder);color:var(--text3);pointer-events:none;}
+.note-editor h1{font-size:1.5rem;font-weight:800;margin:16px 0 8px;color:var(--text);}
+.note-editor h2{font-size:1.2rem;font-weight:700;margin:14px 0 6px;color:var(--text);}
+.note-editor h3{font-size:1rem;font-weight:700;margin:12px 0 5px;color:var(--text);}
+.note-editor ul,.note-editor ol{margin:8px 0 8px 24px;}
+.note-editor li{margin-bottom:4px;}
+.note-editor strong{font-weight:700;}
+.note-editor em{font-style:italic;}
+.note-ai-panel{border-left:1px solid var(--border);background:var(--surface);display:flex;flex-direction:column;overflow:hidden;}
+.note-ai-head{padding:12px 16px;border-bottom:1px solid var(--border);font-size:12px;font-weight:700;color:var(--accent);letter-spacing:0.06em;text-transform:uppercase;display:flex;align-items:center;justify-content:space-between;}
+.note-ai-btns{padding:12px 16px;display:flex;flex-direction:column;gap:8px;border-bottom:1px solid var(--border);}
+.note-ai-action{width:100%;padding:8px 12px;border:1px solid var(--border2);border-radius:var(--r);background:var(--surface2);color:var(--text2);font-size:12px;font-weight:600;cursor:pointer;transition:all 0.15s;text-align:left;font-family:var(--font);}
+.note-ai-action:hover{border-color:var(--accent);color:var(--accent);background:rgba(6,182,212,0.05);}
+.note-ai-response{flex:1;overflow-y:auto;padding:14px 16px;font-size:12px;line-height:1.75;color:var(--text2);}
+.note-ai-response:empty::before{content:"Select an action or highlight text and choose an option.";color:var(--text3);font-style:italic;}
+.note-empty-state{display:flex;flex-direction:column;align-items:center;justify-content:center;height:100%;color:var(--text3);gap:12px;}
+.note-empty-state .ico{font-size:3rem;opacity:0.3;}
+.notion-link-card{background:var(--surface2);border:1px solid var(--border);border-radius:var(--r2);padding:16px;margin-bottom:10px;display:flex;align-items:center;gap:12px;}
+.notion-link-card .notion-ico{font-size:20px;flex-shrink:0;}
+.notion-link-card-body{flex:1;min-width:0;}
+.notion-link-card-title{font-size:13px;font-weight:600;color:var(--text);white-space:nowrap;overflow:hidden;text-overflow:ellipsis;}
+.notion-link-card-url{font-size:11px;color:var(--text3);white-space:nowrap;overflow:hidden;text-overflow:ellipsis;margin-top:2px;}
+.highlight-tooltip{position:fixed;background:var(--navy);border:1px solid rgba(6,182,212,0.3);border-radius:8px;padding:6px 4px;display:flex;gap:4px;z-index:9000;box-shadow:0 8px 24px rgba(0,0,0,0.3);display:none;}
+.highlight-tooltip button{padding:4px 10px;border:none;border-radius:6px;background:rgba(255,255,255,0.08);color:white;font-size:11px;font-weight:600;cursor:pointer;font-family:var(--font);transition:background 0.12s;}
+.highlight-tooltip button:hover{background:rgba(6,182,212,0.3);}
+.notes-filter-bar{padding:10px 16px;border-bottom:1px solid var(--border);display:flex;gap:6px;flex-wrap:wrap;flex-shrink:0;}
+.note-filter-pill{padding:3px 10px;border-radius:99px;font-size:11px;font-weight:600;cursor:pointer;border:1px solid var(--border);background:transparent;color:var(--text3);transition:all 0.12s;font-family:var(--font);}
+.note-filter-pill.active{background:var(--navy);color:white;border-color:transparent;}
+.note-search{padding:10px 16px;border-bottom:1px solid var(--border);flex-shrink:0;}
+.note-search input{padding:7px 12px;font-size:12px;}
+
+.spin { width: 13px; height: 13px; border: 2px solid rgba(255,255,255,0.25); border-top-color: white; border-radius: 50%; animation: rot 0.6s linear infinite; display: none; flex-shrink: 0; }
+.loading .spin { display: inline-block; }
+@keyframes rot { to { transform: rotate(360deg); } }
+.gen-prog { margin-top: 12px; display: none; }
+.gen-prog-track { height: 3px; background: var(--border); border-radius: 99px; overflow: hidden; }
+.gen-prog-fill { height: 100%; background: linear-gradient(90deg,var(--accent),var(--accent2)); width: 0%; transition: width 0.3s; border-radius: 99px; }
+
+.modal-bg { position: fixed; inset: 0; background: rgba(5,10,20,0.7); backdrop-filter: blur(4px); z-index: 1000; display: none; align-items: center; justify-content: center; }
+.modal-bg.open { display: flex; }
+.modal { background: var(--modal-bg); border: 1px solid var(--border); border-radius: 20px; padding: 28px; width: 520px; max-height: 85vh; overflow-y: auto; box-shadow: 0 40px 80px rgba(0,0,0,0.25); transition: background 0.25s; }
+.modal-title { font-size: 1rem; font-weight: 800; letter-spacing: -0.02em; color: var(--text); margin-bottom: 20px; }
+
+.divider { height: 1px; background: var(--border); margin: 16px 0; }
+.empty { text-align: center; padding: 48px 20px; color: var(--text2); font-size: 13px; line-height: 2; }
+.empty-ico { font-size: 2rem; margin-bottom: 10px; display: block; opacity: 0.4; }
+.err-box { background: rgba(239,68,68,0.08); border: 1px solid rgba(239,68,68,0.2); border-radius: var(--r); padding: 10px 14px; color: var(--red); font-size: 12px; margin-top: 10px; display: none; }
+.row { display: flex; align-items: center; gap: 10px; }
+.flex1 { flex: 1; }
+.mt4{margin-top:4px;}.mt8{margin-top:8px;}.mt12{margin-top:12px;}.mt16{margin-top:16px;}.mt20{margin-top:20px;}
+.mb8{margin-bottom:8px;}.mb12{margin-bottom:12px;}.mb16{margin-bottom:16px;}.mb20{margin-bottom:20px;}
+</style>
+</head>
+<body>
+
+<!-- LOCK -->
+<div id="lock">
+  <div class="lock-card">
+    <div class="lock-icon">🧬</div>
+    <div class="lock-logo">Med<span>Study</span></div>
+    <div class="lock-sub">Personal revision tool · UK Medicine</div>
+    <input type="password" id="pwInput" placeholder="••••••••" autocomplete="off" onkeydown="if(event.key==='Enter')tryUnlock()">
+    <button class="btn btn-teal" style="width:100%;justify-content:center;padding:12px;font-size:14px;" id="lockBtn" onclick="tryUnlock()">
+      <div class="spin"></div>Unlock
+    </button>
+    <div class="lock-err" id="lockErr"></div>
+  </div>
+</div>
+
+<!-- APP -->
+<div id="app">
+ <div class="layout">
+  <div class="sidebar">
+    <div class="sidebar-logo">
+      <div class="logo-mark">M</div>
+      <div class="logo-name">Med<span>Study</span></div>
+    </div>
+    <div class="sidebar-user">
+      <div class="user-avatar">AB</div>
+      <div>
+        <div class="user-name">Abhinav</div>
+        <div class="user-year" id="sidebarYear">Year 2</div>
+      </div>
+    </div>
+    <div class="nav-section">Practice</div>
+    <div style="padding:0 0 4px;">
+      <div class="nav-item active" data-page="dashboard" onclick="nav('dashboard',this)"><span class="nav-icon">⊞</span>Dashboard</div>
+      <div class="nav-item" data-page="lectures" onclick="nav('lectures',this)"><span class="nav-icon">📖</span>Lectures</div>
+      <div class="nav-item" data-page="notes" onclick="nav('notes',this)"><span class="nav-icon">📓</span>Notes Hub</div>
+      <div class="nav-item" data-page="mcq" onclick="nav('mcq',this)"><span class="nav-icon">❓</span>MCQ Generator</div>
+      <div class="nav-item" data-page="mock" onclick="nav('mock',this)"><span class="nav-icon">📝</span>Mock Exam</div>
+      <div class="nav-item" data-page="recall" onclick="nav('recall',this)"><span class="nav-icon">⚡</span>Quick Recall</div>
+      <div class="nav-item" data-page="review" onclick="nav('review',this)"><span class="nav-icon">🔁</span>Review Wrong<span class="nav-badge" id="wrongCount" style="display:none;">0</span></div>
+    </div>
+    <div class="nav-section">Reference</div>
+    <div style="padding:0 0 4px;">
+      <div class="nav-item" data-page="drugs" onclick="nav('drugs',this)"><span class="nav-icon">💊</span>Drug Cards</div>
+      <div class="nav-item" data-page="bugs" onclick="nav('bugs',this)"><span class="nav-icon">🦠</span>Bug Table</div>
+    </div>
+    <div class="sidebar-bottom">
+      <div class="theme-toggle" onclick="toggleTheme()">
+        <span class="theme-toggle-label" id="themeLabel">Dark mode</span>
+        <div class="toggle-track" id="themeTrack"><div class="toggle-thumb"></div></div>
+      </div>
+      <div class="year-btn" onclick="openYearModal()">
+        <div>
+          <div class="year-btn-label">Active profile</div>
+          <div class="year-btn-name" id="yearName">Year 2</div>
+        </div>
+        <span style="color:rgba(255,255,255,0.4);">⇅</span>
+      </div>
+    </div>
+  </div>
+
+  <div class="main">
+   <!-- DASHBOARD -->
+   <div class="page active" id="page-dashboard">
+    <div class="page-hero">
+      <div>
+        <div class="page-hero-title">Welcome back, Abhinav 👋</div>
+        <div class="page-hero-sub" id="dashSub">Year 2 · Keep going — you've got this.</div>
+      </div>
+      <button class="btn btn-outline btn-sm" onclick="openTargetModal()">＋ Today's targets</button>
+    </div>
+    <div style="padding:24px 32px 0;">
+      <div class="g4 mb20">
+        <div class="stat-card"><div class="stat-card-bar" style="background:linear-gradient(90deg,var(--accent),transparent);"></div><div class="stat-icon" style="background:rgba(6,182,212,0.1);color:var(--accent);">📚</div><div class="stat-num" id="sLec">0</div><div class="stat-label">Lectures done</div><div class="stat-hint" id="sLecSub">pass 1 or above</div></div>
+        <div class="stat-card"><div class="stat-card-bar" style="background:linear-gradient(90deg,var(--green),transparent);"></div><div class="stat-icon" style="background:rgba(16,185,129,0.1);color:var(--green);">✅</div><div class="stat-num" id="sMCQ">0</div><div class="stat-label">Questions answered</div></div>
+        <div class="stat-card"><div class="stat-card-bar" style="background:linear-gradient(90deg,var(--orange),transparent);"></div><div class="stat-icon" style="background:rgba(245,158,11,0.1);color:var(--orange);">🎯</div><div class="stat-num" id="sAvg">—</div><div class="stat-label">Average score</div></div>
+        <div class="stat-card"><div class="stat-card-bar" style="background:linear-gradient(90deg,var(--red),transparent);"></div><div class="stat-icon" style="background:rgba(239,68,68,0.1);color:var(--red);">⚡</div><div class="stat-num" id="sWrong">0</div><div class="stat-label">To review</div></div>
+      </div>
+      <div class="g2">
+        <div class="section-card"><div class="section-head"><div><div class="section-title">Block progress</div><div class="section-sub">Pass 1 and pass 2 across all blocks</div></div></div><div class="section-body"><div id="blockProg"></div></div></div>
+        <div style="display:flex;flex-direction:column;gap:14px;">
+          <div class="countdown-card" id="countdownCard">
+            <div class="cd-label">Exam countdown</div>
+            <div class="cd-exam-name"><span id="cdName" style="flex:1;">Set your exam date</span><button class="cd-edit-btn" onclick="openExamModal()">Edit dates</button></div>
+            <div class="cd-days" id="cdDays">&#8212;<span>days to go</span></div>
+            <div class="cd-sub" id="cdSub">Click "Edit dates" to get started</div>
+            <div class="cd-bar"><div class="cd-bar-fill" id="cdBarFill" style="width:0%;"></div></div>
+            <div id="cdImportantDates"></div>
+          </div>
+          <div class="target-card">
+            <div class="row mb12"><div class="flex1"><div style="font-size:13px;font-weight:700;color:var(--text);">Today's targets</div><div style="font-size:12px;color:var(--text2);margin-top:2px;" id="targetProgress">No targets set</div></div><button class="btn btn-xs btn-outline" onclick="openTargetModal()">Edit</button></div>
+            <div id="targetList"><div style="font-size:12px;color:var(--text3);text-align:center;padding:12px 0;">Click Edit to add targets</div></div>
+          </div>
+        </div>
+      </div>
+      <div class="g2 mt16">
+        <div class="section-card"><div class="section-head"><div class="section-title">Recent scores</div></div><div class="section-body"><div id="recentScores"></div></div></div>
+        <div class="section-card"><div class="section-head"><div><div class="section-title">Block breakdown</div><div class="section-sub">MCQ accuracy per block</div></div></div><div class="section-body"><div id="subjBreakdown"><div class="empty" style="padding:20px 0;font-size:12px;"><span class="empty-ico">📊</span>Complete MCQs to see breakdown</div></div></div></div>
+      </div>
+    </div>
+   </div>
+
+   <!-- LECTURES -->
+   <div class="page" id="page-lectures">
+    <div class="page-hero"><div><div class="page-hero-title">Lectures</div><div class="page-hero-sub">Track first and second pass progress</div></div><button class="btn btn-primary btn-sm" onclick="openModal('addLecModal')">＋ Add lecture</button></div>
+    <div style="padding:20px 32px 0;">
+      <div class="pill-row" id="lecBlockPills"></div>
+      <div class="pill-row" id="lecSubjPills" style="margin-top:-10px;"></div>
+      <div class="pill-row" id="lecPassPills" style="margin-top:-10px;"></div>
+      <div id="lecList"></div>
+    </div>
+   </div>
+
+   <!-- MCQ -->
+   <div class="page" id="page-mcq">
+    <div class="page-hero"><div class="page-hero-title">MCQ Generator</div><div class="page-hero-sub">From your notes or paste text → AI generates exam-style questions → scores saved automatically</div></div>
+    <div style="padding:24px 32px 0;">
+      <div class="section-card mb16"><div class="section-head"><div class="section-title">Generate questions</div></div>
+        <div class="section-body">
+          <label>Source</label>
+          <div style="display:flex;gap:10px;margin-bottom:16px;flex-wrap:wrap;">
+            <label style="text-transform:none;font-size:13px;display:flex;align-items:center;gap:8px;cursor:pointer;font-weight:500;"><input type="radio" name="mcqSrc" value="text" checked style="width:auto;" onchange="mcqSrcChange()"> Paste text</label>
+            <label style="text-transform:none;font-size:13px;display:flex;align-items:center;gap:8px;cursor:pointer;font-weight:500;"><input type="radio" name="mcqSrc" value="note" style="width:auto;" onchange="mcqSrcChange()"> From a saved note</label>
+          </div>
+          <div id="mcqTextSrc">
+            <label>Notes / lecture content</label>
+            <textarea id="mcqNotes" placeholder="Paste your lecture notes here..." style="min-height:130px;"></textarea>
+          </div>
+          <div id="mcqNoteSrc" style="display:none;">
+            <label>Select note</label>
+            <select id="mcqNoteSelect" style="margin-bottom:8px;"><option value="">— pick a note —</option></select>
+            <div id="mcqNotePreview" style="font-size:12px;color:var(--text2);background:var(--surface2);border:1px solid var(--border);border-radius:var(--r);padding:10px 14px;max-height:80px;overflow:hidden;display:none;"></div>
+          </div>
+          <div style="display:flex;flex-wrap:wrap;gap:14px;margin-top:16px;">
+            <div style="min-width:130px;"><label>Block</label><select id="mcqBlock"><option>GU</option><option>MSK</option><option>Neurology</option><option>GI</option><option>CVR</option><option>Core</option></select></div>
+            <div style="min-width:150px;"><label>Subject</label><select id="mcqSubject"><option value="">Any subject</option><option>Anatomy</option><option>Physiology</option><option>Pharmacology</option><option>Microbiology</option><option>Immunology</option><option>Pathology</option><option>Biochemistry</option><option>Radiology</option><option>Haematology</option><option>General</option></select></div>
+            <div style="min-width:90px;"><label>Questions</label><select id="mcqNum"><option value="5">5</option><option value="10" selected>10</option><option value="15">15</option><option value="20">20</option></select></div>
+            <div style="min-width:170px;"><label>Difficulty</label><select id="mcqDiff"><option value="mixed" selected>Mixed</option><option value="easy">Recall / Easy</option><option value="medium">Applied / Medium</option><option value="hard">Clinical / Hard</option></select></div>
+            <div style="margin-top:auto;"><button class="btn btn-primary" id="mcqBtn" onclick="genMCQ()"><div class="spin"></div><span id="mcqTxt">Generate questions</span></button></div>
+          </div>
+          <div class="gen-prog" id="mcqProg"><div class="gen-prog-track"><div class="gen-prog-fill" id="mcqFill"></div></div></div>
+          <div class="err-box" id="mcqErr"></div>
+        </div>
+      </div>
+      <div class="score-bar" id="mcqScoreBar"><div><div style="font-size:10px;color:var(--text2);margin-bottom:2px;font-weight:600;letter-spacing:0.06em;text-transform:uppercase;">Score</div><div class="score-num" id="mcqScoreNum">—</div></div><div style="font-size:14px;font-weight:700;" id="mcqScoreMsg"></div></div>
+      <div id="mcqQs"></div>
+    </div>
+   </div>
+
+   <!-- MOCK EXAM -->
+   <div class="page" id="page-mock">
+    <div class="page-hero"><div class="page-hero-title">Mock Exam</div><div class="page-hero-sub">Timed exam from your saved questions — pick duration and blocks</div></div>
+    <div style="padding:24px 32px 0;" id="mockSetup">
+      <div class="section-card mb16">
+        <div class="section-head"><div class="section-title">Set up your exam</div></div>
+        <div class="section-body">
+          <div class="g2 mb16">
+            <div>
+              <label>Duration</label>
+              <div style="display:flex;flex-direction:column;gap:8px;">
+                <label style="text-transform:none;font-size:13px;display:flex;align-items:center;gap:10px;cursor:pointer;"><input type="radio" name="dur" value="30" style="width:auto;"> <span>30 min — Sprint (approx 20 questions)</span></label>
+                <label style="text-transform:none;font-size:13px;display:flex;align-items:center;gap:10px;cursor:pointer;"><input type="radio" name="dur" value="60" checked style="width:auto;"> <span>1 hour — Standard (approx 40 questions)</span></label>
+                <label style="text-transform:none;font-size:13px;display:flex;align-items:center;gap:10px;cursor:pointer;"><input type="radio" name="dur" value="120" style="width:auto;"> <span>2 hours — Full paper (approx 80 questions)</span></label>
+              </div>
+            </div>
+            <div>
+              <label>Blocks to include</label>
+              <div class="pill-row" id="mockBlockPills" style="margin-bottom:8px;"></div>
+              <label>Difficulty</label>
+              <select id="mockDiff"><option value="mixed" selected>Mixed</option><option value="easy">Recall / Easy</option><option value="medium">Applied / Medium</option><option value="hard">Clinical / Hard</option></select>
+            </div>
+          </div>
+          <div class="err-box" id="mockErr"></div>
+          <button class="btn btn-green" id="mockStartBtn" onclick="startMockExam()" style="font-size:14px;padding:10px 24px;">
+            <div class="spin"></div><span id="mockStartTxt">Start exam</span>
+          </button>
+        </div>
+      </div>
+    </div>
+    <div style="padding:0 32px;" id="mockExamArea"></div>
+   </div>
+
+   <!-- QUICK RECALL -->
+   <div class="page" id="page-recall">
+    <div class="page-hero"><div class="page-hero-title">Quick Recall</div><div class="page-hero-sub">See a term — type everything you know — AI marks it. Faster than MCQs.</div></div>
+    <div style="padding:24px 32px 0;" id="recallSetup">
+      <div class="section-card mb16">
+        <div class="section-head"><div class="section-title">Set up recall session</div></div>
+        <div class="section-body">
+          <label>Source</label>
+          <div style="display:flex;flex-direction:column;gap:8px;margin-bottom:16px;">
+            <label style="text-transform:none;font-size:13px;display:flex;align-items:center;gap:10px;cursor:pointer;"><input type="radio" name="recallSrc" value="notes" checked style="width:auto;"> <span>From my notes (paste below)</span></label>
+            <label style="text-transform:none;font-size:13px;display:flex;align-items:center;gap:10px;cursor:pointer;"><input type="radio" name="recallSrc" value="drugs" style="width:auto;"> <span>Drug cards (from my saved cards)</span></label>
+            <label style="text-transform:none;font-size:13px;display:flex;align-items:center;gap:10px;cursor:pointer;"><input type="radio" name="recallSrc" value="bugs" style="width:auto;"> <span>Bug table (from my saved bugs)</span></label>
+          </div>
+          <div id="recallNotesInput">
+            <label>Notes to generate terms from</label>
+            <textarea id="recallNotes" placeholder="Paste lecture notes here — AI will pull out key terms to test you on..." style="min-height:120px;"></textarea>
+          </div>
+          <div class="g2 mt12">
+            <div><label>Block</label><select id="recallBlock"><option value="all">All blocks</option><option>GU</option><option>MSK</option><option>Neurology</option><option>GI</option><option>CVR</option><option>Core</option></select></div>
+            <div><label>Number of terms</label><select id="recallCount"><option value="5">5 terms</option><option value="10" selected>10 terms</option><option value="15">15 terms</option><option value="20">20 terms</option></select></div>
+          </div>
+          <div class="err-box" id="recallErr"></div>
+          <button class="btn btn-primary mt12" id="recallStartBtn" onclick="startRecall()"><div class="spin"></div><span id="recallStartTxt">Start recall</span></button>
+        </div>
+      </div>
+    </div>
+    <div style="padding:0 32px;" id="recallArea"></div>
+   </div>
+
+   <!-- REVIEW -->
+   <div class="page" id="page-review">
+    <div class="page-hero"><div class="page-hero-title">Review Wrong Answers</div><div class="page-hero-sub">Every question you got wrong — filter by block and retest</div></div>
+    <div style="padding:24px 32px 0;">
+      <div class="section-card mb16"><div class="section-head"><div class="section-title">Select blocks to review</div></div><div class="section-body"><div class="pill-row" id="reviewPills"></div><button class="btn btn-primary mt8" onclick="startReview()">Start review</button></div></div>
+      <div id="reviewArea"></div>
+    </div>
+   </div>
+
+   <!-- DRUGS -->
+   <div class="page" id="page-drugs">
+    <div class="page-hero"><div><div class="page-hero-title">Drug Cards</div><div class="page-hero-sub">Write yourself · AI checks gaps · test by block</div></div><button class="btn btn-primary btn-sm" onclick="openAddDrug()">＋ Add drug</button></div>
+    <div style="padding:20px 32px 0;">
+      <div class="tab-row mb20"><div class="tab active" onclick="dTab('browse',this)">Browse</div><div class="tab" onclick="dTab('test',this)">Test yourself</div></div>
+      <div id="drugBrowse"><div class="pill-row" id="drugPills"></div><div id="drugList"></div></div>
+      <div id="drugTest" style="display:none;"><div class="section-card mb16"><div class="section-head"><div class="section-title">Select blocks to test</div></div><div class="section-body"><div class="pill-row" id="drugTestPills"></div><button class="btn btn-primary mt8" onclick="startDrugTest()">Start test</button></div></div><div id="drugTestArea"></div></div>
+    </div>
+   </div>
+
+   <!-- BUGS -->
+   <div class="page" id="page-bugs">
+    <div class="page-hero"><div><div class="page-hero-title">Bug Table</div><div class="page-hero-sub">Build your master microbiology reference</div></div><button class="btn btn-primary btn-sm" onclick="openAddBug()">＋ Add bug</button></div>
+    <div style="padding:20px 32px 0;">
+      <div class="tab-row mb20"><div class="tab active" onclick="bTab('browse',this)">Browse</div><div class="tab" onclick="bTab('test',this)">Test yourself</div></div>
+      <div id="bugBrowse"><div class="pill-row" id="bugPills"></div><div class="section-card" style="overflow-x:auto;"><table class="btable"><thead><tr><th>Bug</th><th>Gram</th><th>Type</th><th>Causes</th><th>Treatment</th><th>Block</th><th></th></tr></thead><tbody id="bugBody"></tbody></table></div></div>
+      <div id="bugTest" style="display:none;"><div class="section-card mb16"><div class="section-head"><div class="section-title">Select blocks</div></div><div class="section-body"><div class="pill-row" id="bugTestPills"></div><button class="btn btn-primary mt8" onclick="startBugTest()">Start test</button></div></div><div id="bugTestArea"></div></div>
+    </div>
+   </div>
+   <!-- NOTES HUB -->
+   <div class="page" id="page-notes" style="padding:0;">
+    <div class="notes-layout">
+      <!-- Left sidebar: note list -->
+      <div class="notes-sidebar">
+        <div class="notes-sidebar-head">
+          <span class="notes-sidebar-title">My Notes</span>
+          <button class="btn btn-xs btn-teal" onclick="newNote()">＋ New</button>
+        </div>
+        <div class="note-search"><input type="text" id="noteSearch" placeholder="Search notes…" oninput="filterNotes()" style="padding:7px 12px;font-size:12px;"></div>
+        <div class="notes-filter-bar" id="notesFilterBar"></div>
+        <div class="notes-list" id="notesList">
+          <div class="empty" style="padding:32px 16px;font-size:12px;"><span class="empty-ico">📓</span>No notes yet.<br>Click + New to start.</div>
+        </div>
+        <!-- Notion links section -->
+        <div style="border-top:1px solid var(--border);flex-shrink:0;">
+          <div style="padding:10px 16px 6px;display:flex;align-items:center;justify-content:space-between;">
+            <span style="font-size:10px;font-weight:700;color:var(--text3);text-transform:uppercase;letter-spacing:0.1em;">Notion Links</span>
+            <button class="btn btn-xs btn-outline" onclick="openModal('notionLinkModal')" style="font-size:10px;padding:2px 8px;">＋ Add</button>
+          </div>
+          <div id="notionLinksList" style="padding:0 16px 12px;max-height:160px;overflow-y:auto;"></div>
+        </div>
+      </div>
+
+      <!-- Right: editor + AI panel -->
+      <div class="note-editor-area">
+        <div class="note-toolbar" id="noteToolbar" style="display:none;">
+          <span style="font-size:12px;font-weight:700;color:var(--text2);margin-right:4px;" id="noteSavingIndicator"></span>
+          <button class="note-toolbar-btn" onclick="noteCmd('bold')"><b>B</b></button>
+          <button class="note-toolbar-btn" onclick="noteCmd('italic')"><i>I</i></button>
+          <button class="note-toolbar-btn" onclick="noteCmd('underline')"><u>U</u></button>
+          <div class="note-toolbar-sep"></div>
+          <button class="note-toolbar-btn" onclick="noteCmd('formatBlock','h1')">H1</button>
+          <button class="note-toolbar-btn" onclick="noteCmd('formatBlock','h2')">H2</button>
+          <button class="note-toolbar-btn" onclick="noteCmd('insertUnorderedList')">• List</button>
+          <div class="note-toolbar-sep"></div>
+          <button class="note-toolbar-btn" onclick="genMCQFromNote()" title="Generate MCQs from this note" style="color:var(--accent);border-color:rgba(6,182,212,0.3);">❓ MCQs</button>
+          <button class="note-toolbar-btn" onclick="genRecallFromNote()" title="Quick recall from this note" style="color:var(--purple);border-color:rgba(139,92,246,0.3);">⚡ Recall</button>
+          <div class="note-toolbar-sep"></div>
+          <button class="note-toolbar-btn" id="aiToggleBtn" onclick="toggleAIPanel()" style="color:var(--accent);">✨ AI</button>
+          <button class="note-toolbar-btn" onclick="deleteNote()" style="color:var(--red);border-color:rgba(239,68,68,0.2);margin-left:auto;">🗑 Delete</button>
+        </div>
+
+        <div class="note-content-wrap" id="noteContentWrap">
+          <!-- Editor -->
+          <div style="display:flex;flex-direction:column;overflow:hidden;background:var(--bg);">
+            <!-- Note meta bar -->
+            <div id="noteMetaBar" style="display:none;padding:10px 32px;border-bottom:1px solid var(--border);background:var(--surface);display:flex;gap:12px;align-items:center;flex-wrap:wrap;">
+              <div style="display:flex;align-items:center;gap:6px;">
+                <label style="text-transform:none;font-size:11px;font-weight:600;color:var(--text2);margin:0;">Block:</label>
+                <select id="noteBlock" onchange="saveNoteMeta()" style="width:auto;padding:4px 8px;font-size:12px;">
+                  <option value="">—</option>
+                  <option>GU</option><option>MSK</option><option>Neurology</option><option>GI</option><option>CVR</option><option>Core</option>
+                </select>
+              </div>
+              <div style="display:flex;align-items:center;gap:6px;">
+                <label style="text-transform:none;font-size:11px;font-weight:600;color:var(--text2);margin:0;">Subject:</label>
+                <select id="noteSubject" onchange="saveNoteMeta()" style="width:auto;padding:4px 8px;font-size:12px;">
+                  <option value="">—</option>
+                  <option>Anatomy</option><option>Physiology</option><option>Pharmacology</option><option>Microbiology</option>
+                  <option>Immunology</option><option>Pathology</option><option>Biochemistry</option><option>Radiology</option>
+                  <option>Haematology</option><option>General</option>
+                </select>
+              </div>
+              <input type="text" id="noteLectureRef" placeholder="Lecture ref (e.g. GU Lecture 5)" onchange="saveNoteMeta()" style="width:200px;padding:4px 8px;font-size:12px;">
+            </div>
+            <div id="noteEditor" contenteditable="false" class="note-editor" data-placeholder="Start typing your note..."></div>
+          </div>
+
+          <!-- AI Panel (hidden by default) -->
+          <div class="note-ai-panel" id="noteAiPanel" style="display:none;">
+            <div class="note-ai-head">✨ AI Assistant <button onclick="toggleAIPanel()" style="background:none;border:none;color:var(--text3);cursor:pointer;font-size:14px;">✕</button></div>
+            <div class="note-ai-btns">
+              <button class="note-ai-action" onclick="aiNoteAction('summarise')">📋 Summarise this note</button>
+              <button class="note-ai-action" onclick="aiNoteAction('keypoints')">🎯 Key exam points</button>
+              <button class="note-ai-action" onclick="aiNoteAction('gaps')">🔍 What am I missing?</button>
+              <button class="note-ai-action" onclick="aiNoteAction('explain')">💡 Explain highlighted text</button>
+              <button class="note-ai-action" onclick="aiNoteAction('flashcard')">🃏 Make flashcard from highlight</button>
+            </div>
+            <div class="note-ai-response" id="noteAiResponse"></div>
+          </div>
+        </div>
+
+        <!-- Empty state when no note selected -->
+        <div class="note-empty-state" id="noteEmptyState">
+          <span class="ico">📓</span>
+          <span style="font-size:14px;font-weight:600;color:var(--text2);">Select a note or create a new one</span>
+          <span style="font-size:12px;">Your notes are saved to Supabase</span>
+          <button class="btn btn-teal" onclick="newNote()">＋ Create first note</button>
+        </div>
+      </div>
+    </div>
+   </div>
+
+  </div>
+ </div>
+</div>
+
+<!-- HIGHLIGHT TOOLTIP -->
+<div class="highlight-tooltip" id="highlightTooltip">
+  <button onclick="aiFromHighlight('explain')">💡 Explain</button>
+  <button onclick="aiFromHighlight('flashcard')">🃏 Flashcard</button>
+  <button onclick="aiFromHighlight('mcq')">❓ MCQ</button>
+</div> — must be before </body> and before the script so DOMContentLoaded finds them -->
+<div class="modal-bg" id="yearModal">
+  <div class="modal"><div class="modal-title">Year profiles</div><div id="yearList" class="mb16"></div><div class="divider"></div><div style="font-size:13px;font-weight:700;margin-bottom:10px;color:var(--text);">Add new profile</div><div class="row"><input type="text" id="newYearInput" placeholder="e.g. Year 3" style="flex:1;"><button class="btn btn-primary btn-sm" onclick="addYear()">Add</button></div><button class="btn btn-ghost mt12" onclick="closeModal('yearModal')">Close</button></div>
+</div>
+<div class="modal-bg" id="addLecModal">
+  <div class="modal"><div class="modal-title">Add lecture</div><div class="mb12"><label>Lecture title</label><input type="text" id="lecTitle" placeholder="e.g. Renal physiology — filtration mechanisms"></div><div class="g2 mb12"><div><label>Block</label><select id="lecBlock"><option value="GU">GU</option><option value="MSK">MSK</option><option value="Neurology">Neurology</option><option value="GI">GI</option><option value="CVR">CVR</option><option value="Core">Core</option></select></div><div><label>Subject</label><select id="lecSubj"><option value="Anatomy">Anatomy</option><option value="Physiology">Physiology</option><option value="Pharmacology">Pharmacology</option><option value="Microbiology">Microbiology</option><option value="Immunology">Immunology</option><option value="Pathology">Pathology</option><option value="Biochemistry">Biochemistry</option><option value="Radiology">Radiology</option><option value="Development">Development</option><option value="Haematology">Haematology</option><option value="General">General</option></select></div></div><div class="err-box" id="lecErr"></div><div class="row" style="gap:8px;"><button class="btn btn-primary flex1" onclick="addLec()">Add lecture</button><button class="btn btn-outline" onclick="closeModal('addLecModal')">Cancel</button></div></div>
+</div>
+<div class="modal-bg" id="addDrugModal">
+  <div class="modal"><div class="modal-title">Add drug card</div><div class="mb12"><label>Drug name</label><input type="text" id="dName" placeholder="e.g. Metformin"></div><div class="mb12"><label>Mechanism</label><input type="text" id="dMech" placeholder="e.g. Activates AMPK, reduces hepatic glucose output"></div><div class="mb12"><label>Used for</label><input type="text" id="dUse" placeholder="e.g. Type 2 diabetes, first line"></div><div class="mb12"><label>Key side effect / buzzword</label><input type="text" id="dSide" placeholder="e.g. Lactic acidosis, no weight gain"></div><div class="mb12"><label>Block</label><select id="dBlock"><option>GU</option><option>MSK</option><option>Neurology</option><option>GI</option><option>CVR</option><option>Core</option></select></div><button class="btn btn-outline mb12" id="aiDBtn" onclick="aiCheckDrug()" style="width:100%;justify-content:center;"><div class="spin"></div><span id="aiDTxt">✨ Check what I missed (AI)</span></button><div id="aiDSug" style="display:none;background:var(--ai-sug-bg);border:1px solid var(--ai-sug-border);border-radius:var(--r);padding:14px;margin-bottom:12px;"><div style="font-size:10px;color:var(--accent);font-weight:700;letter-spacing:0.08em;text-transform:uppercase;margin-bottom:6px;">AI suggestions</div><div id="aiDContent" style="font-size:12px;color:var(--text2);line-height:1.7;"></div></div><div class="row" style="gap:8px;"><button class="btn btn-primary flex1" onclick="saveDrug()">Save card</button><button class="btn btn-outline" onclick="closeModal('addDrugModal')">Cancel</button></div><div class="err-box" id="dErr"></div></div>
+</div>
+<div class="modal-bg" id="addBugModal">
+  <div class="modal"><div class="modal-title">Add bug</div><div class="mb12"><label>Bug name</label><input type="text" id="bName" placeholder="e.g. Staphylococcus aureus"></div><div class="g2 mb12"><div><label>Gram stain</label><select id="bGram"><option value="+ve">Gram +ve</option><option value="-ve">Gram -ve</option><option value="—">N/A</option></select></div><div><label>Type</label><input type="text" id="bType" placeholder="e.g. Cocci, intracellular"></div></div><div class="mb12"><label>Causes</label><input type="text" id="bCauses" placeholder="e.g. Skin, endocarditis, osteomyelitis"></div><div class="mb12"><label>Treatment</label><input type="text" id="bTx" placeholder="e.g. Flucloxacillin (MSSA), Vancomycin (MRSA)"></div><div class="mb12"><label>Block</label><select id="bBlock"><option>GU</option><option>MSK</option><option>Neurology</option><option>GI</option><option>CVR</option><option>Core</option></select></div><button class="btn btn-outline mb12" id="aiBBtn" onclick="aiCheckBug()" style="width:100%;justify-content:center;"><div class="spin"></div><span id="aiBTxt">✨ Check what I missed (AI)</span></button><div id="aiBSug" style="display:none;background:var(--ai-sug-bg);border:1px solid var(--ai-sug-border);border-radius:var(--r);padding:14px;margin-bottom:12px;"><div style="font-size:10px;color:var(--accent);font-weight:700;letter-spacing:0.08em;text-transform:uppercase;margin-bottom:6px;">AI suggestions</div><div id="aiBContent" style="font-size:12px;color:var(--text2);line-height:1.7;"></div></div><div class="row" style="gap:8px;"><button class="btn btn-primary flex1" onclick="saveBug()">Save bug</button><button class="btn btn-outline" onclick="closeModal('addBugModal')">Cancel</button></div><div class="err-box" id="bErr"></div></div>
+</div>
+<div class="modal-bg" id="targetModal">
+  <div class="modal"><div class="modal-title">Today's targets</div><div class="mb16"><label>Add a target</label><div class="row" style="gap:8px;"><input type="text" id="targetInput" placeholder="e.g. GU lecture 12 — renal tubular acidosis" style="flex:1;" onkeydown="if(event.key==='Enter')addTarget()"><select id="targetBlock" style="width:110px;"><option>GU</option><option>MSK</option><option>Neurology</option><option>GI</option><option>CVR</option><option>Core</option></select><button class="btn btn-primary btn-sm" onclick="addTarget()">Add</button></div></div><div id="targetModalList" class="mb12"></div><button class="btn btn-ghost" onclick="closeModal('targetModal')">Done</button></div>
+</div>
+<div class="modal-bg" id="examModal">
+  <div class="modal">
+    <div class="modal-title">Exam dates</div>
+    <div class="mb12"><label>Main exam name</label><input type="text" id="examNameInp" placeholder="e.g. Year 2 Finals — Paper 1 and 2"></div>
+    <div class="mb16"><label>Main exam date</label><input type="date" id="examDateInp"></div>
+    <div class="divider"></div>
+    <div style="font-size:13px;font-weight:700;color:var(--text);margin-bottom:12px;">Important dates <span style="font-size:11px;color:var(--text3);font-weight:400;margin-left:4px;">smaller countdowns on dashboard</span></div>
+    <div class="row mb12" style="gap:8px;">
+      <input type="text" id="impNameInp" placeholder="e.g. Paper 2, Mock, OSCEs..." style="flex:2;">
+      <input type="date" id="impDateInp" style="flex:1;">
+      <button class="btn btn-primary btn-sm" onclick="addImpDate()">Add</button>
+    </div>
+    <div id="impDateList" class="mb16"></div>
+    <div class="row" style="gap:8px;"><button class="btn btn-primary flex1" onclick="saveExamDates()">Save</button><button class="btn btn-outline" onclick="closeModal('examModal')">Cancel</button></div>
+  </div>
+</div>
+
+<div class="modal-bg" id="notionLinkModal">
+  <div class="modal"><div class="modal-title">Import from Notion</div>
+    <div style="font-size:12px;color:var(--text2);margin-bottom:16px;line-height:1.8;background:var(--surface2);border:1px solid var(--border);border-radius:var(--r);padding:12px;">
+      <strong style="color:var(--text);">Before importing:</strong> Open Notion → your page → click <strong>...</strong> menu → <strong>Connections</strong> → add your MedStudy integration. Otherwise the import will fail.
+    </div>
+    <div class="mb12"><label>Notion page URL</label><input type="text" id="notionLinkUrl" placeholder="https://www.notion.so/Your-Page-abc123…"></div>
+    <div class="g2 mb12">
+      <div><label>Block (optional)</label><select id="notionLinkBlock"><option value="">— none —</option><option>GU</option><option>MSK</option><option>Neurology</option><option>GI</option><option>CVR</option><option>Core</option></select></div>
+      <div><label>Subject (optional)</label><select id="notionLinkSubject"><option value="">— none —</option><option>Anatomy</option><option>Physiology</option><option>Pharmacology</option><option>Microbiology</option><option>Immunology</option><option>Pathology</option><option>Biochemistry</option><option>Radiology</option><option>Haematology</option><option>General</option></select></div>
+    </div>
+    <div class="err-box" id="notionLinkErr"></div>
+    <div style="margin-bottom:10px;">
+      <button class="btn btn-teal" id="notionImportBtn" onclick="importNotionPage()" style="width:100%;justify-content:center;font-size:14px;padding:11px;">
+        <div class="spin"></div><span id="notionImportTxt">⬇ Import as MedStudy note</span>
+      </button>
+    </div>
+    <div style="text-align:center;font-size:11px;color:var(--text3);margin-bottom:12px;">— or just save as a view-only link —</div>
+    <div class="row" style="gap:8px;">
+      <button class="btn btn-outline flex1" onclick="saveNotionLinkOnly()">Save as link only</button>
+      <button class="btn btn-ghost" onclick="closeModal('notionLinkModal')">Cancel</button>
+    </div>
+  </div>
+</div>
+
+<div class="modal-bg" id="notionViewModal">
+  <div class="modal" style="width:90vw;max-width:1000px;height:85vh;display:flex;flex-direction:column;padding:0;overflow:hidden;">
+    <div style="padding:16px 20px;border-bottom:1px solid var(--border);display:flex;align-items:center;justify-content:space-between;flex-shrink:0;">
+      <div style="font-size:14px;font-weight:700;color:var(--text);" id="notionViewTitle">Notion page</div>
+      <button onclick="closeModal('notionViewModal')" style="background:none;border:none;color:var(--text2);cursor:pointer;font-size:18px;">✕</button>
+    </div>
+    <iframe id="notionViewFrame" src="" style="flex:1;border:none;width:100%;" allow="fullscreen"></iframe>
+  </div>
+</div>
+
+<div class="modal-bg" id="newNoteModal">
+  <div class="modal"><div class="modal-title">New note</div>
+    <div class="mb12"><label>Title</label><input type="text" id="newNoteTitle" placeholder="e.g. Renal tubular acidosis — GU Lecture 8"></div>
+    <div class="g2 mb12">
+      <div><label>Block</label><select id="newNoteBlock"><option value="">—</option><option>GU</option><option>MSK</option><option>Neurology</option><option>GI</option><option>CVR</option><option>Core</option></select></div>
+      <div><label>Subject</label><select id="newNoteSubject"><option value="">—</option><option>Anatomy</option><option>Physiology</option><option>Pharmacology</option><option>Microbiology</option><option>Immunology</option><option>Pathology</option><option>Biochemistry</option><option>Radiology</option><option>Haematology</option><option>General</option></select></div>
+    </div>
+    <div class="mb12"><label>Lecture ref (optional)</label><input type="text" id="newNoteLecture" placeholder="e.g. GU Lecture 5"></div>
+    <div class="err-box" id="newNoteErr"></div>
+    <div class="row" style="gap:8px;"><button class="btn btn-primary flex1" onclick="createNote()">Create note</button><button class="btn btn-outline" onclick="closeModal('newNoteModal')">Cancel</button></div>
+  </div>
+</div>
+
+<script>
+const SB_URL='https://tzdkptyeodvlllxmvmqf.supabase.co';
+const SB_KEY='eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJpc3MiOiJzdXBhYmFzZSIsInJlZiI6InR6ZGtwdHllb2R2bGxseG12bXFmIiwicm9sZSI6ImFub24iLCJpYXQiOjE3NzM5MzQ3ODQsImV4cCI6MjA4OTUxMDc4NH0.ofEgXFjqp4xqbuXl6T5GO7tVoMRl0YzT2o5fdELi8uM';
+const SK='_ms_auth';
+const BLOCKS=['GU','MSK','Neurology','GI','CVR','Core'];
+const SUBJECTS=['Anatomy','Physiology','Pharmacology','Microbiology','Immunology','Pathology','Biochemistry','Radiology','Development','Haematology','General'];
+const BC={GU:'gu',MSK:'msk',Neurology:'neuro',GI:'gi',CVR:'cvr',Core:'core'};
+const BLOCK_COLORS={GU:'#ec4899',MSK:'#3b82f6',Neurology:'#10b981',GI:'#f97316',CVR:'#ef4444',Core:'#8b5cf6'};
+const sb=supabase.createClient(SB_URL,SB_KEY);
+let yr='Year 2',fails=0,lockTil=0;
+let mcqQs=[],mcqPk={},mcqDone=false;
+let allDrugs=[],allBugs=[];
+let dTestQs=[],dTestIdx=0,bTestQs=[],bTestIdx=0;
+let revQs=[],revIdx=0,revPk={};
+let selDrugBlocks=new Set(BLOCKS),selBugBlocks=new Set(BLOCKS);
+let lecBlockF='all',lecSubjF='all',lecPassF='all';
+let targets=[];
+let mockQs=[],mockPk={},mockDone=false,mockTimer=null,mockEndTime=0;
+let recallTerms=[],recallIdx=0,recallResults=[];
+const IMP_COLORS=['#06b6d4','#10b981','#f59e0b','#8b5cf6','#ec4899','#ef4444','#3b82f6','#f97316'];
+let tmpImpDates=[];
+
+// ── THEME ──
+function toggleTheme(){
+  const isDark=document.documentElement.getAttribute('data-theme')==='dark';
+  const next=isDark?'light':'dark';
+  document.documentElement.setAttribute('data-theme',next);
+  localStorage.setItem('_ms_theme',next);
+  updateThemeUI(next==='dark');
+}
+function updateThemeUI(dark){
+  const track=document.getElementById('themeTrack');
+  const label=document.getElementById('themeLabel');
+  if(!track||!label)return;
+  if(dark){track.classList.add('on');label.textContent='Light mode';}
+  else{track.classList.remove('on');label.textContent='Dark mode';}
+}
+function applyTheme(){
+  const saved=localStorage.getItem('_ms_theme')||'light';
+  document.documentElement.setAttribute('data-theme',saved);
+  updateThemeUI(saved==='dark');
+}
+
+// ── AUTH ──
+const PW_HASH='adf3446e80aaa0d0bb18f28da17d28c346e126e37030062dd5d2b11a6352673c';
+const PW_SALT='medstudy_2025_salt';
+async function sha256str(s){
+  const buf=await crypto.subtle.digest('SHA-256',new TextEncoder().encode(s));
+  return Array.from(new Uint8Array(buf)).map(b=>b.toString(16).padStart(2,'0')).join('');
+}
+async function tryUnlock(){
+  const now=Date.now();
+  if(now<lockTil){document.getElementById('lockErr').textContent='Locked — wait '+Math.ceil((lockTil-now)/1000)+'s';return;}
+  const pw=document.getElementById('pwInput').value;
+  if(!pw)return;
+  const btn=document.getElementById('lockBtn');
+  btn.disabled=true;
+  btn.querySelector('.spin').style.display='inline-block';
+  document.getElementById('lockErr').textContent='';
+  try{
+    const h=await sha256str(pw+PW_SALT);
+    if(h===PW_HASH){
+      sessionStorage.setItem(SK,'1');
+      unlock();
+    } else {
+      fails++;
+      const inp=document.getElementById('pwInput');
+      inp.value='';inp.classList.add('shake');
+      setTimeout(()=>inp.classList.remove('shake'),400);
+      if(fails>=8){lockTil=Date.now()+600000;document.getElementById('lockErr').textContent='Locked 10 min.';}
+      else if(fails>=5){lockTil=Date.now()+120000;document.getElementById('lockErr').textContent='Locked 2 min.';}
+      else if(fails>=3){lockTil=Date.now()+30000;document.getElementById('lockErr').textContent='Locked 30s.';}
+      else{document.getElementById('lockErr').textContent='Incorrect. ('+fails+' attempt'+(fails>1?'s':'')+')';}
+      btn.disabled=false;
+      btn.querySelector('.spin').style.display='none';
+    }
+  }catch(e){
+    document.getElementById('lockErr').textContent='Error: '+e.message;
+    btn.disabled=false;
+    btn.querySelector('.spin').style.display='none';
+  }
+}
+function unlock(){
+  document.getElementById('lock').style.display='none';
+  document.getElementById('app').style.display='block';
+  init();
+}
+
+// ── SINGLE DOMContentLoaded ──
+document.addEventListener('DOMContentLoaded',function(){
+  applyTheme();
+  document.querySelectorAll('.modal-bg').forEach(m=>m.addEventListener('click',e=>{if(e.target===m)m.classList.remove('open');}));
+  if(sessionStorage.getItem(SK)==='1') unlock();
+});
+
+async function init(){
+  applyTheme();
+  yr=localStorage.getItem('_ms_yr')||'Year 2';
+  document.getElementById('yearName').textContent=yr;
+  document.getElementById('sidebarYear').textContent=yr;
+  document.getElementById('dashSub').textContent=yr+' · Keep going — you\'ve got this.';
+  targets=JSON.parse(localStorage.getItem('_ms_targets_'+yr)||'[]');
+  buildPills();
+  renderCountdown();
+  await loadDash();
+  updateWrongBadge();
+}
+
+function nav(page,el){
+  document.querySelectorAll('.page').forEach(p=>p.classList.remove('active'));
+  document.querySelectorAll('.nav-item').forEach(n=>n.classList.remove('active'));
+  document.getElementById('page-'+page).classList.add('active');
+  if(el)el.classList.add('active');
+  if(page==='notes')loadNotes();
+  if(page==='dashboard')loadDash();
+  if(page==='lectures')loadLecs();
+  if(page==='drugs')loadDrugs();
+  if(page==='bugs')loadBugs();
+  if(page==='mock')resetMockSetup();
+  if(page==='recall')resetRecallSetup();
+}
+
+function buildPills(){
+  document.getElementById('lecBlockPills').innerHTML=`<span class="pill pill-all active" onclick="setLecF('block','all',this)">All blocks</span>`+BLOCKS.map(b=>`<span class="pill pill-${BC[b]}" onclick="setLecF('block','${b}',this)">${b}</span>`).join('');
+  document.getElementById('lecSubjPills').innerHTML=`<span class="subj-pill active" onclick="setLecF('subj','all',this)">All subjects</span>`+SUBJECTS.map(s=>`<span class="subj-pill" onclick="setLecF('subj','${s}',this)">${s}</span>`).join('');
+  document.getElementById('lecPassPills').innerHTML=`<span class="subj-pill active" onclick="setLecF('pass','all',this)">All</span><span class="subj-pill" onclick="setLecF('pass','none',this)">Not started</span><span class="subj-pill" onclick="setLecF('pass','p1',this)">Pass 1 done</span><span class="subj-pill" onclick="setLecF('pass','p2',this)">Both passes</span>`;
+  ['drugPills','bugPills','reviewPills'].forEach(id=>{document.getElementById(id).innerHTML=BLOCKS.map(b=>`<span class="pill pill-${BC[b]} active" onclick="togglePill('${id}','${b}',this)">${b}</span>`).join('');});
+  ['drugTestPills','bugTestPills'].forEach(id=>{document.getElementById(id).innerHTML=BLOCKS.map(b=>`<span class="pill pill-${BC[b]} active" onclick="toggleTestPill('${id}','${b}',this)">${b}</span>`).join('');});
+  document.getElementById('mockBlockPills').innerHTML=BLOCKS.map(b=>`<span class="pill pill-${BC[b]} active" onclick="this.classList.toggle('active')">${b}</span>`).join('');
+  document.querySelectorAll('input[name="recallSrc"]').forEach(r=>r.addEventListener('change',()=>{
+    document.getElementById('recallNotesInput').style.display=r.value==='notes'&&r.checked?'block':'none';
+  }));
+}
+
+function setLecF(type,val,el){
+  if(type==='block'){lecBlockF=val;document.querySelectorAll('#lecBlockPills .pill').forEach(p=>p.classList.remove('active'));el.classList.add('active');}
+  if(type==='subj'){lecSubjF=val;document.querySelectorAll('#lecSubjPills .subj-pill').forEach(p=>p.classList.remove('active'));el.classList.add('active');}
+  if(type==='pass'){lecPassF=val;document.querySelectorAll('#lecPassPills .subj-pill').forEach(p=>p.classList.remove('active'));el.classList.add('active');}
+  loadLecs();
+}
+function togglePill(id,block,el){el.classList.toggle('active');}
+function toggleTestPill(id,block,el){const s=id==='drugTestPills'?selDrugBlocks:selBugBlocks;if(s.has(block)){s.delete(block);el.classList.remove('active');}else{s.add(block);el.classList.add('active');}}
+function getActivePills(id){return[...document.querySelectorAll(`#${id} .pill.active`)].map(p=>{const c=[...p.classList];for(const b of BLOCKS)if(c.includes('pill-'+BC[b]))return b;return null;}).filter(Boolean);}
+
+async function loadDash(){
+  const[lecR,mcqR,wrongR]=await Promise.all([sb.from('lectures').select('*').eq('year',yr),sb.from('mcq_sessions').select('*').eq('year',yr),sb.from('wrong_answers').select('*').eq('year',yr).eq('resolved',false)]);
+  const lecs=lecR.data||[],sessions=mcqR.data||[],wrongs=wrongR.data||[];
+  document.getElementById('sLec').textContent=lecs.filter(l=>l.pass1).length;
+  document.getElementById('sLecSub').textContent=`of ${lecs.length} total`;
+  document.getElementById('sMCQ').textContent=sessions.reduce((a,s)=>a+(s.total||0),0);
+  const scored=sessions.filter(s=>s.score!==null&&s.total>0);
+  document.getElementById('sAvg').textContent=scored.length?Math.round(scored.reduce((a,s)=>a+(s.score/s.total*100),0)/scored.length)+'%':'—';
+  document.getElementById('sWrong').textContent=wrongs.length;
+  updateWrongBadge(wrongs.length);
+  document.getElementById('blockProg').innerHTML=BLOCKS.map(b=>{
+    const bl=lecs.filter(l=>l.block===b),p1=bl.filter(l=>l.pass1).length,p2=bl.filter(l=>l.pass2).length,tot=bl.length;
+    const pct1=tot?Math.round(p1/tot*100):0,pct2=tot?Math.round(p2/tot*100):0;
+    return`<div style="margin-bottom:18px;"><div class="row" style="margin-bottom:7px;"><span class="dot d-${BC[b]}" style="margin-right:6px;"></span><span style="font-size:13px;font-weight:600;flex:1;">${b}</span><span style="font-size:11px;color:var(--text2);">${p1}/${tot} &nbsp;·&nbsp; <span style="color:var(--green);font-weight:600;">${p2} pass 2</span></span></div><div style="position:relative;height:7px;background:var(--surface2);border-radius:99px;overflow:hidden;border:1px solid var(--border);"><div style="position:absolute;left:0;top:0;height:100%;width:${pct2}%;background:var(--green);border-radius:99px;"></div><div style="position:absolute;left:${pct2}%;top:0;height:100%;width:${Math.max(0,pct1-pct2)}%;background:var(--orange);border-radius:99px;"></div></div></div>`;
+  }).join('');
+  const recent=[...sessions].reverse().slice(0,6);
+  document.getElementById('recentScores').innerHTML=recent.length?recent.map(s=>{
+    const pct=s.total?Math.round(s.score/s.total*100):0,col=pct>=70?'var(--green)':pct>=50?'var(--orange)':'var(--red)';
+    const d=new Date(s.created_at);
+    return`<div class="row mb12"><span class="dot d-${BC[s.block]||''}" style="margin-right:4px;"></span><span style="font-size:13px;flex:1;font-weight:500;">${s.block}</span><span style="font-size:11px;color:var(--text2);">${d.getDate()}/${d.getMonth()+1}</span><span style="font-size:14px;font-weight:800;color:${col};min-width:52px;text-align:right;">${s.score}/${s.total}</span></div>`;
+  }).join(''):`<div class="empty" style="padding:20px;"><span class="empty-ico">📊</span>No sessions yet</div>`;
+  const blockStats={};
+  sessions.forEach(s=>{
+    if(!s.total||s.score===null)return;
+    const bl=s.block||'Core';
+    if(!blockStats[bl])blockStats[bl]={score:0,total:0};
+    blockStats[bl].score+=s.score;blockStats[bl].total+=s.total;
+  });
+  const rows=Object.entries(blockStats).filter(([,v])=>v.total>0).map(([bl,v])=>({bl,pct:Math.round(v.score/v.total*100),col:BLOCK_COLORS[bl]||'#64748b'})).sort((a,b)=>a.pct-b.pct);
+  const sbEl=document.getElementById('subjBreakdown');
+  if(sbEl){
+    if(!rows.length){sbEl.innerHTML='<div class="empty" style="padding:20px 0;font-size:12px;"><span class="empty-ico">📊</span>Complete MCQs to see breakdown</div>';}
+    else{sbEl.innerHTML=rows.map(r=>{const bc=r.pct>=70?'var(--green)':r.pct>=50?'var(--orange)':'var(--red)';return'<div class="subj-row"><div class="subj-label"><span class="dot" style="background:'+r.col+';margin-right:6px;"></span>'+r.bl+'</div><div class="subj-track"><div class="subj-fill" style="width:'+r.pct+'%;background:'+bc+';"></div></div><div class="subj-pct">'+r.pct+'%</div></div>';}).join('')+'<div style="font-size:11px;color:var(--text3);margin-top:12px;">Based on '+sessions.filter(s=>s.score!==null).length+' session'+(sessions.filter(s=>s.score!==null).length!==1?'s':'')+' · lowest first</div>';}
+  }
+  renderTargets();
+  renderCountdown();
+}
+
+function updateWrongBadge(n){
+  const el=document.getElementById('wrongCount');
+  if(n===undefined){sb.from('wrong_answers').select('*',{count:'exact',head:true}).eq('year',yr).eq('resolved',false).then(r=>{const c=r.count||0;el.textContent=c;el.style.display=c>0?'inline':'none';});}
+  else{el.textContent=n;el.style.display=n>0?'inline':'none';}
+}
+
+function renderTargets(){
+  targets=JSON.parse(localStorage.getItem('_ms_targets_'+yr)||'[]');
+  const done=targets.filter(t=>t.done).length;
+  document.getElementById('targetProgress').textContent=targets.length?`${done} of ${targets.length} completed`:'No targets set';
+  document.getElementById('targetList').innerHTML=targets.length?targets.map((t,i)=>`<div class="target-item" onclick="toggleTarget(${i})"><div class="target-check ${t.done?'done':''}">${t.done?'<svg width="10" height="8" viewBox="0 0 10 8"><polyline points="1,4 3.5,6.5 9,1" stroke="white" stroke-width="1.8" fill="none" stroke-linecap="round"/></svg>':''}</div><span class="target-text ${t.done?'done':''}">${esc(t.text)}</span><span style="font-size:10px;font-weight:600;color:var(--text3);">${t.block}</span></div>`).join(''):`<div style="font-size:12px;color:var(--text3);text-align:center;padding:12px 0;">Click Edit to add targets</div>`;
+  const ml=document.getElementById('targetModalList');
+  if(ml)ml.innerHTML=targets.map((t,i)=>`<div class="row mb8"><span style="flex:1;font-size:13px;${t.done?'text-decoration:line-through;color:var(--text2);':''}">${esc(t.text)} <span style="color:var(--text3);font-size:11px;">[${t.block}]</span></span><button class="btn btn-xs btn-danger" onclick="removeTarget(${i})">✕</button></div>`).join('')||'<div style="color:var(--text3);font-size:12px;padding:8px 0;">No targets yet</div>';
+}
+function toggleTarget(i){targets[i].done=!targets[i].done;saveTargets();}
+function removeTarget(i){targets.splice(i,1);saveTargets();}
+function saveTargets(){localStorage.setItem('_ms_targets_'+yr,JSON.stringify(targets));renderTargets();}
+function addTarget(){const txt=document.getElementById('targetInput').value.trim(),block=document.getElementById('targetBlock').value;if(!txt)return;targets.push({text:txt,block,done:false});document.getElementById('targetInput').value='';saveTargets();}
+function openTargetModal(){renderTargets();openModal('targetModal');}
+
+// ── LECTURES ──
+async function loadLecs(){
+  const{data}=await sb.from('lectures').select('*').eq('year',yr).order('created_at');
+  let lecs=data||[];
+  if(lecBlockF!=='all')lecs=lecs.filter(l=>l.block===lecBlockF);
+  if(lecSubjF!=='all')lecs=lecs.filter(l=>l.subject===lecSubjF);
+  if(lecPassF==='none')lecs=lecs.filter(l=>!l.pass1);
+  if(lecPassF==='p1')lecs=lecs.filter(l=>l.pass1&&!l.pass2);
+  if(lecPassF==='p2')lecs=lecs.filter(l=>l.pass1&&l.pass2);
+  const el=document.getElementById('lecList');
+  if(!lecs.length){el.innerHTML=`<div class="empty"><span class="empty-ico">📖</span>No lectures match this filter.</div>`;return;}
+  el.innerHTML=lecs.map(l=>{
+    const cls=l.pass2?'p2':l.pass1?'p1':'';
+    return`<div class="lec-row ${cls}"><span class="dot d-${BC[l.block]||''}"></span><span class="lec-title">${esc(l.title)}</span>${l.subject?`<span class="badge badge-muted" style="font-size:10px;">${l.subject}</span>`:''}<span class="badge badge-muted" style="font-size:10px;">${l.block}</span><button class="btn btn-xs ${l.pass1?'btn-success':'btn-outline'}" onclick="togglePass('${l.id}',1,${l.pass1})">${l.pass1?'✓ P1':'P1'}</button><button class="btn btn-xs ${l.pass2?'btn-success':'btn-outline'}" onclick="togglePass('${l.id}',2,${l.pass2})" ${!l.pass1?'disabled':''}>${l.pass2?'✓ P2':'P2'}</button><button class="btn btn-xs btn-danger" onclick="delLec('${l.id}')">✕</button></div>`;
+  }).join('');
+}
+async function addLec(){
+  const title=document.getElementById('lecTitle').value.trim();
+  const block=document.getElementById('lecBlock').value;
+  const subject=document.getElementById('lecSubj').value;
+  if(!title){showErr('lecErr','Please enter a lecture title.');return;}
+  const{error}=await sb.from('lectures').insert({title,block,subject,year:yr,pass1:false,pass2:false});
+  if(error){showErr('lecErr','Save failed: '+error.message);return;}
+  closeModal('addLecModal');
+  document.getElementById('lecTitle').value='';
+  hideErr('lecErr');
+  loadLecs();loadDash();
+}
+async function togglePass(id,pass,cur){await sb.from('lectures').update({[pass===1?'pass1':'pass2']:!cur}).eq('id',id);loadLecs();loadDash();}
+async function delLec(id){await sb.from('lectures').delete().eq('id',id);loadLecs();loadDash();}
+
+// ── MCQ SOURCE SWITCH ──
+function mcqSrcChange(){
+  const src=document.querySelector('input[name="mcqSrc"]:checked').value;
+  document.getElementById('mcqTextSrc').style.display=src==='text'?'block':'none';
+  document.getElementById('mcqNoteSrc').style.display=src==='note'?'block':'none';
+  if(src==='note')populateMcqNoteSelect();
+}
+async function populateMcqNoteSelect(){
+  const{data}=await sb.from('notes').select('id,title,block,subject').eq('year',yr).order('updated_at',{ascending:false});
+  const sel=document.getElementById('mcqNoteSelect');
+  sel.innerHTML='<option value="">— pick a note —</option>'+(data||[]).map(n=>`<option value="${n.id}">${esc(n.title)}${n.block?' ['+n.block+']':''}</option>`).join('');
+  sel.onchange=async function(){
+    const id=this.value;if(!id){document.getElementById('mcqNotePreview').style.display='none';return;}
+    const{data:nd}=await sb.from('notes').select('content,block,subject').eq('id',id).single();
+    if(nd){
+      const txt=(nd.content||'').replace(/<[^>]+>/g,' ').substring(0,200);
+      document.getElementById('mcqNotePreview').textContent=txt+'…';
+      document.getElementById('mcqNotePreview').style.display='block';
+      if(nd.block)document.getElementById('mcqBlock').value=nd.block;
+      if(nd.subject)document.getElementById('mcqSubject').value=nd.subject;
+    }
+  };
+}
+
+// ── MCQ ──
+async function genMCQ(){
+  const src=document.querySelector('input[name="mcqSrc"]:checked')?.value||'text';
+  let notes='';
+  if(src==='note'){
+    const id=document.getElementById('mcqNoteSelect').value;
+    if(!id){showErr('mcqErr','Select a note first.');return;}
+    const{data:nd}=await sb.from('notes').select('content,title').eq('id',id).single();
+    notes=(nd?.content||'').replace(/<[^>]+>/g,' ');
+    if(notes.length<20){showErr('mcqErr','Note seems empty.');return;}
+  }else{
+    notes=document.getElementById('mcqNotes').value.trim();
+    if(!notes||notes.length<20){showErr('mcqErr','Paste some notes first.');return;}
+  }
+  const num=document.getElementById('mcqNum').value,diff=document.getElementById('mcqDiff').value,block=document.getElementById('mcqBlock').value;
+  const subject=document.getElementById('mcqSubject').value;
+  setBusy('mcqBtn','mcqTxt','Generating…',true);hideErr('mcqErr');startProg('mcqProg','mcqFill');
+  mcqQs=[];mcqPk={};mcqDone=false;document.getElementById('mcqQs').innerHTML='';document.getElementById('mcqScoreBar').classList.remove('show');
+  const dmap={mixed:'a mix of recall, applied and hard clinical reasoning',easy:'recall: definitions and key facts',medium:'applied: mechanisms and clinical application',hard:'hard clinical vignettes requiring differential diagnosis'};
+  const subjectLine=subject?` Subject: ${subject}.`:'';
+  const prompt=`UK Year 2 med student MCQs. Format: clinical vignette or knowledge stem then question ending with (mark: 1). 5 options, 1 correct, 4 plausible distractors. Difficulty: ${dmap[diff]}. Block: ${block}.${subjectLine} Raw JSON only: {"questions":[{"vignette":"","question":"...(mark: 1)","options":["A","B","C","D","E"],"correct":0,"explanation":"..."}]}. Generate ${num} from: ${notes}`;
+  try{
+    const r=await fetch('https://mymedicinefriend.ranaabhinav23.workers.dev',{method:'POST',headers:{'Content-Type':'application/json'},body:JSON.stringify({model:'claude-haiku-4-5-20251001',max_tokens:4000,messages:[{role:'user',content:prompt}]})});
+    if(!r.ok)throw new Error((await r.json()).error||'API error');
+    const d=await r.json();const raw=(d.content?.[0]?.text||'').trim();
+    let p;try{p=JSON.parse(raw);}catch{const m=raw.match(/\{[\s\S]*\}/);if(m)p=JSON.parse(m[0]);else throw new Error('Parse error.');}
+    mcqQs=p.questions||[];if(!mcqQs.length)throw new Error('No questions returned.');renderMCQ();
+  }catch(e){showErr('mcqErr',e.message);}
+  finally{setBusy('mcqBtn','mcqTxt','Generate questions',false);endProg('mcqProg','mcqFill');}
+}
+function renderMCQ(prefix='mc',qs=mcqQs){
+  document.getElementById('mcqQs').innerHTML=qs.map((q,i)=>`<div class="q-card" style="animation-delay:${i*0.04}s"><div class="q-num">Q${i+1} <span style="color:var(--text3);font-weight:400;">(mark: 1)</span></div><div class="q-text">${q.vignette?`${esc(q.vignette)}<br><br>`:''}<strong>${esc(q.question)}</strong></div><div>${q.options.map((o,j)=>`<div class="opt" id="${prefix}o${i}_${j}" onclick="${prefix}Pick(${i},${j})"><input type="radio" name="${prefix}q${i}" value="${j}"><span>${esc(o)}</span></div>`).join('')}</div><div class="expl" id="${prefix}e${i}"><strong style="color:var(--accent);">Explanation:</strong> ${esc(q.explanation)}</div></div>`).join('')+`<div class="row mb20" style="gap:10px;flex-wrap:wrap;"><button class="btn btn-primary" id="mcqSubBtn" onclick="subMCQ()">Submit all</button><button class="btn btn-outline" onclick="revMCQ()">Show answers</button><button class="btn btn-ghost" onclick="rstMCQ()">Reset</button></div>`;
+}
+function mcPick(qi,oi){if(mcqDone)return;mcqPk[qi]=oi;for(let j=0;j<mcqQs[qi].options.length;j++){const e=document.getElementById(`mco${qi}_${j}`);if(e)e.style.borderColor=j===oi?'var(--accent)':'';}};
+async function subMCQ(){
+  if(mcqDone)return;mcqDone=true;let score=0;
+  const block=document.getElementById('mcqBlock').value;const wrongs=[];
+  mcqQs.forEach((q,i)=>{const sel=mcqPk[i],cor=q.correct;lockQ(i,'mc');if(sel!==undefined){markQ('mco',i,sel,sel===cor?'correct':'incorrect');if(sel===cor)score++;else{markQ('mco',i,cor,'reveal');wrongs.push({year:yr,block,question:q.question,options:q.options,correct:q.correct,explanation:q.explanation,resolved:false});}}else{markQ('mco',i,cor,'reveal');wrongs.push({year:yr,block,question:q.question,options:q.options,correct:q.correct,explanation:q.explanation,resolved:false});}document.getElementById(`mce${i}`).classList.add('show');});
+  const sb2=document.getElementById('mcqSubBtn');if(sb2)sb2.disabled=true;
+  showMScore(score);
+  await sb.from('mcq_sessions').insert({year:yr,block,total:mcqQs.length,score,questions:mcqQs});
+  if(wrongs.length)await sb.from('wrong_answers').insert(wrongs);
+  loadDash();
+}
+function revMCQ(){mcqDone=true;mcqQs.forEach((q,i)=>{lockQ(i,'mc');markQ('mco',i,q.correct,'reveal');document.getElementById(`mce${i}`).classList.add('show');});const s=document.getElementById('mcqSubBtn');if(s)s.disabled=true;showMScore(null);}
+function rstMCQ(){mcqPk={};mcqDone=false;renderMCQ();document.getElementById('mcqScoreBar').classList.remove('show');}
+function lockQ(qi,pf){document.querySelectorAll(`input[name="${pf}q${qi}"]`).forEach(r=>r.disabled=true);document.querySelectorAll(`[id^="${pf}o${qi}_"]`).forEach(el=>el.classList.add('locked'));}
+function markQ(pf,qi,oi,cls){const el=document.getElementById(`${pf}${qi}_${oi}`);if(el)el.classList.add(cls);}
+function showMScore(score){
+  const bar=document.getElementById('mcqScoreBar');bar.classList.add('show');
+  if(score===null){document.getElementById('mcqScoreNum').textContent='—';document.getElementById('mcqScoreMsg').textContent='Answers revealed';return;}
+  const pct=Math.round(score/mcqQs.length*100);
+  document.getElementById('mcqScoreNum').textContent=`${score} / ${mcqQs.length}`;
+  document.getElementById('mcqScoreMsg').innerHTML=pct>=70?`<span style="color:var(--green)">✓ ${pct}% — pass territory</span>`:pct>=50?`<span style="color:var(--orange)">⚠ ${pct}% — borderline</span>`:`<span style="color:var(--red)">✗ ${pct}% — keep revising</span>`;
+}
+
+// ── MOCK EXAM ──
+function resetMockSetup(){
+  if(mockTimer)clearInterval(mockTimer);
+  document.getElementById('mockSetup').style.display='block';
+  document.getElementById('mockExamArea').innerHTML='';
+  document.getElementById('mockExamArea').style.display='none';
+  hideErr('mockErr');
+}
+async function startMockExam(){
+  const durMin=parseInt(document.querySelector('input[name="dur"]:checked').value);
+  const blocks=getActivePills('mockBlockPills');
+  const diff=document.getElementById('mockDiff').value;
+  if(!blocks.length){showErr('mockErr','Select at least one block.');return;}
+  setBusy('mockStartBtn','mockStartTxt','Building exam…',true);hideErr('mockErr');
+  const totalQ=Math.floor(durMin/1.5);
+  const dmap={mixed:'a mix of recall, applied and hard clinical reasoning',easy:'recall: definitions and key facts',medium:'applied: mechanisms and clinical application',hard:'hard clinical vignettes'};
+  const prompt=`Generate exactly ${Math.min(totalQ,40)} UK Year 2 medical MCQ exam questions across these blocks: ${blocks.join(', ')}. Difficulty: ${dmap[diff]}. Make them varied — different topics within each block. Clinical vignette format where appropriate. Raw JSON only: {"questions":[{"vignette":"","question":"...(mark: 1)","options":["A","B","C","D","E"],"correct":0,"explanation":"...","block":"GU"}]}`;
+  try{
+    const r=await fetch('https://mymedicinefriend.ranaabhinav23.workers.dev',{method:'POST',headers:{'Content-Type':'application/json'},body:JSON.stringify({model:'claude-haiku-4-5-20251001',max_tokens:6000,messages:[{role:'user',content:prompt}]})});
+    if(!r.ok)throw new Error((await r.json()).error||'API error');
+    const d=await r.json();const raw=(d.content?.[0]?.text||'').trim();
+    let p;try{p=JSON.parse(raw);}catch{const m=raw.match(/\{[\s\S]*\}/);if(m)p=JSON.parse(m[0]);else throw new Error('Parse error.');}
+    mockQs=shuffle(p.questions||[]).slice(0,totalQ);
+    if(!mockQs.length)throw new Error('No questions generated.');
+    mockPk={};mockDone=false;
+    document.getElementById('mockSetup').style.display='none';
+    const area=document.getElementById('mockExamArea');
+    area.style.display='block';
+    area.style.padding='24px 0 60px';
+    mockEndTime=Date.now()+durMin*60*1000;
+    renderMockExam(durMin);
+    startMockTimer();
+  }catch(e){showErr('mockErr',e.message);}
+  finally{setBusy('mockStartBtn','mockStartTxt','Start exam',false);}
+}
+function renderMockExam(durMin){
+  const area=document.getElementById('mockExamArea');
+  area.innerHTML=`<div class="exam-progress-wrap"><div style="flex:1;"><div style="font-size:11px;color:var(--text2);font-weight:600;text-transform:uppercase;letter-spacing:0.06em;margin-bottom:4px;">Time remaining</div><div class="exam-timer" id="examTimer">00:00</div></div><div style="text-align:center;"><div style="font-size:11px;color:var(--text2);font-weight:600;text-transform:uppercase;letter-spacing:0.06em;margin-bottom:4px;">Questions</div><div style="font-size:1.2rem;font-weight:700;color:var(--text);">${mockQs.length}</div></div><div style="text-align:right;"><div style="font-size:11px;color:var(--text2);font-weight:600;text-transform:uppercase;letter-spacing:0.06em;margin-bottom:4px;">Duration</div><div style="font-size:1.2rem;font-weight:700;color:var(--text);">${durMin} min</div></div></div>${mockQs.map((q,i)=>`<div class="q-card" style="animation-delay:${i*0.02}s"><div class="q-num">Q${i+1} <span class="badge badge-muted" style="margin-left:4px;">${q.block||''}</span></div><div class="q-text">${q.vignette?`${esc(q.vignette)}<br><br>`:''}<strong>${esc(q.question)}</strong></div><div>${q.options.map((o,j)=>`<div class="opt" id="mxo${i}_${j}" onclick="mxPick(${i},${j})"><input type="radio" name="mxq${i}" value="${j}"><span>${esc(o)}</span></div>`).join('')}</div><div class="expl" id="mxe${i}"><strong style="color:var(--accent);">Explanation:</strong> ${esc(q.explanation)}</div></div>`).join('')}<div class="row mt20" style="gap:10px;"><button class="btn btn-green" style="font-size:14px;padding:10px 28px;" onclick="submitMock()">Submit exam</button><button class="btn btn-danger btn-sm" onclick="resetMockSetup()">Abandon</button></div>`;
+}
+function mxPick(qi,oi){if(mockDone)return;mockPk[qi]=oi;for(let j=0;j<mockQs[qi].options.length;j++){const e=document.getElementById(`mxo${qi}_${j}`);if(e)e.style.borderColor=j===oi?'var(--accent)':'';}};
+function startMockTimer(){
+  if(mockTimer)clearInterval(mockTimer);
+  mockTimer=setInterval(()=>{
+    const left=Math.max(0,mockEndTime-Date.now());
+    const mins=Math.floor(left/60000),secs=Math.floor((left%60000)/1000);
+    const el=document.getElementById('examTimer');
+    if(!el){clearInterval(mockTimer);return;}
+    el.textContent=`${String(mins).padStart(2,'0')}:${String(secs).padStart(2,'0')}`;
+    el.className='exam-timer'+(left<300000&&left>60000?' warning':left<=60000?' danger':'');
+    if(left===0){clearInterval(mockTimer);submitMock();}
+  },1000);
+}
+async function submitMock(){
+  if(mockDone)return;mockDone=true;
+  if(mockTimer)clearInterval(mockTimer);
+  let score=0;const wrongs=[];
+  mockQs.forEach((q,i)=>{
+    const sel=mockPk[i],cor=q.correct;
+    document.querySelectorAll(`input[name="mxq${i}"]`).forEach(r=>r.disabled=true);
+    document.querySelectorAll(`[id^="mxo${i}_"]`).forEach(el=>el.classList.add('locked'));
+    if(sel!==undefined){const se=document.getElementById(`mxo${i}_${sel}`),ce=document.getElementById(`mxo${i}_${cor}`);if(sel===cor){if(se)se.classList.add('correct');score++;}else{if(se)se.classList.add('incorrect');if(ce)ce.classList.add('reveal');wrongs.push({year:yr,block:q.block||'Core',question:q.question,options:q.options,correct:q.correct,explanation:q.explanation,resolved:false});}}
+    else{const ce=document.getElementById(`mxo${i}_${cor}`);if(ce)ce.classList.add('reveal');wrongs.push({year:yr,block:q.block||'Core',question:q.question,options:q.options,correct:q.correct,explanation:q.explanation,resolved:false});}
+    document.getElementById(`mxe${i}`).classList.add('show');
+  });
+  const pct=Math.round(score/mockQs.length*100);
+  await sb.from('mcq_sessions').insert({year:yr,block:'Mock Exam',total:mockQs.length,score,questions:mockQs});
+  if(wrongs.length)await sb.from('wrong_answers').insert(wrongs);
+  const area=document.getElementById('mockExamArea');
+  const banner=document.createElement('div');
+  banner.style.cssText='margin-bottom:20px;';
+  banner.innerHTML=`<div class="score-bar show" style="background:${pct>=70?'rgba(16,185,129,0.1)':pct>=50?'rgba(245,158,11,0.1)':'rgba(239,68,68,0.1)'};border-color:${pct>=70?'rgba(16,185,129,0.3)':pct>=50?'rgba(245,158,11,0.3)':'rgba(239,68,68,0.3)'};">
+    <div><div style="font-size:10px;color:var(--text2);margin-bottom:2px;font-weight:600;text-transform:uppercase;letter-spacing:0.06em;">Exam complete</div><div class="score-num">${score} / ${mockQs.length}</div></div>
+    <div style="text-align:right;"><div style="font-size:1.4rem;font-weight:800;color:${pct>=70?'var(--green)':pct>=50?'var(--orange)':'var(--red)'};">${pct}%</div><div style="font-size:12px;color:var(--text2);">${pct>=70?'✓ Pass territory':pct>=50?'⚠ Borderline':'✗ Keep revising'}</div></div>
+  </div>`;
+  area.insertBefore(banner,area.firstChild);
+  area.scrollIntoView({behavior:'smooth'});
+  loadDash();
+}
+
+// ── QUICK RECALL ──
+function resetRecallSetup(){
+  recallTerms=[];recallIdx=0;recallResults=[];
+  document.getElementById('recallSetup').style.display='block';
+  document.getElementById('recallArea').innerHTML='';
+  hideErr('recallErr');
+}
+async function startRecall(){
+  const src=document.querySelector('input[name="recallSrc"]:checked').value;
+  const count=parseInt(document.getElementById('recallCount').value);
+  const block=document.getElementById('recallBlock').value;
+  setBusy('recallStartBtn','recallStartTxt','Building session…',true);hideErr('recallErr');
+  try{
+    if(src==='drugs'){
+      const{data}=await sb.from('drug_cards').select('*').eq('year',yr);
+      let drugs=data||[];if(block!=='all')drugs=drugs.filter(d=>d.block===block);
+      if(!drugs.length)throw new Error('No drug cards found. Add some first.');
+      recallTerms=shuffle(drugs).slice(0,count).map(d=>({term:d.name,context:'drug',hints:`Block: ${d.block}`,data:d}));
+    }else if(src==='bugs'){
+      const{data}=await sb.from('bug_table').select('*').eq('year',yr);
+      let bugs=data||[];if(block!=='all')bugs=bugs.filter(b=>b.block===block);
+      if(!bugs.length)throw new Error('No bugs found. Add some first.');
+      recallTerms=shuffle(bugs).slice(0,count).map(b=>({term:b.name,context:'bug',hints:`Block: ${b.block}`,data:b}));
+    }else{
+      const notes=document.getElementById('recallNotes').value.trim();
+      if(!notes||notes.length<20)throw new Error('Paste some notes first.');
+      const prompt=`Extract exactly ${count} key medical terms, drugs, conditions, or concepts from these notes. For each one, provide a brief model answer (2-3 sentences of key facts a Year 2 UK med student should know). Raw JSON only: {"terms":[{"term":"HPV","context":"virology","model_answer":"HPV is a double-stranded DNA virus. High-risk strains 16 and 18 cause ~70% of cervical cancers via E6/E7 oncoproteins. Low-risk strains 6 and 11 cause genital warts."}]}\nNotes: ${notes}`;
+      const r=await fetch('https://mymedicinefriend.ranaabhinav23.workers.dev',{method:'POST',headers:{'Content-Type':'application/json'},body:JSON.stringify({model:'claude-haiku-4-5-20251001',max_tokens:3000,messages:[{role:'user',content:prompt}]})});
+      if(!r.ok)throw new Error('API error');
+      const d=await r.json();const raw=(d.content?.[0]?.text||'').trim();
+      let p;try{p=JSON.parse(raw);}catch{const m=raw.match(/\{[\s\S]*\}/);if(m)p=JSON.parse(m[0]);else throw new Error('Parse error.');}
+      recallTerms=(p.terms||[]).slice(0,count).map(t=>({term:t.term,context:t.context,model_answer:t.model_answer}));
+      if(!recallTerms.length)throw new Error('No terms extracted. Try more detailed notes.');
+    }
+    recallIdx=0;recallResults=[];
+    document.getElementById('recallSetup').style.display='none';
+    renderRecallCard();
+  }catch(e){showErr('recallErr',e.message);}
+  finally{setBusy('recallStartBtn','recallStartTxt','Start recall',false);}
+}
+function renderRecallCard(){
+  const area=document.getElementById('recallArea');
+  if(recallIdx>=recallTerms.length){
+    const hits=recallResults.filter(r=>r>=4).length,total=recallResults.length;
+    area.innerHTML=`<div class="section-card" style="text-align:center;padding:40px;"><div style="font-size:1.3rem;font-weight:800;color:var(--text);margin-bottom:8px;">Session complete! 🎉</div><div style="font-size:14px;color:var(--text2);margin-bottom:20px;">Scored well on ${hits} of ${total} terms</div><div class="recall-score-bar" style="justify-content:center;margin-bottom:20px;">${recallResults.map(s=>`<div class="recall-score-dot ${s>=4?'hit':'miss'}"></div>`).join('')}</div><div class="row" style="gap:10px;justify-content:center;"><button class="btn btn-primary" onclick="resetRecallSetup();document.getElementById('recallSetup').style.display='block';">New session</button></div></div>`;
+    return;
+  }
+  const t=recallTerms[recallIdx];
+  area.innerHTML=`<div style="font-size:11px;color:var(--text2);margin-bottom:12px;">Term ${recallIdx+1} of ${recallTerms.length}</div><div class="recall-card"><div class="recall-score-bar" style="justify-content:center;">${recallTerms.map((_,i)=>`<div class="recall-score-dot ${i<recallResults.length?(recallResults[i]>=4?'hit':'miss'):''}"></div>`).join('')}</div><div style="font-size:11px;color:var(--text2);margin-top:8px;margin-bottom:16px;">${t.context||''}</div><div class="recall-term">${esc(t.term)}</div><div class="recall-hint">Type everything you know about this</div><textarea class="recall-input" id="recallAns" placeholder="Type what you know..." style="width:100%;margin-bottom:14px;"></textarea><button class="btn btn-primary" id="recallCheckBtn" onclick="checkRecall()" style="width:100%;justify-content:center;"><div class="spin"></div><span id="recallCheckTxt">Check my answer (AI)</span></button><div id="recallFeedback" class="ai-feedback"></div><div id="recallNextBtn" style="display:none;margin-top:12px;"><button class="btn btn-outline" onclick="recallNext()">Next term →</button></div></div>`;
+}
+async function checkRecall(){
+  const ans=document.getElementById('recallAns').value.trim();if(!ans)return;
+  setBusy('recallCheckBtn','recallCheckTxt','Checking…',true);
+  const t=recallTerms[recallIdx];
+  let modelAns=t.model_answer||'';
+  if(t.context==='drug'&&t.data){modelAns=`Mechanism: ${t.data.mechanism||''}. Used for: ${t.data.used_for||''}. Key side effect: ${t.data.side_effect||''}. ${t.data.ai_notes||''}`;}
+  if(t.context==='bug'&&t.data){modelAns=`Gram: ${t.data.gram}. Type: ${t.data.type||''}. Causes: ${t.data.causes||''}. Treatment: ${t.data.treatment||''}. ${t.data.ai_notes||''}`;}
+  const prompt=`A UK Year 2 med student was asked to recall: "${t.term}"\nTheir answer: "${ans}"\nModel answer: "${modelAns}"\nScore their answer 1-5 (5=excellent, 4=good, 3=partial, 2=poor, 1=wrong/blank).\nGive brief feedback: what they got right, what they missed. Keep it to 2-3 sentences.\nRespond ONLY with JSON: {"score":4,"feedback":"...","grade":"Good"}`;
+  try{
+    const r=await fetch('https://mymedicinefriend.ranaabhinav23.workers.dev',{method:'POST',headers:{'Content-Type':'application/json'},body:JSON.stringify({model:'claude-haiku-4-5-20251001',max_tokens:200,messages:[{role:'user',content:prompt}]})});
+    const d=await r.json();const raw=(d.content?.[0]?.text||'').trim();
+    let p;try{p=JSON.parse(raw);}catch{const m=raw.match(/\{[\s\S]*\}/);if(m)p=JSON.parse(m[0]);else p={score:3,feedback:raw.substring(0,200),grade:'—'};}
+    const score=p.score||3;recallResults.push(score);
+    const fbEl=document.getElementById('recallFeedback');
+    const cls=score>=4?'ai-fb-good':score>=3?'ai-fb-ok':'ai-fb-bad';
+    fbEl.className=`ai-feedback show ${cls}`;
+    fbEl.innerHTML=`<strong>${p.grade||'—'} (${score}/5):</strong> ${esc(p.feedback||'')}${modelAns?`<br><br><strong style="color:var(--text);">Full answer:</strong> ${esc(modelAns)}`:''}`;
+    document.getElementById('recallCheckBtn').style.display='none';
+    document.getElementById('recallNextBtn').style.display='block';
+    document.getElementById('recallAns').disabled=true;
+  }catch(e){document.getElementById('recallFeedback').innerHTML=`<div style="color:var(--red);">Error: ${e.message}</div>`;document.getElementById('recallFeedback').classList.add('show');}
+  finally{setBusy('recallCheckBtn','recallCheckTxt','Check my answer (AI)',false);}
+}
+function recallNext(){recallIdx++;renderRecallCard();}
+
+// ── DRUGS ──
+function dTab(t,el){document.querySelectorAll('#page-drugs .tab').forEach(x=>x.classList.remove('active'));el.classList.add('active');document.getElementById('drugBrowse').style.display=t==='browse'?'block':'none';document.getElementById('drugTest').style.display=t==='test'?'block':'none';}
+async function loadDrugs(){const{data}=await sb.from('drug_cards').select('*').eq('year',yr).order('created_at');allDrugs=data||[];renderDrugs('all');}
+function renderDrugs(block){
+  const drugs=block==='all'?allDrugs:allDrugs.filter(d=>d.block===block);
+  const el=document.getElementById('drugList');
+  if(!drugs.length){el.innerHTML=`<div class="empty"><span class="empty-ico">💊</span>No drug cards yet.</div>`;return;}
+  el.innerHTML=drugs.map(d=>`<div class="data-card"><div class="row mb12"><strong style="font-size:14px;flex:1;">${esc(d.name)}</strong><span class="badge badge-muted">${d.block}</span><button class="btn btn-xs btn-danger" onclick="delDrug('${d.id}')">✕</button></div><div class="g2" style="gap:12px;"><div><div class="field-label">Mechanism</div><div class="field-val">${esc(d.mechanism||'—')}</div></div><div><div class="field-label">Used for</div><div class="field-val">${esc(d.used_for||'—')}</div></div><div><div class="field-label">Side effect</div><div class="field-val">${esc(d.side_effect||'—')}</div></div>${d.ai_notes?`<div><div class="field-label" style="color:var(--accent);">AI additions</div><div class="field-val" style="font-size:12px;color:var(--text2);">${esc(d.ai_notes)}</div></div>`:''}</div></div>`).join('');
+}
+function openAddDrug(){document.getElementById('aiDSug').style.display='none';openModal('addDrugModal');}
+async function aiCheckDrug(){const name=document.getElementById('dName').value.trim();if(!name){showErr('dErr','Enter drug name first.');return;}setBusy('aiDBtn','aiDTxt','Checking…',true);const prompt=`UK Year 2 drug card:\nDrug: ${name}\nMechanism: ${document.getElementById('dMech').value||'blank'}\nUsed for: ${document.getElementById('dUse').value||'blank'}\nSide effect: ${document.getElementById('dSide').value||'blank'}\nGaps or errors? Max 3 bullets. If complete say "Looks good."`;try{const r=await fetch('https://mymedicinefriend.ranaabhinav23.workers.dev',{method:'POST',headers:{'Content-Type':'application/json'},body:JSON.stringify({model:'claude-haiku-4-5-20251001',max_tokens:300,messages:[{role:'user',content:prompt}]})});const d=await r.json();document.getElementById('aiDContent').textContent=(d.content?.[0]?.text||'').trim();document.getElementById('aiDSug').style.display='block';}catch(e){showErr('dErr',e.message);}finally{setBusy('aiDBtn','aiDTxt','✨ Check what I missed (AI)',false);}}
+async function saveDrug(){const name=document.getElementById('dName').value.trim();if(!name){showErr('dErr','Name required.');return;}const ai=document.getElementById('aiDSug').style.display!=='none'?document.getElementById('aiDContent').textContent:'';await sb.from('drug_cards').insert({year:yr,block:document.getElementById('dBlock').value,name,mechanism:document.getElementById('dMech').value.trim(),used_for:document.getElementById('dUse').value.trim(),side_effect:document.getElementById('dSide').value.trim(),ai_notes:ai});closeModal('addDrugModal');['dName','dMech','dUse','dSide'].forEach(id=>document.getElementById(id).value='');loadDrugs();}
+async function delDrug(id){await sb.from('drug_cards').delete().eq('id',id);loadDrugs();}
+function startDrugTest(){const drugs=allDrugs.filter(d=>selDrugBlocks.has(d.block));if(!drugs.length){document.getElementById('drugTestArea').innerHTML='<div class="empty">No drug cards in selected blocks.</div>';return;}dTestQs=shuffle([...drugs]);dTestIdx=0;renderDrugCard();}
+function renderDrugCard(){const a=document.getElementById('drugTestArea');if(dTestIdx>=dTestQs.length){a.innerHTML=`<div class="section-card" style="text-align:center;padding:36px;"><div style="font-size:1.2rem;font-weight:800;color:var(--text);margin-bottom:8px;">Done! 🎉</div><div style="color:var(--text2);">Reviewed ${dTestQs.length} drug cards</div><button class="btn btn-primary mt16" onclick="startDrugTest()">Go again</button></div>`;return;}const d=dTestQs[dTestIdx];a.innerHTML=`<div class="section-card"><div class="section-head"><div><div style="font-size:11px;color:var(--text2);">Card ${dTestIdx+1} of ${dTestQs.length}</div><div class="section-title" style="font-size:1.1rem;margin-top:4px;">${esc(d.name)}</div></div><span class="badge badge-muted">${d.block}</span></div><div class="section-body"><div id="dCardBack" style="display:none;"><div class="g2" style="gap:14px;margin-bottom:16px;"><div><div class="field-label">Mechanism</div><div class="field-val">${esc(d.mechanism||'—')}</div></div><div><div class="field-label">Used for</div><div class="field-val">${esc(d.used_for||'—')}</div></div><div><div class="field-label">Side effect</div><div class="field-val">${esc(d.side_effect||'—')}</div></div>${d.ai_notes?`<div><div class="field-label" style="color:var(--accent);">Extra</div><div class="field-val" style="font-size:12px;">${esc(d.ai_notes)}</div></div>`:''}</div></div><div id="dRevBtn"><button class="btn btn-outline" onclick="revDCard()">Reveal answer</button></div><div id="dActBtn" style="display:none;"><button class="btn btn-primary" onclick="nxtDCard()">Next card →</button></div></div></div>`;}
+function revDCard(){document.getElementById('dCardBack').style.display='block';document.getElementById('dRevBtn').style.display='none';document.getElementById('dActBtn').style.display='block';}
+function nxtDCard(){dTestIdx++;renderDrugCard();}
+
+// ── BUGS ──
+function bTab(t,el){document.querySelectorAll('#page-bugs .tab').forEach(x=>x.classList.remove('active'));el.classList.add('active');document.getElementById('bugBrowse').style.display=t==='browse'?'block':'none';document.getElementById('bugTest').style.display=t==='test'?'block':'none';}
+async function loadBugs(){const{data}=await sb.from('bug_table').select('*').eq('year',yr).order('created_at');allBugs=data||[];renderBugs('all');}
+function renderBugs(block){const bugs=block==='all'?allBugs:allBugs.filter(b=>b.block===block);const tb=document.getElementById('bugBody');if(!bugs.length){tb.innerHTML='<tr><td colspan="7" style="text-align:center;color:var(--text2);padding:36px;">No bugs added yet</td></tr>';return;}tb.innerHTML=bugs.map(b=>`<tr><td><strong>${esc(b.name)}</strong>${b.ai_notes?`<br><small style="color:var(--accent);font-size:10px;">${esc(b.ai_notes)}</small>`:''}</td><td><span class="badge ${b.gram==='+ve'?'badge-blue':b.gram==='-ve'?'badge-red':'badge-muted'}">${b.gram}</span></td><td style="color:var(--text2);">${esc(b.type||'—')}</td><td style="color:var(--text2);">${esc(b.causes||'—')}</td><td style="color:var(--text2);">${esc(b.treatment||'—')}</td><td><span class="dot d-${BC[b.block]||''}" style="margin-right:6px;"></span>${b.block}</td><td><button class="btn btn-xs btn-danger" onclick="delBug('${b.id}')">✕</button></td></tr>`).join('');}
+function openAddBug(){document.getElementById('aiBSug').style.display='none';openModal('addBugModal');}
+async function aiCheckBug(){const name=document.getElementById('bName').value.trim();if(!name){showErr('bErr','Enter bug name first.');return;}setBusy('aiBBtn','aiBTxt','Checking…',true);const prompt=`UK Year 2 bug entry:\nBug: ${name}, Gram: ${document.getElementById('bGram').value}, Type: ${document.getElementById('bType').value||'blank'}, Causes: ${document.getElementById('bCauses').value||'blank'}, Treatment: ${document.getElementById('bTx').value||'blank'}\nGaps? Max 3 bullets. If complete say "Looks good."`;try{const r=await fetch('https://mymedicinefriend.ranaabhinav23.workers.dev',{method:'POST',headers:{'Content-Type':'application/json'},body:JSON.stringify({model:'claude-haiku-4-5-20251001',max_tokens:300,messages:[{role:'user',content:prompt}]})});const d=await r.json();document.getElementById('aiBContent').textContent=(d.content?.[0]?.text||'').trim();document.getElementById('aiBSug').style.display='block';}catch(e){showErr('bErr',e.message);}finally{setBusy('aiBBtn','aiBTxt','✨ Check what I missed (AI)',false);}}
+async function saveBug(){const name=document.getElementById('bName').value.trim();if(!name){showErr('bErr','Name required.');return;}const ai=document.getElementById('aiBSug').style.display!=='none'?document.getElementById('aiBContent').textContent:'';await sb.from('bug_table').insert({year:yr,block:document.getElementById('bBlock').value,name,gram:document.getElementById('bGram').value,type:document.getElementById('bType').value.trim(),causes:document.getElementById('bCauses').value.trim(),treatment:document.getElementById('bTx').value.trim(),ai_notes:ai});closeModal('addBugModal');['bName','bType','bCauses','bTx'].forEach(id=>document.getElementById(id).value='');loadBugs();}
+async function delBug(id){await sb.from('bug_table').delete().eq('id',id);loadBugs();}
+function startBugTest(){const bugs=allBugs.filter(b=>selBugBlocks.has(b.block));if(!bugs.length){document.getElementById('bugTestArea').innerHTML='<div class="empty">No bugs in selected blocks.</div>';return;}bTestQs=shuffle([...bugs]);bTestIdx=0;renderBugCard();}
+function renderBugCard(){const a=document.getElementById('bugTestArea');if(bTestIdx>=bTestQs.length){a.innerHTML=`<div class="section-card" style="text-align:center;padding:36px;"><div style="font-size:1.2rem;font-weight:800;color:var(--text);margin-bottom:8px;">Done! 🎉</div><div style="color:var(--text2);">Reviewed ${bTestQs.length} bugs</div><button class="btn btn-primary mt16" onclick="startBugTest()">Go again</button></div>`;return;}const b=bTestQs[bTestIdx];a.innerHTML=`<div class="section-card"><div class="section-head"><div><div style="font-size:11px;color:var(--text2);">Bug ${bTestIdx+1} of ${bTestQs.length}</div><div class="section-title" style="font-size:1.1rem;margin-top:4px;">${esc(b.name)}</div></div><span class="badge badge-muted">${b.block}</span></div><div class="section-body"><div style="font-size:12px;color:var(--text2);margin-bottom:16px;">What do you remember?</div><div id="bCardBack" style="display:none;"><div class="g2" style="gap:14px;margin-bottom:16px;"><div><div class="field-label">Gram</div><div class="field-val">${b.gram}</div></div><div><div class="field-label">Type</div><div class="field-val">${esc(b.type||'—')}</div></div><div><div class="field-label">Causes</div><div class="field-val">${esc(b.causes||'—')}</div></div><div><div class="field-label">Treatment</div><div class="field-val">${esc(b.treatment||'—')}</div></div>${b.ai_notes?`<div style="grid-column:span 2"><div class="field-label" style="color:var(--accent);">Extra</div><div class="field-val" style="font-size:12px;">${esc(b.ai_notes)}</div></div>`:''}</div></div><div id="bRevBtn"><button class="btn btn-outline" onclick="revBCard()">Reveal answer</button></div><div id="bActBtn" style="display:none;margin-top:12px;"><button class="btn btn-primary" onclick="nxtBCard()">Next bug →</button></div></div></div>`;}
+function revBCard(){document.getElementById('bCardBack').style.display='block';document.getElementById('bRevBtn').style.display='none';document.getElementById('bActBtn').style.display='block';}
+function nxtBCard(){bTestIdx++;renderBugCard();}
+
+// ── REVIEW ──
+async function startReview(){const blocks=getActivePills('reviewPills');const q=blocks.length?sb.from('wrong_answers').select('*').eq('year',yr).eq('resolved',false).in('block',blocks):sb.from('wrong_answers').select('*').eq('year',yr).eq('resolved',false);const{data}=await q;revQs=shuffle(data||[]);revIdx=0;revPk={};if(!revQs.length){document.getElementById('reviewArea').innerHTML='<div class="empty"><span class="empty-ico">🎉</span>No wrong answers in selected blocks!</div>';return;}renderRev();}
+function renderRev(){const a=document.getElementById('reviewArea');if(revIdx>=revQs.length){a.innerHTML=`<div class="section-card" style="text-align:center;padding:36px;"><div style="font-size:1.2rem;font-weight:800;color:var(--text);margin-bottom:8px;">Review complete! 🎉</div><div style="color:var(--text2);">Went through ${revQs.length} wrong answers</div><button class="btn btn-primary mt16" onclick="startReview()">Go again</button></div>`;updateWrongBadge();return;}const q=revQs[revIdx];revPk={};a.innerHTML=`<div style="font-size:11px;color:var(--text2);margin-bottom:10px;">Question ${revIdx+1} of ${revQs.length} · <span class="badge badge-muted">${q.block}</span></div><div class="q-card"><div class="q-text"><strong>${esc(q.question)}</strong></div><div>${(q.options||[]).map((o,j)=>`<div class="opt" id="ro${j}" onclick="rPick(${j})"><input type="radio" name="rq" value="${j}"><span>${esc(o)}</span></div>`).join('')}</div><div class="expl" id="rExp"><strong style="color:var(--accent);">Explanation:</strong> ${esc(q.explanation||'')}</div><div class="row mt12" style="gap:8px;"><button class="btn btn-primary btn-sm" onclick="subRev()">Check answer</button><button class="btn btn-ghost btn-sm" onclick="skipRev()">Skip</button></div></div>`;}
+function rPick(oi){revPk={ans:oi};document.querySelectorAll('[id^="ro"]').forEach((el,j)=>el.style.borderColor=j===oi?'var(--accent)':'');}
+async function subRev(){if(revPk.ans===undefined)return;const q=revQs[revIdx],cor=q.correct,sel=revPk.ans;document.querySelectorAll('input[name="rq"]').forEach(r=>r.disabled=true);document.querySelectorAll('[id^="ro"]').forEach(el=>el.classList.add('locked'));const se=document.getElementById(`ro${sel}`),ce=document.getElementById(`ro${cor}`);if(sel===cor){se.classList.add('correct');await sb.from('wrong_answers').update({resolved:true}).eq('id',q.id);}else{if(se)se.classList.add('incorrect');if(ce)ce.classList.add('reveal');}document.getElementById('rExp').classList.add('show');setTimeout(()=>{revIdx++;renderRev();},sel===cor?900:2200);}
+function skipRev(){revIdx++;renderRev();}
+
+// ── YEAR ──
+function openYearModal(){const years=JSON.parse(localStorage.getItem('_ms_years')||'["Year 2"]');document.getElementById('yearList').innerHTML=years.map(y=>`<div class="row mb8"><span style="font-size:13px;flex:1;font-weight:600;color:var(--text);">${y}</span>${y===yr?'<span class="badge badge-teal">Current</span>':`<button class="btn btn-outline btn-sm" onclick="switchYear('${y}')">Switch</button>`}</div>`).join('');openModal('yearModal');}
+function switchYear(y){yr=y;localStorage.setItem('_ms_yr',y);document.getElementById('yearName').textContent=y;document.getElementById('sidebarYear').textContent=y;document.getElementById('dashSub').textContent=y+' · Keep going — you\'ve got this.';targets=JSON.parse(localStorage.getItem('_ms_targets_'+yr)||'[]');closeModal('yearModal');renderCountdown();loadDash();updateWrongBadge();}
+function addYear(){const n=document.getElementById('newYearInput').value.trim();if(!n)return;const years=JSON.parse(localStorage.getItem('_ms_years')||'["Year 2"]');if(!years.includes(n)){years.push(n);localStorage.setItem('_ms_years',JSON.stringify(years));}document.getElementById('newYearInput').value='';switchYear(n);}
+
+// ── EXAM COUNTDOWN ──
+function renderCountdown(){
+  const d=JSON.parse(localStorage.getItem('_ms_exam_'+yr)||'null');
+  const today=new Date();today.setHours(0,0,0,0);
+  if(!d||!d.date){
+    document.getElementById('cdName').textContent='Set your exam date';
+    document.getElementById('cdDays').innerHTML='&#8212;<span>days to go</span>';
+    document.getElementById('cdSub').textContent='Click "Edit dates" to get started';
+    document.getElementById('cdBarFill').style.width='0%';
+    document.getElementById('cdImportantDates').innerHTML='';
+    return;
+  }
+  const examDate=new Date(d.date);
+  const diff=Math.ceil((examDate-today)/(1000*60*60*24));
+  document.getElementById('cdName').textContent=d.name||'Exam';
+  if(diff<0){
+    document.getElementById('cdDays').innerHTML='Done!<span>exam passed</span>';
+    document.getElementById('cdSub').textContent='Well done!';
+    document.getElementById('cdBarFill').style.width='100%';
+  }else if(diff===0){
+    document.getElementById('cdDays').innerHTML='Today!<span>exam day</span>';
+    document.getElementById('cdSub').textContent='Good luck! You got this!';
+    document.getElementById('cdBarFill').style.width='100%';
+  }else{
+    document.getElementById('cdDays').innerHTML=diff+'<span>days to go</span>';
+    const startDays=d.startDays||90;
+    const pct=Math.max(0,Math.min(100,Math.round((1-diff/startDays)*100)));
+    document.getElementById('cdBarFill').style.width=pct+'%';
+    document.getElementById('cdSub').textContent=examDate.toLocaleDateString('en-GB',{weekday:'long',day:'numeric',month:'long',year:'numeric'});
+  }
+  const imp=d.important||[];
+  const impEl=document.getElementById('cdImportantDates');
+  if(!imp.length){impEl.innerHTML='';return;}
+  impEl.innerHTML='<div class="cd-divider"></div>'+imp.map(item=>{
+    const dt=new Date(item.date);
+    const dl=Math.ceil((dt-today)/(1000*60*60*24));
+    const cls=dl<0?'imp-far':dl<=7?'imp-soon':dl<=28?'imp-near':'imp-far';
+    const label=dl<0?'passed':dl===0?'today!':dl+'d';
+    return'<div class="imp-date-row"><span class="imp-dot" style="background:'+item.color+'"></span><span class="imp-date-name">'+esc(item.name)+'</span><span class="imp-date-badge '+cls+'">'+label+'</span></div>';
+  }).join('');
+}
+function openExamModal(){
+  const d=JSON.parse(localStorage.getItem('_ms_exam_'+yr)||'null')||{};
+  document.getElementById('examNameInp').value=d.name||'';
+  document.getElementById('examDateInp').value=d.date||'';
+  tmpImpDates=[...(d.important||[])];
+  renderImpList();
+  openModal('examModal');
+}
+function renderImpList(){
+  const el=document.getElementById('impDateList');
+  if(!tmpImpDates.length){el.innerHTML='<div style="font-size:12px;color:var(--text3);">No important dates yet</div>';return;}
+  el.innerHTML=tmpImpDates.map((item,i)=>'<div class="row mb8"><span style="width:10px;height:10px;border-radius:50%;background:'+item.color+';flex-shrink:0;display:inline-block;margin-right:2px;"></span><span style="flex:1;font-size:13px;">'+esc(item.name)+'</span><span style="font-size:12px;color:var(--text2);margin-right:8px;">'+new Date(item.date).toLocaleDateString('en-GB',{day:'numeric',month:'short'})+'</span><button class="btn btn-xs btn-danger" onclick="removeImpDate('+i+')">x</button></div>').join('');
+}
+function addImpDate(){
+  const name=document.getElementById('impNameInp').value.trim();
+  const date=document.getElementById('impDateInp').value;
+  if(!name||!date)return;
+  tmpImpDates.push({name,date,color:IMP_COLORS[tmpImpDates.length%IMP_COLORS.length]});
+  document.getElementById('impNameInp').value='';
+  document.getElementById('impDateInp').value='';
+  renderImpList();
+}
+function removeImpDate(i){tmpImpDates.splice(i,1);renderImpList();}
+function saveExamDates(){
+  const name=document.getElementById('examNameInp').value.trim();
+  const date=document.getElementById('examDateInp').value;
+  if(!date){closeModal('examModal');return;}
+  localStorage.setItem('_ms_exam_'+yr,JSON.stringify({name:name||'Exam',date,important:tmpImpDates,startDays:90}));
+  closeModal('examModal');renderCountdown();
+}
+
+
+// ── NOTES HUB ──
+let allNotes=[],activeNoteId=null,noteAiOpen=false,noteSaveTimer=null;
+let notionLinks=JSON.parse(localStorage.getItem('_ms_notion_links')||'[]');
+let noteBlockFilter='all';
+
+async function loadNotes(){
+  renderNotionLinks();
+  buildNotesFilterBar();
+  const{data}=await sb.from('notes').select('*').eq('year',yr).order('updated_at',{ascending:false});
+  allNotes=data||[];
+  renderNotesList();
+  // If no active note, show empty state
+  if(!activeNoteId){
+    document.getElementById('noteEmptyState').style.display='flex';
+    document.getElementById('noteToolbar').style.display='none';
+    document.getElementById('noteMetaBar').style.display='none';
+    document.getElementById('noteContentWrap').style.display='none';
+  }
+}
+
+function buildNotesFilterBar(){
+  const bar=document.getElementById('notesFilterBar');
+  bar.innerHTML=`<button class="note-filter-pill ${noteBlockFilter==='all'?'active':''}" onclick="setNoteFilter('all',this)">All</button>`+
+    BLOCKS.map(b=>`<button class="note-filter-pill" style="${noteBlockFilter===b?'background:'+BLOCK_COLORS[b]+';color:white;border-color:transparent;':''}" onclick="setNoteFilter('${b}',this)">${b}</button>`).join('');
+}
+function setNoteFilter(block,el){
+  noteBlockFilter=block;
+  buildNotesFilterBar();
+  renderNotesList();
+}
+
+function renderNotesList(){
+  const q=(document.getElementById('noteSearch')?.value||'').toLowerCase();
+  let notes=allNotes;
+  if(noteBlockFilter!=='all')notes=notes.filter(n=>n.block===noteBlockFilter);
+  if(q)notes=notes.filter(n=>(n.title||'').toLowerCase().includes(q)||(n.content||'').toLowerCase().includes(q));
+  const el=document.getElementById('notesList');
+  if(!notes.length){el.innerHTML=`<div class="empty" style="padding:24px 16px;font-size:12px;"><span class="empty-ico">📓</span>No notes found.</div>`;return;}
+  el.innerHTML=notes.map(n=>{
+    const dot=n.block?`<span class="dot d-${BC[n.block]||''}" style="flex-shrink:0;"></span>`:'';
+    const ago=timeAgo(n.updated_at);
+    return`<div class="note-item ${n.id===activeNoteId?'active':''}" onclick="openNote('${n.id}')">
+      <div class="note-item-title">${esc(n.title||'Untitled')}</div>
+      <div class="note-item-meta">${dot}<span>${n.subject||''}</span><span style="margin-left:auto;">${ago}</span></div>
+    </div>`;
+  }).join('');
+}
+
+function filterNotes(){renderNotesList();}
+
+function newNote(){
+  // Populate note select in modal if needed
+  document.getElementById('newNoteTitle').value='';
+  document.getElementById('newNoteBlock').value='';
+  document.getElementById('newNoteSubject').value='';
+  document.getElementById('newNoteLecture').value='';
+  hideErr('newNoteErr');
+  openModal('newNoteModal');
+  setTimeout(()=>document.getElementById('newNoteTitle').focus(),100);
+}
+
+async function createNote(){
+  const title=document.getElementById('newNoteTitle').value.trim();
+  if(!title){showErr('newNoteErr','Please enter a title.');return;}
+  const block=document.getElementById('newNoteBlock').value;
+  const subject=document.getElementById('newNoteSubject').value;
+  const lecture_ref=document.getElementById('newNoteLecture').value.trim();
+  const{data,error}=await sb.from('notes').insert({year:yr,title,block,subject,lecture_ref,content:'',updated_at:new Date().toISOString()}).select().single();
+  if(error){showErr('newNoteErr','Save failed: '+error.message);return;}
+  closeModal('newNoteModal');
+  allNotes.unshift(data);
+  renderNotesList();
+  openNote(data.id);
+}
+
+async function openNote(id){
+  // Save current note first
+  if(activeNoteId&&activeNoteId!==id)await flushNoteSave();
+  activeNoteId=id;
+  const note=allNotes.find(n=>n.id===id);
+  if(!note)return;
+  // Show editor
+  document.getElementById('noteEmptyState').style.display='none';
+  document.getElementById('noteToolbar').style.display='flex';
+  document.getElementById('noteMetaBar').style.display='flex';
+  document.getElementById('noteContentWrap').style.display='grid';
+  // Set meta fields
+  document.getElementById('noteBlock').value=note.block||'';
+  document.getElementById('noteSubject').value=note.subject||'';
+  document.getElementById('noteLectureRef').value=note.lecture_ref||'';
+  // Set editor
+  const editor=document.getElementById('noteEditor');
+  editor.contentEditable='true';
+  editor.innerHTML=note.content||'';
+  editor.focus();
+  // Wire up auto-save
+  editor.oninput=()=>scheduleNoteSave();
+  // Highlight tooltip
+  editor.addEventListener('mouseup',showHighlightTooltip);
+  document.getElementById('noteSavingIndicator').textContent='';
+  renderNotesList();
+}
+
+function scheduleNoteSave(){
+  document.getElementById('noteSavingIndicator').textContent='saving…';
+  if(noteSaveTimer)clearTimeout(noteSaveTimer);
+  noteSaveTimer=setTimeout(flushNoteSave,1500);
+}
+async function flushNoteSave(){
+  if(!activeNoteId)return;
+  const content=document.getElementById('noteEditor').innerHTML;
+  await sb.from('notes').update({content,updated_at:new Date().toISOString()}).eq('id',activeNoteId);
+  const note=allNotes.find(n=>n.id===activeNoteId);
+  if(note){note.content=content;note.updated_at=new Date().toISOString();}
+  document.getElementById('noteSavingIndicator').textContent='saved ✓';
+  setTimeout(()=>{if(document.getElementById('noteSavingIndicator'))document.getElementById('noteSavingIndicator').textContent='';},2000);
+}
+async function saveNoteMeta(){
+  if(!activeNoteId)return;
+  const block=document.getElementById('noteBlock').value;
+  const subject=document.getElementById('noteSubject').value;
+  const lecture_ref=document.getElementById('noteLectureRef').value;
+  await sb.from('notes').update({block,subject,lecture_ref,updated_at:new Date().toISOString()}).eq('id',activeNoteId);
+  const note=allNotes.find(n=>n.id===activeNoteId);
+  if(note){note.block=block;note.subject=subject;note.lecture_ref=lecture_ref;}
+  renderNotesList();
+}
+
+async function deleteNote(){
+  if(!activeNoteId)return;
+  if(!confirm('Delete this note? This cannot be undone.'))return;
+  await sb.from('notes').delete().eq('id',activeNoteId);
+  allNotes=allNotes.filter(n=>n.id!==activeNoteId);
+  activeNoteId=null;
+  document.getElementById('noteEditor').innerHTML='';
+  document.getElementById('noteEmptyState').style.display='flex';
+  document.getElementById('noteToolbar').style.display='none';
+  document.getElementById('noteMetaBar').style.display='none';
+  document.getElementById('noteContentWrap').style.display='none';
+  renderNotesList();
+}
+
+function noteCmd(cmd,val){document.execCommand(cmd,false,val||null);}
+
+function toggleAIPanel(){
+  noteAiOpen=!noteAiOpen;
+  const panel=document.getElementById('noteAiPanel');
+  const wrap=document.getElementById('noteContentWrap');
+  panel.style.display=noteAiOpen?'flex':'none';
+  wrap.style.gridTemplateColumns=noteAiOpen?'1fr 300px':'1fr';
+}
+
+async function aiNoteAction(action){
+  if(!activeNoteId)return;
+  const content=document.getElementById('noteEditor').innerHTML.replace(/<[^>]+>/g,' ').trim();
+  if(!content||content.length<20){document.getElementById('noteAiResponse').textContent='Note is empty — write something first!';return;}
+  const sel=window.getSelection();
+  const highlighted=sel&&sel.toString().trim().length>10?sel.toString().trim():'';
+  const prompts={
+    summarise:`Summarise these UK Year 2 med student notes in 4-6 bullet points. Be concise and exam-focused:\n\n${content}`,
+    keypoints:`List the top 8 key exam points from these UK Year 2 med notes. Each point should be one clear, testable fact:\n\n${content}`,
+    gaps:`Review these UK Year 2 med student notes on this topic. What important concepts, conditions, or facts are missing that would likely come up in exams? Give 4-6 specific gaps:\n\n${content}`,
+    explain:`Explain this highlighted text simply for a UK Year 2 med student. Be clear and concise (3-4 sentences):\n\n${highlighted||content.substring(0,300)}`,
+    flashcard:`Create a Q&A flashcard from this text. Format as:\nQ: [question]\nA: [concise answer]\n\nText: ${highlighted||content.substring(0,300)}`
+  };
+  const respEl=document.getElementById('noteAiResponse');
+  respEl.textContent='Thinking…';
+  if(!noteAiOpen)toggleAIPanel();
+  try{
+    const r=await fetch('https://mymedicinefriend.ranaabhinav23.workers.dev',{method:'POST',headers:{'Content-Type':'application/json'},body:JSON.stringify({model:'claude-haiku-4-5-20251001',max_tokens:600,messages:[{role:'user',content:prompts[action]}]})});
+    const d=await r.json();
+    respEl.textContent=(d.content?.[0]?.text||'').trim();
+  }catch(e){respEl.textContent='Error: '+e.message;}
+}
+
+function showHighlightTooltip(e){
+  const sel=window.getSelection();
+  if(!sel||sel.toString().trim().length<3){document.getElementById('highlightTooltip').style.display='none';return;}
+  const rect=sel.getRangeAt(0).getBoundingClientRect();
+  const tip=document.getElementById('highlightTooltip');
+  tip.style.display='flex';
+  tip.style.top=(rect.top+window.scrollY-44)+'px';
+  tip.style.left=Math.max(8,rect.left+rect.width/2-80)+'px';
+}
+document.addEventListener('mousedown',e=>{if(!e.target.closest('#highlightTooltip')&&!e.target.closest('#noteEditor'))document.getElementById('highlightTooltip').style.display='none';});
+
+async function aiFromHighlight(action){
+  const sel=window.getSelection();
+  const text=sel?sel.toString().trim():'';
+  document.getElementById('highlightTooltip').style.display='none';
+  if(!text)return;
+  if(action==='explain'||action==='flashcard'){aiNoteAction(action);if(!noteAiOpen)toggleAIPanel();return;}
+  if(action==='mcq'){
+    // Navigate to MCQ page, pre-fill with highlighted text
+    await flushNoteSave();
+    document.querySelector('input[name="mcqSrc"][value="text"]').checked=true;
+    mcqSrcChange();
+    document.getElementById('mcqNotes').value=text;
+    nav('mcq',document.querySelector('[data-page="mcq"]'));
+  }
+}
+
+// ── GENERATE MCQ FROM NOTE TOOLBAR ──
+async function genMCQFromNote(){
+  if(!activeNoteId)return;
+  await flushNoteSave();
+  const note=allNotes.find(n=>n.id===activeNoteId);
+  // Switch to MCQ page with note pre-selected
+  document.querySelector('input[name="mcqSrc"][value="note"]').checked=true;
+  mcqSrcChange();
+  await populateMcqNoteSelect();
+  document.getElementById('mcqNoteSelect').value=activeNoteId;
+  document.getElementById('mcqNoteSelect').dispatchEvent(new Event('change'));
+  nav('mcq',document.querySelector('[data-page="mcq"]'));
+}
+
+async function genRecallFromNote(){
+  if(!activeNoteId)return;
+  await flushNoteSave();
+  const note=allNotes.find(n=>n.id===activeNoteId);
+  // Navigate to recall with note content pre-filled
+  document.querySelector('input[name="recallSrc"][value="notes"]').checked=true;
+  document.getElementById('recallNotesInput').style.display='block';
+  const content=(note?.content||'').replace(/<[^>]+>/g,' ');
+  document.getElementById('recallNotes').value=content;
+  nav('recall',document.querySelector('[data-page="recall"]'));
+}
+
+// ── NOTION LINKS ──
+const NOTION_WORKER='https://mymedicinefriendmymedicinefriend.ranaabhinav23.workers.dev';
+
+function extractNotionPageId(url){
+  // Handles formats:
+  // https://www.notion.so/Page-Title-abc123def456...
+  // https://www.notion.so/workspace/Page-Title-abc123def456...
+  // https://notion.so/abc123def456...
+  try{
+    const u=new URL(url);
+    const parts=u.pathname.split('/').filter(Boolean);
+    const last=parts[parts.length-1];
+    // Page ID is the last 32 hex chars (with or without hyphens)
+    const match=last.match(/([a-f0-9]{32}|[a-f0-9-]{36})$/i);
+    if(match)return match[1].replace(/-/g,'');
+    // Sometimes the ID is the whole last segment if no title
+    if(/^[a-f0-9]{32}$/i.test(last))return last;
+  }catch(e){}
+  return null;
+}
+
+async function importNotionPage(){
+  const url=document.getElementById('notionLinkUrl').value.trim();
+  if(!url){showErr('notionLinkErr','Paste a Notion page URL first.');return;}
+  const pageId=extractNotionPageId(url);
+  if(!pageId){showErr('notionLinkErr','Could not extract page ID from that URL. Make sure it\'s a full Notion page URL.');return;}
+  const block=document.getElementById('notionLinkBlock').value;
+  const subject=document.getElementById('notionLinkSubject').value;
+  setBusy('notionImportBtn','notionImportTxt','Importing…',true);
+  hideErr('notionLinkErr');
+  try{
+    const r=await fetch(NOTION_WORKER,{
+      method:'POST',
+      headers:{'Content-Type':'application/json'},
+      body:JSON.stringify({pageId})
+    });
+    const d=await r.json();
+    if(!r.ok||d.error)throw new Error(d.error||'Worker error');
+    // Save as a real note in Supabase
+    const{data,error}=await sb.from('notes').insert({
+      year:yr,
+      title:d.title||'Imported Notion Note',
+      content:d.html||'',
+      block,
+      subject,
+      lecture_ref:'',
+      updated_at:new Date().toISOString()
+    }).select().single();
+    if(error)throw new Error('Supabase error: '+error.message);
+    // Also save as a link for reference
+    notionLinks.push({id:Date.now(),name:d.title||'Imported Note',url,block,imported:true,noteId:data.id});
+    localStorage.setItem('_ms_notion_links',JSON.stringify(notionLinks));
+    closeModal('notionLinkModal');
+    document.getElementById('notionLinkUrl').value='';
+    allNotes.unshift(data);
+    renderNotesList();
+    renderNotionLinks();
+    openNote(data.id);
+    // Show success
+    document.getElementById('noteSavingIndicator').textContent='✓ Imported from Notion!';
+    setTimeout(()=>{if(document.getElementById('noteSavingIndicator'))document.getElementById('noteSavingIndicator').textContent='';},3000);
+  }catch(e){
+    showErr('notionLinkErr','Import failed: '+e.message+'. Make sure you connected your MedStudy integration to this page in Notion.');
+  }finally{
+    setBusy('notionImportBtn','notionImportTxt','⬇ Import as MedStudy note',false);
+  }
+}
+
+function saveNotionLinkOnly(){
+  const url=document.getElementById('notionLinkUrl').value.trim();
+  if(!url){showErr('notionLinkErr','Paste a Notion page URL first.');return;}
+  const block=document.getElementById('notionLinkBlock').value;
+  // Use URL as name fallback
+  const name=url.split('/').filter(Boolean).pop()?.replace(/-[a-f0-9]{32}$/i,'').replace(/-/g,' ')||'Notion page';
+  notionLinks.push({id:Date.now(),name,url,block,imported:false});
+  localStorage.setItem('_ms_notion_links',JSON.stringify(notionLinks));
+  document.getElementById('notionLinkUrl').value='';
+  hideErr('notionLinkErr');
+  closeModal('notionLinkModal');
+  renderNotionLinks();
+}
+
+function saveNotionLink(){saveNotionLinkOnly();}
+
+function renderNotionLinks(){
+  const el=document.getElementById('notionLinksList');
+  if(!notionLinks.length){el.innerHTML=`<div style="font-size:11px;color:var(--text3);text-align:center;padding:8px 0;">No Notion pages yet.<br>Click + Add to import.</div>`;return;}
+  el.innerHTML=notionLinks.map(l=>`<div class="notion-link-card">
+    <span class="notion-ico">${l.imported?'✅':'🔗'}</span>
+    <div class="notion-link-card-body" onclick="${l.imported&&l.noteId?`openNote('${l.noteId}')`:`viewNotionPage(${l.id})`}" style="cursor:pointer;">
+      <div class="notion-link-card-title">${esc(l.name)}</div>
+      <div class="notion-link-card-url">${l.imported?'<span style="color:var(--green);font-size:10px;">Imported as note</span>':'View only · '+esc(l.url.substring(0,35))+'…'}</div>
+    </div>
+    <button class="btn btn-xs btn-danger" onclick="removeNotionLink(${l.id})">✕</button>
+  </div>`).join('');
+}
+
+function viewNotionPage(id){
+  const link=notionLinks.find(l=>l.id===id);if(!link)return;
+  document.getElementById('notionViewTitle').textContent=link.name;
+  document.getElementById('notionViewFrame').src=link.url;
+  openModal('notionViewModal');
+}
+function removeNotionLink(id){
+  notionLinks=notionLinks.filter(l=>l.id!==id);
+  localStorage.setItem('_ms_notion_links',JSON.stringify(notionLinks));
+  renderNotionLinks();
+}
+
+function timeAgo(dateStr){
+  if(!dateStr)return'';
+  const diff=Date.now()-new Date(dateStr).getTime();
+  const m=Math.floor(diff/60000);
+  if(m<1)return'just now';if(m<60)return m+'m ago';
+  const h=Math.floor(m/60);if(h<24)return h+'h ago';
+  const d=Math.floor(h/24);return d+'d ago';
+}
+
+// ── UTILS ──
+function openModal(id){document.getElementById(id).classList.add('open');}
+function closeModal(id){document.getElementById(id).classList.remove('open');}
+function showErr(id,m){const e=document.getElementById(id);e.textContent=m;e.style.display='block';}
+function hideErr(id){document.getElementById(id).style.display='none';}
+function setBusy(bid,tid,txt,b){const btn=document.getElementById(bid);btn.disabled=b;btn.classList.toggle('loading',b);document.getElementById(tid).textContent=txt;}
+function esc(s){return String(s||'').replace(/&/g,'&amp;').replace(/</g,'&lt;').replace(/>/g,'&gt;').replace(/\n/g,'<br>');}
+function shuffle(a){for(let i=a.length-1;i>0;i--){const j=Math.floor(Math.random()*(i+1));[a[i],a[j]]=[a[j],a[i]];}return a;}
+let _pt={};
+function startProg(pid,fid){let p=0;document.getElementById(pid).style.display='block';_pt[pid]=setInterval(()=>{p=Math.min(p+Math.random()*4,88);document.getElementById(fid).style.width=p+'%';},300);}
+function endProg(pid,fid){clearInterval(_pt[pid]);document.getElementById(fid).style.width='100%';setTimeout(()=>{document.getElementById(pid).style.display='none';document.getElementById(fid).style.width='0%';},500);}
+</script>
+</body>
+</html>
