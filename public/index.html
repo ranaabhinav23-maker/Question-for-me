@@ -836,7 +836,7 @@ function applyTheme(){
 }
 
 // ── AUTH ──
-const PW_HASH='adf3446e80aaa0d0bb18f28da17d28c346e126e37030062dd5d2b11a6352673c';
+const PW_HASH='53376799f4948971998e519f778678f7434ccfecd9574a7bded2f9c65a01d2c6';
 const PW_SALT='medstudy_2025_salt';
 async function sha256str(s){
   const buf=await crypto.subtle.digest('SHA-256',new TextEncoder().encode(s));
@@ -1733,10 +1733,10 @@ async function importNotionRow(pageId,title,block,subject,dbUrl){
     setBusy('notionImportBtn','notionImportTxt','⬇ Import as MedStudy note',false);
   }
 }
+function saveNotionLinkOnly(){
   const url=document.getElementById('notionLinkUrl').value.trim();
   if(!url){showErr('notionLinkErr','Paste a Notion page URL first.');return;}
   const block=document.getElementById('notionLinkBlock').value;
-  // Use URL as name fallback
   const name=url.split('/').filter(Boolean).pop()?.replace(/-[a-f0-9]{32}$/i,'').replace(/-/g,' ')||'Notion page';
   notionLinks.push({id:Date.now(),name,url,block,imported:false});
   localStorage.setItem('_ms_notion_links',JSON.stringify(notionLinks));
