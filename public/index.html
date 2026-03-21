@@ -441,12 +441,14 @@ label { font-size: 11px; color: var(--text2); font-weight: 600; display: block; 
     <div class="nav-section">Practice</div>
     <div style="padding:0 0 4px;">
       <div class="nav-item active" data-page="dashboard" onclick="nav('dashboard',this)"><span class="nav-icon">⊞</span>Dashboard</div>
+      <div class="nav-item" data-page="timer" onclick="nav('timer',this)"><span class="nav-icon">🌿</span>Focus Timer</div>
       <div class="nav-item" data-page="lectures" onclick="nav('lectures',this)"><span class="nav-icon">📖</span>Lectures</div>
       <div class="nav-item" data-page="notes" onclick="nav('notes',this)"><span class="nav-icon">📓</span>Notes Hub</div>
       <div class="nav-item" data-page="mcq" onclick="nav('mcq',this)"><span class="nav-icon">❓</span>MCQ Generator</div>
       <div class="nav-item" data-page="mock" onclick="nav('mock',this)"><span class="nav-icon">📝</span>Mock Exam</div>
       <div class="nav-item" data-page="recall" onclick="nav('recall',this)"><span class="nav-icon">⚡</span>Quick Recall</div>
       <div class="nav-item" data-page="review" onclick="nav('review',this)"><span class="nav-icon">🔁</span>Review Wrong<span class="nav-badge" id="wrongCount" style="display:none;">0</span></div>
+      <div class="nav-item" data-page="flashcards" onclick="nav('flashcards',this)"><span class="nav-icon">🃏</span>Flashcards</div>
     </div>
     <div class="nav-section">Reference</div>
     <div style="padding:0 0 4px;">
@@ -456,6 +458,17 @@ label { font-size: 11px; color: var(--text2); font-weight: 600; display: block; 
       <div class="nav-item" data-page="bugs" onclick="nav('bugs',this)"><span class="nav-icon">🦠</span>Bug Table</div>
     </div>
     <div class="sidebar-bottom">
+      <!-- Mini timer bar - shows when timer is running -->
+      <div id="sidebarTimer" style="display:none;background:rgba(6,182,212,0.1);border:1px solid rgba(6,182,212,0.25);border-radius:var(--r);padding:8px 12px;margin-bottom:10px;cursor:pointer;" onclick="nav('timer',document.querySelector('[data-page=timer]'))">
+        <div style="display:flex;align-items:center;justify-content:space-between;margin-bottom:5px;">
+          <span style="font-size:10px;font-weight:700;color:var(--accent);" id="sidebarTimerMode">FOCUS</span>
+          <button onclick="event.stopPropagation();toggleTimer();" style="background:none;border:none;color:var(--accent);cursor:pointer;font-size:13px;padding:0;" id="sidebarTimerBtn">⏸</button>
+        </div>
+        <div style="font-size:1.2rem;font-weight:800;color:white;font-family:var(--mono);letter-spacing:0.05em;" id="sidebarTimerDisplay">25:00</div>
+        <div style="height:3px;background:rgba(255,255,255,0.1);border-radius:99px;overflow:hidden;margin-top:6px;">
+          <div id="sidebarTimerBar" style="height:100%;background:var(--accent);border-radius:99px;transition:width 1s linear;width:100%;"></div>
+        </div>
+      </div>
       <div class="theme-toggle" onclick="toggleTheme()">
         <span class="theme-toggle-label" id="themeLabel">Dark mode</span>
         <div class="toggle-track" id="themeTrack"><div class="toggle-thumb"></div></div>
@@ -478,7 +491,8 @@ label { font-size: 11px; color: var(--text2); font-weight: 600; display: block; 
         <div class="page-hero-title">Welcome back, Abhinav 👋</div>
         <div class="page-hero-sub" id="dashSub">Year 2 · Keep going — you've got this.</div>
       </div>
-      <div style="display:flex;gap:8px;">
+      <div style="display:flex;gap:8px;align-items:center;">
+        <div id="streakBadge" style="display:flex;align-items:center;gap:6px;background:rgba(245,158,11,0.12);border:1px solid rgba(245,158,11,0.25);border-radius:99px;padding:5px 12px;font-size:12px;font-weight:700;color:#d97706;">🔥 <span id="streakNum">0</span> day streak</div>
         <button class="btn btn-outline btn-sm" onclick="openTargetModal()">＋ Add target</button>
       </div>
     </div>
@@ -486,7 +500,8 @@ label { font-size: 11px; color: var(--text2); font-weight: 600; display: block; 
       <div class="g4 mb20">
         <div class="stat-card"><div class="stat-card-bar" style="background:linear-gradient(90deg,var(--accent),transparent);"></div><div class="stat-icon" style="background:rgba(6,182,212,0.1);color:var(--accent);">📚</div><div class="stat-num" id="sLec">0</div><div class="stat-label">Lectures done</div><div class="stat-hint" id="sLecSub">pass 1 or above</div></div>
         <div class="stat-card"><div class="stat-card-bar" style="background:linear-gradient(90deg,var(--green),transparent);"></div><div class="stat-icon" style="background:rgba(16,185,129,0.1);color:var(--green);">✅</div><div class="stat-num" id="sMCQ">0</div><div class="stat-label">Questions answered</div></div>
-        <div class="stat-card"><div class="stat-card-bar" style="background:linear-gradient(90deg,var(--orange),transparent);"></div><div class="stat-icon" style="background:rgba(245,158,11,0.1);color:var(--orange);">🎯</div><div class="stat-num" id="sAvg">—</div><div class="stat-label">Average score</div></div>
+        <div class="stat-card" onclick="nav('timer',document.querySelector('[data-page=timer]'))" style="cursor:pointer;"><div class="stat-card-bar" style="background:linear-gradient(90deg,var(--orange),transparent);"></div><div class="stat-icon" style="background:rgba(245,158,11,0.1);color:var(--orange);">⏱</div><div class="stat-num" id="sTodayHours">0h</div><div class="stat-label">Today's study</div><div class="stat-hint" id="sWeekHours">this week: 0h</div></div>
+        <div class="stat-card" onclick="nav('timer',document.querySelector('[data-page=timer]'))" style="cursor:pointer;"><div class="stat-card-bar" style="background:linear-gradient(90deg,var(--purple),transparent);"></div><div class="stat-icon" style="background:rgba(139,92,246,0.1);color:var(--purple);">📈</div><div class="stat-num" id="sTotalHours">—</div><div class="stat-label">Total hours ever</div><div class="stat-hint" id="sTotalSessions">all time</div></div>
         <div class="stat-card"><div class="stat-card-bar" style="background:linear-gradient(90deg,var(--red),transparent);"></div><div class="stat-icon" style="background:rgba(239,68,68,0.1);color:var(--red);">⚡</div><div class="stat-num" id="sWrong">0</div><div class="stat-label">To review</div></div>
       </div>
       <div class="g2">
@@ -536,8 +551,14 @@ label { font-size: 11px; color: var(--text2); font-weight: 600; display: block; 
 
    <!-- LECTURES -->
    <div class="page" id="page-lectures">
-    <div class="page-hero"><div><div class="page-hero-title">Lectures</div><div class="page-hero-sub">Track first and second pass progress</div></div><button class="btn btn-primary btn-sm" onclick="openModal('addLecModal')">＋ Add lecture</button></div>
-    <div style="padding:20px 32px 0;">
+    <div class="page-hero"><div><div class="page-hero-title">Lectures</div><div class="page-hero-sub">Track first and second pass progress</div></div>
+      <div style="display:flex;gap:8px;align-items:center;">
+        <div id="lecTimeRemaining" style="font-size:12px;color:var(--text2);"></div>
+        <button class="btn btn-primary btn-sm" onclick="openModal('addLecModal')">＋ Add lecture</button>
+      </div>
+    </div>
+    <div style="padding:16px 32px 0;">
+      <div id="lecTimeBanner" style="display:none;margin-bottom:16px;"></div>
       <div class="pill-row" id="lecBlockPills"></div>
       <div class="pill-row" id="lecSubjPills" style="margin-top:-10px;"></div>
       <div class="pill-row" id="lecPassPills" style="margin-top:-10px;"></div>
@@ -547,14 +568,22 @@ label { font-size: 11px; color: var(--text2); font-weight: 600; display: block; 
 
    <!-- MCQ -->
    <div class="page" id="page-mcq">
-    <div class="page-hero"><div class="page-hero-title">MCQ Generator</div><div class="page-hero-sub">From your notes or paste text → AI generates exam-style questions → scores saved automatically</div></div>
+    <div class="page-hero"><div class="page-hero-title">MCQ Generator</div><div class="page-hero-sub">AI generates questions · all saved to your bank · smart mix of new + review</div></div>
     <div style="padding:24px 32px 0;">
+      <!-- Difficulty tracker -->
+      <div id="mcqDiffTracker" style="margin-bottom:16px;display:none;">
+        <div class="section-card">
+          <div class="section-head"><div class="section-title">Your weak topics</div><div class="section-sub">Based on your wrong answers</div></div>
+          <div class="section-body" style="padding:12px 16px;"><div id="mcqWeakTopics"></div></div>
+        </div>
+      </div>
       <div class="section-card mb16"><div class="section-head"><div class="section-title">Generate questions</div></div>
         <div class="section-body">
           <label>Source</label>
           <div style="display:flex;gap:10px;margin-bottom:16px;flex-wrap:wrap;">
             <label style="text-transform:none;font-size:13px;display:flex;align-items:center;gap:8px;cursor:pointer;font-weight:500;"><input type="radio" name="mcqSrc" value="text" checked style="width:auto;" onchange="mcqSrcChange()"> Paste text</label>
-            <label style="text-transform:none;font-size:13px;display:flex;align-items:center;gap:8px;cursor:pointer;font-weight:500;"><input type="radio" name="mcqSrc" value="note" style="width:auto;" onchange="mcqSrcChange()"> From saved notes</label>
+            <label style="text-transform:none;font-size:13px;display:flex;align-items:center;gap:10px;cursor:pointer;font-weight:500;"><input type="radio" name="mcqSrc" value="note" style="width:auto;" onchange="mcqSrcChange()"> From saved notes</label>
+            <label style="text-transform:none;font-size:13px;display:flex;align-items:center;gap:10px;cursor:pointer;font-weight:500;"><input type="radio" name="mcqSrc" value="smart" style="width:auto;" onchange="mcqSrcChange()"> 🧠 Smart mix</label>
           </div>
           <div id="mcqTextSrc">
             <label>Notes / lecture content</label>
@@ -577,6 +606,23 @@ label { font-size: 11px; color: var(--text2); font-weight: 600; display: block; 
               <span id="mcqNoteCount" style="font-size:11px;color:var(--text2);margin-left:auto;align-self:center;"></span>
             </div>
           </div>
+          <div id="mcqSmartSrc" style="display:none;">
+            <div style="background:rgba(6,182,212,0.06);border:1px solid rgba(6,182,212,0.2);border-radius:var(--r);padding:14px;margin-bottom:12px;">
+              <div style="font-size:12px;font-weight:700;color:var(--accent);margin-bottom:6px;">🧠 Smart mix will include:</div>
+              <div style="font-size:12px;color:var(--text2);line-height:1.8;">
+                • 3-4 questions from topics you got <strong>wrong before</strong><br>
+                • 1-2 questions from topics you got <strong>right before</strong> (spaced review)<br>
+                • Rest are <strong>new questions</strong> from your selected notes
+              </div>
+            </div>
+            <label>Base notes for new questions</label>
+            <div style="margin-bottom:10px;">
+              <div class="pill-row" id="mcqSmartBlockPills" style="margin-bottom:8px;"></div>
+            </div>
+            <div id="mcqSmartNoteList" style="max-height:160px;overflow-y:auto;border:1px solid var(--border);border-radius:var(--r);background:var(--surface2);padding:8px;display:flex;flex-direction:column;gap:4px;">
+              <div style="font-size:12px;color:var(--text3);padding:8px;">Loading notes…</div>
+            </div>
+          </div>
           <div style="display:flex;flex-wrap:wrap;gap:14px;margin-top:16px;">
             <div style="min-width:90px;"><label>Questions</label><select id="mcqNum"><option value="5">5</option><option value="10" selected>10</option><option value="15">15</option><option value="20">20</option></select></div>
             <div style="min-width:170px;"><label>Difficulty</label><select id="mcqDiff"><option value="mixed" selected>Mixed</option><option value="easy">Recall / Easy</option><option value="medium">Applied / Medium</option><option value="hard">Clinical / Hard</option></select></div>
@@ -586,7 +632,13 @@ label { font-size: 11px; color: var(--text2); font-weight: 600; display: block; 
           <div class="err-box" id="mcqErr"></div>
         </div>
       </div>
-      <div class="score-bar" id="mcqScoreBar"><div><div style="font-size:10px;color:var(--text2);margin-bottom:2px;font-weight:600;letter-spacing:0.06em;text-transform:uppercase;">Score</div><div class="score-num" id="mcqScoreNum">—</div></div><div style="font-size:14px;font-weight:700;" id="mcqScoreMsg"></div></div>
+      <div class="score-bar" id="mcqScoreBar">
+        <div><div style="font-size:10px;color:var(--text2);margin-bottom:2px;font-weight:600;letter-spacing:0.06em;text-transform:uppercase;">Score</div><div class="score-num" id="mcqScoreNum">—</div></div>
+        <div style="font-size:14px;font-weight:700;" id="mcqScoreMsg"></div>
+        <div id="mcqWrongFlashBtn" style="display:none;">
+          <button class="btn btn-outline btn-sm" onclick="wrongToFlashcards()">🃏 Make flashcards from wrong answers</button>
+        </div>
+      </div>
       <div id="mcqQs"></div>
     </div>
    </div>
@@ -797,6 +849,105 @@ label { font-size: 11px; color: var(--text2); font-weight: 600; display: block; 
       <div style="width:260px;border-left:1px solid var(--border);background:var(--surface);display:flex;flex-direction:column;overflow:hidden;flex-shrink:0;">
         <div style="padding:14px 16px;border-bottom:1px solid var(--border);font-size:12px;font-weight:700;color:var(--text);">Current Plan</div>
         <div id="plannerSideSummary" style="flex:1;overflow-y:auto;padding:12px 16px;"></div>
+      </div>
+    </div>
+   </div>
+
+   <!-- FOCUS TIMER -->
+   <div class="page" id="page-timer">
+    <div class="page-hero"><div><div class="page-hero-title">Focus Timer 🌿</div><div class="page-hero-sub">Every session saved · see your full history</div></div>
+      <div style="display:flex;gap:8px;">
+        <div id="timerTotalBadge" style="font-size:12px;font-weight:700;color:var(--accent);background:rgba(6,182,212,0.1);border:1px solid rgba(6,182,212,0.2);border-radius:99px;padding:5px 14px;"></div>
+      </div>
+    </div>
+    <div style="padding:28px 32px 0;">
+      <div class="tab-row mb20">
+        <div class="tab active" onclick="timerTab('focus',this)">⏱ Timer</div>
+        <div class="tab" onclick="timerTab('history',this)">📊 History</div>
+      </div>
+
+      <!-- TIMER TAB -->
+      <div id="timerFocusTab">
+        <div class="g2">
+          <div class="section-card" style="text-align:center;padding:40px 24px;">
+            <div id="timerMode" style="font-size:11px;font-weight:700;color:var(--text3);text-transform:uppercase;letter-spacing:0.12em;margin-bottom:16px;">FOCUS SESSION</div>
+            <div id="timerDisplay" style="font-size:5rem;font-weight:800;color:var(--text);letter-spacing:-0.04em;font-family:var(--mono);margin-bottom:8px;">25:00</div>
+            <div id="timerSessionLabel" style="font-size:13px;color:var(--text2);margin-bottom:28px;">Session 1 of 4</div>
+            <div style="display:flex;gap:4px;justify-content:center;margin-bottom:28px;" id="timerDots"></div>
+            <div style="display:flex;gap:10px;justify-content:center;margin-bottom:24px;">
+              <button class="btn btn-ghost btn-sm" onclick="setTimerMode(25,5)" id="tmBtn25" style="border:1px solid var(--border);background:var(--navy);color:white;">25/5</button>
+              <button class="btn btn-ghost btn-sm" onclick="setTimerMode(50,10)" id="tmBtn50" style="border:1px solid var(--border);">50/10</button>
+              <button class="btn btn-ghost btn-sm" onclick="setTimerMode(90,15)" id="tmBtn90" style="border:1px solid var(--border);">90/15</button>
+            </div>
+            <div style="display:flex;gap:12px;justify-content:center;">
+              <button class="btn btn-teal" id="timerStartBtn" onclick="toggleTimer()" style="padding:12px 36px;font-size:15px;">▶ Start</button>
+              <button class="btn btn-outline" onclick="resetTimer()">↺ Reset</button>
+            </div>
+            <div style="margin-top:20px;">
+              <input type="text" id="timerTask" placeholder="What are you working on? (optional)" style="max-width:280px;text-align:center;font-size:13px;padding:8px 12px;">
+            </div>
+          </div>
+          <div>
+            <div class="section-card mb16">
+              <div class="section-head"><div class="section-title">Today</div><div style="font-size:13px;font-weight:700;color:var(--accent);" id="timerTodayTotal">0h 0m</div></div>
+              <div class="section-body" style="padding:12px 16px;"><div id="timerTodayLog"></div></div>
+            </div>
+            <div class="section-card">
+              <div class="section-head"><div class="section-title">This week</div><div style="font-size:12px;color:var(--text2);" id="timerWeekTotal"></div></div>
+              <div class="section-body" style="padding:12px 16px;"><div id="timerWeekChart"></div></div>
+            </div>
+          </div>
+        </div>
+      </div>
+
+      <!-- HISTORY TAB -->
+      <div id="timerHistoryTab" style="display:none;">
+        <div class="g4 mb16" id="timerHistoryStats"></div>
+        <div style="display:flex;gap:10px;align-items:center;margin-bottom:16px;flex-wrap:wrap;">
+          <div style="font-size:13px;font-weight:700;color:var(--text);">Week of</div>
+          <button class="btn btn-outline btn-sm" onclick="shiftHistoryWeek(-1)">← Prev</button>
+          <div id="timerHistoryWeekLabel" style="font-size:13px;font-weight:600;color:var(--accent);min-width:180px;text-align:center;"></div>
+          <button class="btn btn-outline btn-sm" onclick="shiftHistoryWeek(1)">Next →</button>
+          <button class="btn btn-ghost btn-sm" onclick="goHistoryToday()">This week</button>
+        </div>
+        <div class="section-card mb16">
+          <div class="section-head">
+            <div class="section-title" id="timerHistoryWeekTitle">Loading…</div>
+            <div style="font-size:14px;font-weight:800;color:var(--accent);" id="timerHistoryWeekHours"></div>
+          </div>
+          <div class="section-body" style="padding:16px 20px;">
+            <div id="timerHistoryBarChart" style="margin-bottom:16px;"></div>
+            <div id="timerHistorySessionList"></div>
+          </div>
+        </div>
+        <div class="section-card">
+          <div class="section-head"><div class="section-title">Monthly overview</div><div style="font-size:12px;color:var(--text2);" id="timerMonthLabel"></div></div>
+          <div class="section-body" style="padding:16px 20px;"><div id="timerMonthHeatmap"></div></div>
+        </div>
+      </div>
+    </div>
+   </div>
+
+   <!-- FLASHCARDS -->
+   <div class="page" id="page-flashcards">
+    <div class="page-hero"><div><div class="page-hero-title">Flashcards 🃏</div><div class="page-hero-sub">Spaced repetition · add manually or generate from wrong answers</div></div>
+      <button class="btn btn-primary btn-sm" onclick="openModal('addFlashcardModal')">＋ Add card</button>
+    </div>
+    <div style="padding:20px 32px 0;">
+      <div class="tab-row mb20">
+        <div class="tab active" onclick="fcTab('due',this)">🔥 Due Today</div>
+        <div class="tab" onclick="fcTab('browse',this)">Browse</div>
+      </div>
+      <div id="fcDue">
+        <div class="g4 mb16" id="fcStats"></div>
+        <div id="fcDueArea"></div>
+      </div>
+      <div id="fcBrowse" style="display:none;">
+        <div style="display:flex;gap:8px;margin-bottom:16px;">
+          <input type="text" id="fcSearch" placeholder="Search flashcards…" oninput="renderFCBrowse()" style="flex:1;padding:7px 12px;font-size:12px;">
+          <select id="fcBlockFilter" onchange="renderFCBrowse()" style="width:auto;padding:7px 10px;font-size:12px;"><option value="">All blocks</option><option>GU</option><option>MSK</option><option>Neurology</option><option>GI</option><option>CVR</option><option>Core</option></select>
+        </div>
+        <div id="fcBrowseList"></div>
       </div>
     </div>
    </div>
@@ -1024,6 +1175,19 @@ label { font-size: 11px; color: var(--text2); font-weight: 600; display: block; 
   </div>
 </div>
 
+<div class="modal-bg" id="addFlashcardModal">
+  <div class="modal"><div class="modal-title">Add Flashcard</div>
+    <div class="mb12"><label>Front (question / term)</label><textarea id="fcFront" placeholder="e.g. Mechanism of Metformin?" style="min-height:80px;"></textarea></div>
+    <div class="mb12"><label>Back (answer)</label><textarea id="fcBack" placeholder="e.g. Activates AMPK → reduces hepatic glucose output..." style="min-height:80px;"></textarea></div>
+    <div class="g2 mb12">
+      <div><label>Block</label><select id="fcBlock"><option value="">—</option><option>GU</option><option>MSK</option><option>Neurology</option><option>GI</option><option>CVR</option><option>Core</option></select></div>
+      <div><label>Subject</label><select id="fcSubject"><option value="">—</option><option>Anatomy</option><option>Physiology</option><option>Pharmacology</option><option>Microbiology</option><option>Pathology</option><option>General</option></select></div>
+    </div>
+    <div class="err-box" id="fcErr"></div>
+    <div class="row" style="gap:8px;"><button class="btn btn-primary flex1" onclick="saveFlashcard()">Save</button><button class="btn btn-outline" onclick="closeModal('addFlashcardModal')">Cancel</button></div>
+  </div>
+</div>
+
 <script>
 const SB_URL='https://tzdkptyeodvlllxmvmqf.supabase.co';
 const SB_KEY='eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJpc3MiOiJzdXBhYmFzZSIsInJlZiI6InR6ZGtwdHllb2R2bGxseG12bXFmIiwicm9sZSI6ImFub24iLCJpYXQiOjE3NzM5MzQ3ODQsImV4cCI6MjA4OTUxMDc4NH0.ofEgXFjqp4xqbuXl6T5GO7tVoMRl0YzT2o5fdELi8uM';
@@ -1128,6 +1292,8 @@ async function init(){
   targets=JSON.parse(localStorage.getItem('_ms_targets_'+yr)||'[]');
   buildPills();
   renderCountdown();
+  renderStreak();
+  renderHoursStats();
   await loadDash();
   updateWrongBadge();
 }
@@ -1138,6 +1304,8 @@ function nav(page,el){
   const pageEl=document.getElementById('page-'+page);
   if(pageEl){pageEl.classList.add('active');if(page==='aiplanner')pageEl.style.display='flex';}
   if(el)el.classList.add('active');
+  if(page==='timer'){loadTimer();}
+  if(page==='flashcards'){loadFlashcards();}
   if(page==='plan')loadPlan();
   if(page==='aiplanner')loadAIPlanner();
   if(page==='notes')loadNotes();
@@ -3443,6 +3611,330 @@ function updateSRSBadge() {
     }
   });
 }
+
+// ── STREAK ──
+const STREAK_KEY='_ms_streak_';
+function getStreak(){return JSON.parse(localStorage.getItem(STREAK_KEY+yr)||'{"count":0,"lastDate":""}');}
+function updateStreak(){
+  const s=getStreak();
+  const today=new Date().toISOString().split('T')[0];
+  if(s.lastDate===today)return s.count;
+  const yesterday=new Date();yesterday.setDate(yesterday.getDate()-1);
+  const yStr=yesterday.toISOString().split('T')[0];
+  const newCount=s.lastDate===yStr?s.count+1:1;
+  localStorage.setItem(STREAK_KEY+yr,JSON.stringify({count:newCount,lastDate:today}));
+  return newCount;
+}
+function renderStreak(){
+  const count=updateStreak();
+  const el=document.getElementById('streakNum');
+  if(el)el.textContent=count;
+}
+
+// ── FOCUS TIMER (Supabase-backed) ──
+const TIMER_LOG_KEY='_ms_timer_';
+let timerInterval=null,timerSeconds=0,timerRunning=false,timerIsBreak=false;
+let timerWorkMin=25,timerBreakMin=5,timerSession=1,timerTotalSessions=4;
+let timerStartTime=null,timerTaskName='';
+let _timerAllSessions=[];
+let _timerHistoryWeekOffset=0;
+
+async function logTimerSession(minutes,task){
+  const now=new Date();
+  const entry={year:yr,date:now.toISOString().split('T')[0],time_of_day:now.toLocaleTimeString('en-GB',{hour:'2-digit',minute:'2-digit'}),minutes,task:task||'Study session',created_at:now.toISOString()};
+  try{await sb.from('focus_sessions').insert(entry);_timerAllSessions.unshift(entry);}
+  catch(e){console.warn('Supabase timer save failed:',e.message);}
+  const local=JSON.parse(localStorage.getItem(TIMER_LOG_KEY+yr)||'[]');
+  local.unshift(entry);
+  localStorage.setItem(TIMER_LOG_KEY+yr,JSON.stringify(local.slice(0,500)));
+}
+
+async function loadTimerSessions(){
+  try{
+    const{data}=await sb.from('focus_sessions').select('*').eq('year',yr).order('created_at',{ascending:false});
+    _timerAllSessions=data||[];
+  }catch(e){_timerAllSessions=JSON.parse(localStorage.getItem(TIMER_LOG_KEY+yr)||'[]');}
+}
+
+function getTimerLog(){
+  if(_timerAllSessions.length)return _timerAllSessions;
+  return JSON.parse(localStorage.getItem(TIMER_LOG_KEY+yr)||'[]');
+}
+
+function timerTab(t,el){
+  document.querySelectorAll('#page-timer .tab').forEach(x=>x.classList.remove('active'));
+  el.classList.add('active');
+  document.getElementById('timerFocusTab').style.display=t==='focus'?'block':'none';
+  document.getElementById('timerHistoryTab').style.display=t==='history'?'block':'none';
+  if(t==='history')renderTimerHistory();
+}
+
+function setTimerMode(work,brk){
+  timerWorkMin=work;timerBreakMin=brk;
+  timerTotalSessions=work===25?4:work===50?3:2;
+  resetTimer();
+  document.querySelectorAll('[id^="tmBtn"]').forEach(b=>{b.style.background='';b.style.color='';});
+  const btn=document.getElementById('tmBtn'+work);
+  if(btn){btn.style.background='var(--navy)';btn.style.color='white';}
+}
+
+function toggleTimer(){if(timerRunning){pauseTimer();}else{startTimerRun();}}
+
+function startTimerRun(){
+  timerRunning=true;
+  timerStartTime=timerStartTime||Date.now();
+  timerTaskName=document.getElementById('timerTask')?.value||'Study session';
+  const mainBtn=document.getElementById('timerStartBtn');
+  if(mainBtn)mainBtn.textContent='⏸ Pause';
+  updateTimerDisplay();
+  timerInterval=setInterval(()=>{
+    if(timerSeconds<=0){
+      clearInterval(timerInterval);timerRunning=false;
+      if(!timerIsBreak){
+        logTimerSession(timerWorkMin,timerTaskName).then(()=>{renderTimerLog();renderHoursStats();});
+        timerSession++;
+        if(timerSession>timerTotalSessions){
+          timerSession=1;
+          const m=document.getElementById('timerMode');if(m)m.textContent='ALL DONE! 🎉';
+          const b=document.getElementById('timerStartBtn');if(b)b.textContent='▶ Start';
+          timerStartTime=null;return;
+        }
+        timerIsBreak=true;timerSeconds=timerBreakMin*60;
+        const m=document.getElementById('timerMode');if(m)m.textContent='BREAK TIME ☕';
+        const b=document.getElementById('timerStartBtn');if(b)b.textContent='▶ Start break';
+      }else{
+        timerIsBreak=false;timerSeconds=timerWorkMin*60;timerStartTime=null;
+        const m=document.getElementById('timerMode');if(m)m.textContent='FOCUS SESSION';
+        const b=document.getElementById('timerStartBtn');if(b)b.textContent='▶ Start';
+      }
+      updateTimerDisplay();updateTimerDots();return;
+    }
+    timerSeconds--;updateTimerDisplay();
+  },1000);
+}
+
+function pauseTimer(){
+  clearInterval(timerInterval);timerRunning=false;
+  const b=document.getElementById('timerStartBtn');if(b)b.textContent='▶ Resume';
+  const s=document.getElementById('sidebarTimerBtn');if(s)s.textContent='▶';
+}
+
+function resetTimer(){
+  clearInterval(timerInterval);
+  timerRunning=false;timerIsBreak=false;timerSession=1;timerStartTime=null;
+  timerSeconds=timerWorkMin*60;
+  const m=document.getElementById('timerMode');if(m)m.textContent='FOCUS SESSION';
+  const b=document.getElementById('timerStartBtn');if(b)b.textContent='▶ Start';
+  const d=document.getElementById('timerDisplay');if(d)d.style.color='var(--text)';
+  const s=document.getElementById('sidebarTimer');if(s)s.style.display='none';
+  updateTimerDisplay();updateTimerDots();
+}
+
+function updateTimerDisplay(){
+  const m=Math.floor(timerSeconds/60),s=timerSeconds%60;
+  const timeStr=String(m).padStart(2,'0')+':'+String(s).padStart(2,'0');
+  const el=document.getElementById('timerDisplay');
+  if(el){el.textContent=timeStr;el.style.color=timerIsBreak?'var(--green)':timerSeconds<60?'var(--red)':'var(--text)';}
+  const lbl=document.getElementById('timerSessionLabel');
+  if(lbl)lbl.textContent=timerIsBreak?'Break '+(timerSession-1)+' of '+timerTotalSessions:'Session '+timerSession+' of '+timerTotalSessions;
+  const totalSecs=(timerIsBreak?timerBreakMin:timerWorkMin)*60;
+  const pct=Math.round((timerSeconds/totalSecs)*100);
+  const sidebar=document.getElementById('sidebarTimer');
+  if(sidebar){
+    sidebar.style.display=(timerRunning||timerSeconds<totalSecs)?'block':'none';
+    const sd=document.getElementById('sidebarTimerDisplay');if(sd){sd.textContent=timeStr;sd.style.color=timerIsBreak?'var(--green)':timerSeconds<60?'#f87171':'white';}
+    const sb2=document.getElementById('sidebarTimerBar');if(sb2){sb2.style.width=pct+'%';sb2.style.background=timerIsBreak?'var(--green)':timerSeconds<60?'var(--red)':'var(--accent)';}
+    const sm=document.getElementById('sidebarTimerMode');if(sm)sm.textContent=timerIsBreak?'BREAK ☕':'FOCUS · S'+timerSession+'/'+timerTotalSessions;
+    const sbtn=document.getElementById('sidebarTimerBtn');if(sbtn)sbtn.textContent=timerRunning?'⏸':'▶';
+  }
+}
+
+function updateTimerDots(){
+  const el=document.getElementById('timerDots');if(!el)return;
+  el.innerHTML=Array.from({length:timerTotalSessions},(_,i)=>
+    '<div style="width:10px;height:10px;border-radius:50%;background:'+(i<timerSession-1?'var(--green)':i===timerSession-1&&!timerIsBreak?'var(--accent)':'var(--border2)')+';transition:all 0.3s;"></div>'
+  ).join('');
+}
+
+function renderTimerLog(){
+  const log=getTimerLog();
+  const today=new Date().toISOString().split('T')[0];
+  const todayLog=log.filter(s=>s.date===today);
+  const todayMins=todayLog.reduce((a,s)=>a+s.minutes,0);
+  const h=Math.floor(todayMins/60),m=todayMins%60;
+  const el=document.getElementById('timerTodayTotal');if(el)el.textContent=h+'h '+m+'m';
+  const logEl=document.getElementById('timerTodayLog');
+  if(logEl){
+    if(!todayLog.length){logEl.innerHTML='<div style="font-size:12px;color:var(--text3);text-align:center;padding:12px;">No sessions today yet</div>';return;}
+    logEl.innerHTML=todayLog.map(s=>'<div style="display:flex;align-items:center;gap:10px;padding:7px 0;border-bottom:1px solid var(--border);"><div style="font-size:11px;color:var(--text3);min-width:40px;">'+(s.time_of_day||s.time||'')+'</div><div style="flex:1;font-size:12px;color:var(--text);">'+esc(s.task)+'</div><div style="font-size:12px;font-weight:700;color:var(--accent);">'+s.minutes+'m</div></div>').join('');
+  }
+  renderWeekChart();
+}
+
+function renderWeekChart(){
+  const log=getTimerLog();
+  const el=document.getElementById('timerWeekChart');
+  const weekTotalEl=document.getElementById('timerWeekTotal');
+  if(!el)return;
+  const days=[];
+  for(let i=6;i>=0;i--){
+    const d=new Date();d.setDate(d.getDate()-i);
+    const dateStr=d.toISOString().split('T')[0];
+    const mins=log.filter(s=>s.date===dateStr).reduce((a,s)=>a+s.minutes,0);
+    days.push({date:dateStr,mins,label:d.toLocaleDateString('en-GB',{weekday:'short'})});
+  }
+  const weekMins=days.reduce((a,d)=>a+d.mins,0);
+  const wh=Math.floor(weekMins/60),wm=weekMins%60;
+  if(weekTotalEl)weekTotalEl.textContent=wh+'h '+wm+'m this week';
+  const maxMins=Math.max(...days.map(d=>d.mins),1);
+  const today=new Date().toISOString().split('T')[0];
+  el.innerHTML='<div style="display:flex;align-items:flex-end;gap:8px;height:80px;">'+days.map(d=>{
+    const h=Math.round((d.mins/maxMins)*72);
+    const isToday=d.date===today;
+    return'<div style="flex:1;display:flex;flex-direction:column;align-items:center;gap:4px;"><div style="font-size:9px;color:var(--text3);">'+(d.mins>0?Math.round(d.mins/60*10)/10+'h':'')+'</div><div style="width:100%;height:'+Math.max(h,2)+'px;background:'+(isToday?'var(--accent)':'var(--border2)')+';border-radius:4px 4px 0 0;transition:height 0.4s;"></div><div style="font-size:10px;color:'+(isToday?'var(--accent)':'var(--text3)')+';font-weight:'+(isToday?700:400)+';">'+d.label+'</div></div>';
+  }).join('')+'</div>';
+}
+
+function renderHoursStats(){
+  const log=getTimerLog();
+  const today=new Date().toISOString().split('T')[0];
+  const todayMins=log.filter(s=>s.date===today).reduce((a,s)=>a+s.minutes,0);
+  const h=Math.floor(todayMins/60),m=todayMins%60;
+  const el=document.getElementById('sTodayHours');
+  if(el)el.textContent=h>0?h+'h '+m+'m':m+'m';
+  const weekMins=Array.from({length:7},(_,i)=>{
+    const d=new Date();d.setDate(d.getDate()-i);
+    return log.filter(s=>s.date===d.toISOString().split('T')[0]).reduce((a,s)=>a+s.minutes,0);
+  }).reduce((a,b)=>a+b,0);
+  const wh=Math.floor(weekMins/60),wm=weekMins%60;
+  const wel=document.getElementById('sWeekHours');
+  if(wel)wel.textContent='this week: '+(wh>0?wh+'h ':'')+wm+'m';
+  const allMins=log.reduce((a,s)=>a+s.minutes,0);
+  const ah=Math.floor(allMins/60);
+  const tel=document.getElementById('sTotalHours');if(tel)tel.textContent=ah>0?ah+'h':'0h';
+  const sel=document.getElementById('sTotalSessions');if(sel)sel.textContent=log.length+' sessions total';
+  const badge=document.getElementById('timerTotalBadge');if(badge)badge.textContent=ah+'h studied all time';
+}
+
+// ── HISTORY VIEW ──
+function shiftHistoryWeek(dir){_timerHistoryWeekOffset+=dir;renderTimerHistory();}
+function goHistoryToday(){_timerHistoryWeekOffset=0;renderTimerHistory();}
+
+function getWeekStart(offset){
+  const d=new Date();
+  const day=d.getDay();
+  const diffToMon=day===0?-6:1-day;
+  d.setDate(d.getDate()+diffToMon+(offset*7));
+  d.setHours(0,0,0,0);return d;
+}
+
+function renderTimerHistory(){
+  const log=getTimerLog();
+  const weekStart=getWeekStart(_timerHistoryWeekOffset);
+  const weekEnd=new Date(weekStart);weekEnd.setDate(weekEnd.getDate()+6);
+  const fmt=d=>d.toLocaleDateString('en-GB',{day:'numeric',month:'short',year:'numeric'});
+  const isThisWeek=_timerHistoryWeekOffset===0;
+  const isLastWeek=_timerHistoryWeekOffset===-1;
+  const weekLabel=isThisWeek?'This week':isLastWeek?'Last week':fmt(weekStart)+' – '+fmt(weekEnd);
+  const labelEl=document.getElementById('timerHistoryWeekLabel');if(labelEl)labelEl.textContent=weekLabel;
+  const titleEl=document.getElementById('timerHistoryWeekTitle');if(titleEl)titleEl.textContent=weekLabel;
+
+  const days=[];
+  for(let i=0;i<7;i++){
+    const d=new Date(weekStart);d.setDate(d.getDate()+i);
+    const dateStr=d.toISOString().split('T')[0];
+    const sessions=log.filter(s=>s.date===dateStr);
+    const mins=sessions.reduce((a,s)=>a+s.minutes,0);
+    days.push({date:dateStr,label:d.toLocaleDateString('en-GB',{weekday:'short',day:'numeric'}),mins,sessions});
+  }
+  const weekMins=days.reduce((a,d)=>a+d.mins,0);
+  const wh=Math.floor(weekMins/60),wm=weekMins%60;
+  const hoursEl=document.getElementById('timerHistoryWeekHours');if(hoursEl)hoursEl.textContent=wh+'h '+wm+'m';
+
+  const maxMins=Math.max(...days.map(d=>d.mins),60);
+  const today=new Date().toISOString().split('T')[0];
+  const barEl=document.getElementById('timerHistoryBarChart');
+  if(barEl){
+    barEl.innerHTML='<div style="display:flex;align-items:flex-end;gap:10px;height:100px;margin-bottom:8px;">'+days.map(d=>{
+      const barH=Math.round((d.mins/maxMins)*90);
+      const isToday=d.date===today;
+      const dh=Math.floor(d.mins/60),dm=d.mins%60;
+      return'<div style="flex:1;display:flex;flex-direction:column;align-items:center;gap:4px;"><div style="font-size:9px;color:var(--text3);">'+(d.mins>0?(dh>0?dh+'h ':'')+dm+'m':'')+'</div><div style="width:100%;height:'+Math.max(barH,3)+'px;background:'+(isToday?'var(--accent)':d.mins>0?'rgba(6,182,212,0.4)':'var(--border)')+';border-radius:4px 4px 0 0;"></div><div style="font-size:10px;color:'+(isToday?'var(--accent)':'var(--text3)')+';text-align:center;line-height:1.3;">'+d.label+'</div></div>';
+    }).join('')+'</div>';
+  }
+
+  const listEl=document.getElementById('timerHistorySessionList');
+  if(listEl){
+    const allSessions=days.flatMap(d=>d.sessions);
+    if(!allSessions.length){listEl.innerHTML='<div style="font-size:12px;color:var(--text3);text-align:center;padding:16px;">No sessions this week</div>';return;}
+    const byDay={};
+    allSessions.forEach(s=>{if(!byDay[s.date])byDay[s.date]=[];byDay[s.date].push(s);});
+    listEl.innerHTML=Object.entries(byDay).reverse().map(([date,sessions])=>{
+      const dayMins=sessions.reduce((a,s)=>a+s.minutes,0);
+      const dh=Math.floor(dayMins/60),dm=dayMins%60;
+      const d=new Date(date);
+      return'<div style="margin-bottom:14px;"><div style="display:flex;align-items:center;justify-content:space-between;margin-bottom:6px;"><div style="font-size:12px;font-weight:700;color:var(--text);">'+d.toLocaleDateString('en-GB',{weekday:'long',day:'numeric',month:'short'})+'</div><div style="font-size:12px;font-weight:700;color:var(--accent);">'+(dh>0?dh+'h ':'')+dm+'m</div></div>'+
+      sessions.map(s=>'<div style="display:flex;align-items:center;gap:10px;padding:6px 10px;background:var(--surface2);border-radius:6px;margin-bottom:4px;"><div style="font-size:11px;color:var(--text3);min-width:40px;">'+(s.time_of_day||s.time||'')+'</div><div style="flex:1;font-size:12px;color:var(--text);">'+esc(s.task)+'</div><div style="font-size:12px;font-weight:700;color:var(--accent);">'+s.minutes+'m</div></div>').join('')+'</div>';
+    }).join('');
+  }
+
+  renderMonthHeatmap(log);
+
+  // All-time stats
+  const allMins=log.reduce((a,s)=>a+s.minutes,0);
+  const ah=Math.floor(allMins/60);
+  const uniqueDays=new Set(log.map(s=>s.date)).size;
+  const avgMins=uniqueDays>0?Math.round(allMins/uniqueDays):0;
+  const avgH=Math.floor(avgMins/60),avgM=avgMins%60;
+  const statsEl=document.getElementById('timerHistoryStats');
+  if(statsEl)statsEl.innerHTML=
+    '<div class="stat-card"><div class="stat-card-bar" style="background:linear-gradient(90deg,var(--accent),transparent);"></div><div class="stat-icon" style="background:rgba(6,182,212,0.1);color:var(--accent);">⏱</div><div class="stat-num">'+ah+'h</div><div class="stat-label">Total hours</div><div class="stat-hint">'+log.length+' sessions</div></div>'+
+    '<div class="stat-card"><div class="stat-card-bar" style="background:linear-gradient(90deg,var(--green),transparent);"></div><div class="stat-icon" style="background:rgba(16,185,129,0.1);color:var(--green);">📅</div><div class="stat-num">'+uniqueDays+'</div><div class="stat-label">Days studied</div></div>'+
+    '<div class="stat-card"><div class="stat-card-bar" style="background:linear-gradient(90deg,var(--orange),transparent);"></div><div class="stat-icon" style="background:rgba(245,158,11,0.1);color:var(--orange);">📊</div><div class="stat-num">'+(avgH>0?avgH+'h ':'')+avgM+'m</div><div class="stat-label">Avg per day</div></div>'+
+    '<div class="stat-card"><div class="stat-card-bar" style="background:linear-gradient(90deg,var(--purple),transparent);"></div><div class="stat-icon" style="background:rgba(139,92,246,0.1);color:var(--purple);">🔥</div><div class="stat-num">'+getStreak().count+'</div><div class="stat-label">Day streak</div></div>';
+}
+
+function renderMonthHeatmap(log){
+  const el=document.getElementById('timerMonthHeatmap');
+  const labelEl=document.getElementById('timerMonthLabel');
+  if(!el)return;
+  const today=new Date();
+  const cells=[];
+  for(let i=83;i>=0;i--){
+    const d=new Date(today);d.setDate(d.getDate()-i);
+    const dateStr=d.toISOString().split('T')[0];
+    const mins=log.filter(s=>s.date===dateStr).reduce((a,s)=>a+s.minutes,0);
+    cells.push({date:dateStr,mins,label:d.toLocaleDateString('en-GB',{weekday:'short',day:'numeric',month:'short'})});
+  }
+  const first=new Date(cells[0].date);
+  if(labelEl)labelEl.textContent=first.toLocaleDateString('en-GB',{month:'short',year:'numeric'})+' – now';
+  const maxMins=Math.max(...cells.map(c=>c.mins),1);
+  const todayStr=today.toISOString().split('T')[0];
+  el.innerHTML='<div style="display:grid;grid-template-columns:repeat(12,1fr);gap:3px;">'+
+    cells.map(c=>{
+      const intensity=c.mins===0?0:Math.max(0.15,c.mins/maxMins);
+      const isToday=c.date===todayStr;
+      const h=Math.floor(c.mins/60),m=c.mins%60;
+      return'<div title="'+c.label+': '+(c.mins>0?(h>0?h+'h ':'')+m+'m':'No sessions')+'" style="aspect-ratio:1;border-radius:3px;background:'+(c.mins===0?'var(--border)':'rgba(6,182,212,'+intensity+')')+';border:'+(isToday?'2px solid var(--accent)':'1px solid transparent')+';cursor:default;" onmouseover="this.style.transform=\'scale(1.3)\'" onmouseout="this.style.transform=\'scale(1)\'"></div>';
+    }).join('')+'</div>'+
+    '<div style="display:flex;align-items:center;gap:6px;margin-top:10px;font-size:10px;color:var(--text3);"><span>Less</span>'+
+    [0,0.15,0.35,0.6,1].map(i=>'<div style="width:12px;height:12px;border-radius:2px;background:'+(i===0?'var(--border)':'rgba(6,182,212,'+i+')')+'"></div>').join('')+
+    '<span>More</span></div>';
+}
+
+async function loadTimer(){
+  await loadTimerSessions();
+  renderTimerLog();
+  renderHoursStats();
+  if(!timerRunning&&timerSeconds===(timerWorkMin*60)&&timerSession===1)setTimerMode(25,5);
+  updateTimerDisplay();
+  updateTimerDots();
+  const mainBtn=document.getElementById('timerStartBtn');
+  if(mainBtn)mainBtn.textContent=timerRunning?'⏸ Pause':timerSeconds<timerWorkMin*60?'▶ Resume':'▶ Start';
+  const modeEl=document.getElementById('timerMode');
+  if(modeEl)modeEl.textContent=timerIsBreak?'BREAK TIME ☕':'FOCUS SESSION';
+}
+
 
 function openModal(id){document.getElementById(id).classList.add('open');}
 function closeModal(id){document.getElementById(id).classList.remove('open');}
