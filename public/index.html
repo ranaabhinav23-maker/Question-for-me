@@ -703,10 +703,18 @@ label { font-size: 11px; color: var(--text2); font-weight: 600; display: block; 
 
    <!-- DRUGS -->
    <div class="page" id="page-drugs">
-    <div class="page-hero"><div><div class="page-hero-title">Drug Cards</div><div class="page-hero-sub">Write yourself · AI checks gaps · test by block</div></div><button class="btn btn-primary btn-sm" onclick="openAddDrug()">＋ Add drug</button></div>
+    <div class="page-hero"><div><div class="page-hero-title">Drug Cards</div><div class="page-hero-sub">Write yourself · AI checks gaps · spaced repetition built in</div></div><button class="btn btn-primary btn-sm" onclick="openAddDrug()">＋ Add drug</button></div>
     <div style="padding:20px 32px 0;">
-      <div class="tab-row mb20"><div class="tab active" onclick="dTab('browse',this)">Browse</div><div class="tab" onclick="dTab('test',this)">Test yourself</div></div>
+      <div class="tab-row mb20">
+        <div class="tab active" onclick="dTab('browse',this)">Browse</div>
+        <div class="tab" onclick="dTab('srs',this)">🧠 Due Today</div>
+        <div class="tab" onclick="dTab('test',this)">Test yourself</div>
+      </div>
       <div id="drugBrowse"><div class="pill-row" id="drugPills"></div><div id="drugList"></div></div>
+      <div id="drugSRS" style="display:none;">
+        <div class="g4 mb16" id="srsStats"></div>
+        <div id="srsArea"></div>
+      </div>
       <div id="drugTest" style="display:none;"><div class="section-card mb16"><div class="section-head"><div class="section-title">Select blocks to test</div></div><div class="section-body"><div class="pill-row" id="drugTestPills"></div><button class="btn btn-primary mt8" onclick="startDrugTest()">Start test</button></div></div><div id="drugTestArea"></div></div>
     </div>
    </div>
@@ -1658,7 +1666,14 @@ async function checkRecall(){
 function recallNext(){recallIdx++;renderRecallCard();}
 
 // ── DRUGS ──
-function dTab(t,el){document.querySelectorAll('#page-drugs .tab').forEach(x=>x.classList.remove('active'));el.classList.add('active');document.getElementById('drugBrowse').style.display=t==='browse'?'block':'none';document.getElementById('drugTest').style.display=t==='test'?'block':'none';}
+function dTab(t,el){
+  document.querySelectorAll('#page-drugs .tab').forEach(x=>x.classList.remove('active'));
+  el.classList.add('active');
+  document.getElementById('drugBrowse').style.display=t==='browse'?'block':'none';
+  document.getElementById('drugSRS').style.display=t==='srs'?'block':'none';
+  document.getElementById('drugTest').style.display=t==='test'?'block':'none';
+  if(t==='srs')loadSRS();
+}
 async function loadDrugs(){const{data}=await sb.from('drug_cards').select('*').eq('year',yr).order('created_at');allDrugs=data||[];renderDrugs('all');}
 function renderDrugs(block){
   const drugs=block==='all'?allDrugs:allDrugs.filter(d=>d.block===block);
@@ -3201,6 +3216,234 @@ function applyPlanChanges(){
   renderPlanStats?.();
   if(document.getElementById('page-plan')?.classList.contains('active'))loadPlan();
 }
+// ── SPACED REPETITION (SM-2 algorithm) ──
+const SRS_KEY = '_ms_srs_';
+
+function getSRSData() {
+  return JSON.parse(localStorage.getItem(SRS_KEY + yr) || '{}');
+}
+function saveSRSData(data) {
+  localStorage.setItem(SRS_KEY + yr, JSON.stringify(data));
+}
+
+function getSRSCard(drugId) {
+  const data = getSRSData();
+  return data[drugId] || { interval: 1, easeFactor: 2.5, repetitions: 0, nextReview: null, lastReview: null };
+}
+
+function updateSRSCard(drugId, quality) {
+  // quality: 0=blackout, 1=wrong, 2=hard, 3=okay, 4=good, 5=easy
+  const data = getSRSData();
+  let card = data[drugId] || { interval: 1, easeFactor: 2.5, repetitions: 0 };
+
+  if (quality < 3) {
+    // Failed — reset
+    card.repetitions = 0;
+    card.interval = 1;
+  } else {
+    // Passed
+    if (card.repetitions === 0) card.interval = 1;
+    else if (card.repetitions === 1) card.interval = 6;
+    else card.interval = Math.round(card.interval * card.easeFactor);
+    card.repetitions++;
+  }
+
+  // Update ease factor (SM-2 formula)
+  card.easeFactor = Math.max(1.3, card.easeFactor + 0.1 - (5 - quality) * (0.08 + (5 - quality) * 0.02));
+
+  // Set next review date
+  const next = new Date();
+  next.setDate(next.getDate() + card.interval);
+  card.nextReview = next.toISOString().split('T')[0];
+  card.lastReview = new Date().toISOString().split('T')[0];
+
+  data[drugId] = card;
+  saveSRSData(data);
+}
+
+function isDueToday(drugId) {
+  const card = getSRSCard(drugId);
+  if (!card.nextReview) return true; // never reviewed = due
+  const today = new Date().toISOString().split('T')[0];
+  return card.nextReview <= today;
+}
+
+function getDueCount() {
+  return allDrugs.filter(d => isDueToday(d.id)).length;
+}
+
+let srsQueue = [], srsIdx = 0, srsSessionResults = [];
+
+function loadSRS() {
+  const today = new Date().toISOString().split('T')[0];
+  const srsData = getSRSData();
+
+  const due = allDrugs.filter(d => isDueToday(d.id));
+  const upcoming = allDrugs.filter(d => {
+    const card = getSRSCard(d.id);
+    return card.nextReview && card.nextReview > today;
+  });
+  const newCards = allDrugs.filter(d => !srsData[d.id]);
+
+  // Stats
+  document.getElementById('srsStats').innerHTML = `
+    <div class="stat-card"><div class="stat-card-bar" style="background:linear-gradient(90deg,var(--red),transparent);"></div><div class="stat-icon" style="background:rgba(239,68,68,0.1);color:var(--red);">🔥</div><div class="stat-num">${due.length}</div><div class="stat-label">Due today</div><div class="stat-hint">needs review</div></div>
+    <div class="stat-card"><div class="stat-card-bar" style="background:linear-gradient(90deg,var(--green),transparent);"></div><div class="stat-icon" style="background:rgba(16,185,129,0.1);color:var(--green);">✅</div><div class="stat-num">${upcoming.length}</div><div class="stat-label">Scheduled</div><div class="stat-hint">coming up</div></div>
+    <div class="stat-card"><div class="stat-card-bar" style="background:linear-gradient(90deg,var(--accent),transparent);"></div><div class="stat-icon" style="background:rgba(6,182,212,0.1);color:var(--accent);">🆕</div><div class="stat-num">${newCards.length}</div><div class="stat-label">New cards</div><div class="stat-hint">never reviewed</div></div>
+    <div class="stat-card"><div class="stat-card-bar" style="background:linear-gradient(90deg,var(--purple),transparent);"></div><div class="stat-icon" style="background:rgba(139,92,246,0.1);color:var(--purple);">💊</div><div class="stat-num">${allDrugs.length}</div><div class="stat-label">Total cards</div><div class="stat-hint">in your deck</div></div>
+  `;
+
+  if (!due.length) {
+    document.getElementById('srsArea').innerHTML = `
+      <div class="section-card" style="text-align:center;padding:48px;">
+        <div style="font-size:2rem;margin-bottom:12px;">🎉</div>
+        <div style="font-size:1.2rem;font-weight:800;color:var(--text);margin-bottom:8px;">All caught up!</div>
+        <div style="font-size:13px;color:var(--text2);margin-bottom:20px;">No cards due today. Come back tomorrow or add more drugs.</div>
+        ${newCards.length ? `<button class="btn btn-teal" onclick="startSRSSession(true)">Start new cards (${newCards.length})</button>` : ''}
+      </div>`;
+    return;
+  }
+
+  document.getElementById('srsArea').innerHTML = `
+    <div class="section-card mb16">
+      <div class="section-head"><div class="section-title">Ready to review</div><div class="section-sub">${due.length} cards due · takes ~${Math.ceil(due.length * 0.5)} minutes</div></div>
+      <div class="section-body">
+        <div style="margin-bottom:16px;">
+          ${due.slice(0, 5).map(d => `<div style="display:flex;align-items:center;gap:8px;padding:6px 0;border-bottom:1px solid var(--border);"><span class="dot d-${BC[d.block]||''}"></span><span style="font-size:13px;flex:1;">${esc(d.name)}</span><span class="badge badge-muted">${d.block}</span></div>`).join('')}
+          ${due.length > 5 ? `<div style="font-size:12px;color:var(--text3);padding:8px 0;">...and ${due.length - 5} more</div>` : ''}
+        </div>
+        <button class="btn btn-teal" style="font-size:14px;padding:10px 28px;" onclick="startSRSSession(false)">Start review session →</button>
+      </div>
+    </div>
+    <div id="srsUpcoming"></div>
+  `;
+
+  // Upcoming schedule
+  if (upcoming.length) {
+    const grouped = {};
+    upcoming.forEach(d => {
+      const card = getSRSCard(d.id);
+      if (!grouped[card.nextReview]) grouped[card.nextReview] = [];
+      grouped[card.nextReview].push(d);
+    });
+    const rows = Object.entries(grouped).sort(([a],[b])=>a.localeCompare(b)).slice(0,5);
+    document.getElementById('srsUpcoming').innerHTML = `
+      <div class="section-card">
+        <div class="section-head"><div class="section-title">Upcoming reviews</div></div>
+        <div class="section-body">
+          ${rows.map(([date, drugs]) => {
+            const d = new Date(date);
+            const label = d.toLocaleDateString('en-GB', {weekday:'short', day:'numeric', month:'short'});
+            return `<div style="display:flex;align-items:center;gap:12px;padding:8px 0;border-bottom:1px solid var(--border);">
+              <div style="font-size:12px;font-weight:700;color:var(--text2);min-width:90px;">${label}</div>
+              <div style="font-size:12px;color:var(--text);">${drugs.map(d=>esc(d.name)).join(', ')}</div>
+              <div style="margin-left:auto;"><span class="badge badge-muted">${drugs.length}</span></div>
+            </div>`;
+          }).join('')}
+        </div>
+      </div>`;
+  }
+}
+
+function startSRSSession(newOnly) {
+  if (newOnly) {
+    const srsData = getSRSData();
+    srsQueue = shuffle(allDrugs.filter(d => !srsData[d.id]));
+  } else {
+    srsQueue = shuffle(allDrugs.filter(d => isDueToday(d.id)));
+  }
+  srsIdx = 0;
+  srsSessionResults = [];
+  renderSRSCard();
+}
+
+function renderSRSCard() {
+  const area = document.getElementById('srsArea');
+  if (srsIdx >= srsQueue.length) {
+    const good = srsSessionResults.filter(r => r >= 3).length;
+    const total = srsSessionResults.length;
+    area.innerHTML = `
+      <div class="section-card" style="text-align:center;padding:48px;">
+        <div style="font-size:2rem;margin-bottom:12px;">${good === total ? '🏆' : '💪'}</div>
+        <div style="font-size:1.2rem;font-weight:800;color:var(--text);margin-bottom:8px;">Session complete!</div>
+        <div style="font-size:13px;color:var(--text2);margin-bottom:8px;">Scored well on <strong>${good} of ${total}</strong> cards</div>
+        <div style="display:flex;gap:4px;justify-content:center;margin-bottom:20px;">
+          ${srsSessionResults.map(r => `<div style="width:12px;height:12px;border-radius:50%;background:${r>=3?'var(--green)':'var(--red)'};"></div>`).join('')}
+        </div>
+        <div style="font-size:12px;color:var(--text3);margin-bottom:20px;">Cards due for review have been scheduled based on how well you knew them.</div>
+        <button class="btn btn-teal" onclick="loadSRS()">Back to overview</button>
+      </div>`;
+    return;
+  }
+
+  const drug = srsQueue[srsIdx];
+  const card = getSRSCard(drug.id);
+  const isNew = !card.lastReview;
+
+  area.innerHTML = `
+    <div style="font-size:11px;color:var(--text2);margin-bottom:12px;display:flex;align-items:center;justify-content:space-between;">
+      <span>Card ${srsIdx + 1} of ${srsQueue.length}</span>
+      <span>${isNew ? '<span class="badge badge-teal">New</span>' : `Last reviewed: ${card.lastReview}`}</span>
+    </div>
+    <div class="section-card" style="padding:32px;text-align:center;margin-bottom:16px;">
+      <div style="font-size:10px;font-weight:700;color:var(--text3);text-transform:uppercase;letter-spacing:0.1em;margin-bottom:12px;">${drug.block} · Drug Card</div>
+      <div style="font-size:2rem;font-weight:800;color:var(--text);margin-bottom:8px;">${esc(drug.name)}</div>
+      <div style="font-size:13px;color:var(--text2);">What do you know about this drug?</div>
+      <div id="srsCardBack" style="display:none;margin-top:24px;text-align:left;">
+        <div style="height:1px;background:var(--border);margin-bottom:20px;"></div>
+        <div class="g2" style="gap:16px;margin-bottom:16px;">
+          <div><div class="field-label">Mechanism</div><div class="field-val">${esc(drug.mechanism || '—')}</div></div>
+          <div><div class="field-label">Used for</div><div class="field-val">${esc(drug.used_for || '—')}</div></div>
+          <div><div class="field-label">Side effect</div><div class="field-val">${esc(drug.side_effect || '—')}</div></div>
+          ${drug.ai_notes ? `<div><div class="field-label" style="color:var(--accent);">AI notes</div><div class="field-val" style="font-size:12px;">${esc(drug.ai_notes)}</div></div>` : ''}
+        </div>
+        <div style="font-size:12px;color:var(--text2);margin-bottom:12px;font-weight:600;">How well did you know this?</div>
+        <div style="display:flex;gap:8px;flex-wrap:wrap;justify-content:center;">
+          <button onclick="rateSRS(0)" style="flex:1;min-width:80px;padding:10px 8px;border-radius:var(--r);border:none;cursor:pointer;font-family:var(--font);font-size:12px;font-weight:700;background:rgba(239,68,68,0.15);color:var(--red);">❌ Blackout<br><span style="font-size:10px;font-weight:400;">Complete blank</span></button>
+          <button onclick="rateSRS(1)" style="flex:1;min-width:80px;padding:10px 8px;border-radius:var(--r);border:none;cursor:pointer;font-family:var(--font);font-size:12px;font-weight:700;background:rgba(239,68,68,0.1);color:var(--red);">😕 Wrong<br><span style="font-size:10px;font-weight:400;">Incorrect recall</span></button>
+          <button onclick="rateSRS(2)" style="flex:1;min-width:80px;padding:10px 8px;border-radius:var(--r);border:none;cursor:pointer;font-family:var(--font);font-size:12px;font-weight:700;background:rgba(245,158,11,0.1);color:var(--orange);">😐 Hard<br><span style="font-size:10px;font-weight:400;">Got it with effort</span></button>
+          <button onclick="rateSRS(3)" style="flex:1;min-width:80px;padding:10px 8px;border-radius:var(--r);border:none;cursor:pointer;font-family:var(--font);font-size:12px;font-weight:700;background:rgba(16,185,129,0.1);color:var(--green);">🙂 Okay<br><span style="font-size:10px;font-weight:400;">Recalled with hint</span></button>
+          <button onclick="rateSRS(4)" style="flex:1;min-width:80px;padding:10px 8px;border-radius:var(--r);border:none;cursor:pointer;font-family:var(--font);font-size:12px;font-weight:700;background:rgba(16,185,129,0.15);color:var(--green);">😊 Good<br><span style="font-size:10px;font-weight:400;">Small hesitation</span></button>
+          <button onclick="rateSRS(5)" style="flex:1;min-width:80px;padding:10px 8px;border-radius:var(--r);border:none;cursor:pointer;font-family:var(--font);font-size:12px;font-weight:700;background:rgba(6,182,212,0.15);color:var(--accent);">🌟 Easy<br><span style="font-size:10px;font-weight:400;">Perfect recall</span></button>
+        </div>
+      </div>
+    </div>
+    <div id="srsRevealBtn" style="text-align:center;">
+      <button class="btn btn-outline" style="padding:10px 32px;font-size:14px;" onclick="revealSRSCard()">Reveal answer</button>
+    </div>
+  `;
+}
+
+function revealSRSCard() {
+  document.getElementById('srsCardBack').style.display = 'block';
+  document.getElementById('srsRevealBtn').style.display = 'none';
+}
+
+function rateSRS(quality) {
+  const drug = srsQueue[srsIdx];
+  updateSRSCard(drug.id, quality);
+  srsSessionResults.push(quality);
+  srsIdx++;
+  renderSRSCard();
+}
+
+// Update loadDrugs to also refresh SRS badge
+const _origLoadDrugs = loadDrugs;
+async function loadDrugs() {
+  await _origLoadDrugs();
+  updateSRSBadge();
+}
+
+function updateSRSBadge() {
+  const due = allDrugs.filter(d => isDueToday(d.id)).length;
+  const tabs = document.querySelectorAll('#page-drugs .tab');
+  tabs.forEach(t => {
+    if (t.textContent.includes('Due Today') || t.textContent.includes('🧠')) {
+      t.innerHTML = `🧠 Due Today${due > 0 ? ` <span style="background:var(--red);color:white;border-radius:99px;padding:1px 6px;font-size:10px;margin-left:4px;">${due}</span>` : ''}`;
+    }
+  });
+}
+
 function openModal(id){document.getElementById(id).classList.add('open');}
 function closeModal(id){document.getElementById(id).classList.remove('open');}
 function showErr(id,m){const e=document.getElementById(id);e.textContent=m;e.style.display='block';}
