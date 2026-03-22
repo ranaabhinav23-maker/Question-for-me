@@ -1703,7 +1703,6 @@ function renderMCQ(prefix='mc',qs=mcqQs){
 function mcPick(qi,oi){if(mcqDone)return;mcqPk[qi]=oi;for(let j=0;j<mcqQs[qi].options.length;j++){const e=document.getElementById(`mco${qi}_${j}`);if(e)e.style.borderColor=j===oi?'var(--accent)':'';}};
 async function subMCQ(){
   if(mcqDone)return;mcqDone=true;let score=0;
-  // Derive block from the questions themselves — no mcqBlock element needed
   const block=mcqQs[0]?.block||'Core';
   const wrongs=[];
   mcqQs.forEach((q,i)=>{
@@ -1712,22 +1711,33 @@ async function subMCQ(){
     if(sel!==undefined){
       markQ('mco',i,sel,sel===cor?'correct':'incorrect');
       if(sel===cor)score++;
-      else{markQ('mco',i,cor,'reveal');wrongs.push({year:yr,block:q.block||block,question:q.question,options:q.options,correct:q.correct,explanation:q.explanation,resolved:false});}
+      else{markQ('mco',i,cor,'reveal');wrongs.push({year:yr,block:q.block||block,subject:q.subject||'',question:q.question,options:q.options,correct:q.correct,explanation:q.explanation,resolved:false});}
     }else{
       markQ('mco',i,cor,'reveal');
-      wrongs.push({year:yr,block:q.block||block,question:q.question,options:q.options,correct:q.correct,explanation:q.explanation,resolved:false});
+      wrongs.push({year:yr,block:q.block||block,subject:q.subject||'',question:q.question,options:q.options,correct:q.correct,explanation:q.explanation,resolved:false});
     }
     const expEl=document.getElementById(`mce${i}`);if(expEl)expEl.classList.add('show');
   });
   const sb2=document.getElementById('mcqSubBtn');if(sb2)sb2.disabled=true;
   showMScore(score);
-  // Show flashcard button if there are wrong answers
   _lastWrongQs=wrongs;
   const flashBtn=document.getElementById('mcqWrongFlashBtn');
   if(flashBtn)flashBtn.style.display=wrongs.length?'block':'none';
   // Save session
   try{await sb.from('mcq_sessions').insert({year:yr,block,total:mcqQs.length,score,questions:mcqQs});}catch(e){console.warn('mcq session save:',e);}
+  // Save wrong answers with subject field
   if(wrongs.length){try{await sb.from('wrong_answers').insert(wrongs);}catch(e){console.warn('wrong answers save:',e);}}
+  // Save ALL generated questions to shared question bank
+  try{
+    const bankRows=mcqQs.map(q=>({
+      created_by:'abhinav',university:'UCLan',year_level:yr,
+      block:q.block||block,subject:q.subject||'',topic:'',
+      difficulty:'mixed',vignette:q.vignette||'',
+      question:q.question,options:q.options,correct:q.correct,
+      explanation:q.explanation||''
+    }));
+    await sb.from('shared_questions').insert(bankRows);
+  }catch(e){console.warn('shared bank save:',e);}
   updateWrongBadge();
   loadDash();
 }
@@ -1976,7 +1986,15 @@ async function startReview(){
   if(blocks.length)q=q.in('block',blocks);
   const{data}=await q;
   let filtered=data||[];
-  if(_reviewSubjF!=='all')filtered=filtered.filter(w=>w.subject===_reviewSubjF);
+  // Subject filter — works even if subject field is missing on old records
+  if(_reviewSubjF!=='all'){
+    filtered=filtered.filter(w=>(w.subject||'')=== _reviewSubjF);
+    // If no results with subject filter, show all for that block with a note
+    if(!filtered.length&&(data||[]).length){
+      document.getElementById('reviewArea').innerHTML=`<div class="empty"><span class="empty-ico">📂</span>No wrong answers tagged as <strong>${_reviewSubjF}</strong>.<br><span style="font-size:12px;color:var(--text3);">Older wrong answers may not have a subject tag. Try "All subjects".</span></div>`;
+      return;
+    }
+  }
   revQs=shuffle(filtered);revIdx=0;revPk={};
   if(!revQs.length){document.getElementById('reviewArea').innerHTML='<div class="empty"><span class="empty-ico">🎉</span>No wrong answers match this filter!</div>';return;}
   renderRev();
