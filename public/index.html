@@ -385,6 +385,15 @@ label { font-size: 11px; color: var(--text2); font-weight: 600; display: block; 
 .note-search{padding:10px 16px;border-bottom:1px solid var(--border);flex-shrink:0;}
 .note-search input{padding:7px 12px;font-size:12px;}
 
+/* ── FLOATING TIMER POPOUT ── */
+#timerPopout{position:fixed;bottom:24px;right:24px;z-index:8000;background:var(--navy);border:1px solid rgba(6,182,212,0.4);border-radius:16px;padding:16px 20px;box-shadow:0 8px 32px rgba(0,0,0,0.4);min-width:200px;display:none;user-select:none;}
+#timerPopout.visible{display:block;animation:fadeIn 0.2s ease;}
+.popout-drag{cursor:move;}
+#timerPopout .pt-mode{font-size:9px;font-weight:700;color:var(--accent);text-transform:uppercase;letter-spacing:0.12em;margin-bottom:4px;}
+#timerPopout .pt-time{font-size:2.5rem;font-weight:800;color:white;font-family:var(--mono);letter-spacing:-0.02em;line-height:1;}
+#timerPopout .pt-bar{height:3px;background:rgba(255,255,255,0.1);border-radius:99px;overflow:hidden;margin-top:10px;}
+#timerPopout .pt-bar-fill{height:100%;background:var(--accent);border-radius:99px;transition:width 1s linear;}
+#timerPopout .pt-controls{display:flex;align-items:center;justify-content:space-between;margin-top:10px;}
 .spin { width: 13px; height: 13px; border: 2px solid rgba(255,255,255,0.25); border-top-color: white; border-radius: 50%; animation: rot 0.6s linear infinite; display: none; flex-shrink: 0; }
 .loading .spin { display: inline-block; }
 @keyframes rot { to { transform: rotate(360deg); } }
@@ -463,12 +472,15 @@ label { font-size: 11px; color: var(--text2); font-weight: 600; display: block; 
     </div>
     <div class="sidebar-bottom">
       <!-- Mini timer bar - shows when timer is running -->
-      <div id="sidebarTimer" style="display:none;background:rgba(6,182,212,0.1);border:1px solid rgba(6,182,212,0.25);border-radius:var(--r);padding:8px 12px;margin-bottom:10px;cursor:pointer;" onclick="nav('timer',document.querySelector('[data-page=timer]'))">
+      <div id="sidebarTimer" style="display:none;background:rgba(6,182,212,0.1);border:1px solid rgba(6,182,212,0.25);border-radius:var(--r);padding:8px 12px;margin-bottom:10px;">
         <div style="display:flex;align-items:center;justify-content:space-between;margin-bottom:5px;">
-          <span style="font-size:10px;font-weight:700;color:var(--accent);" id="sidebarTimerMode">FOCUS</span>
-          <button onclick="event.stopPropagation();toggleTimer();" style="background:none;border:none;color:var(--accent);cursor:pointer;font-size:13px;padding:0;" id="sidebarTimerBtn">⏸</button>
+          <span style="font-size:10px;font-weight:700;color:var(--accent);cursor:pointer;" id="sidebarTimerMode" onclick="nav('timer',document.querySelector('[data-page=timer]'))">FOCUS</span>
+          <div style="display:flex;gap:6px;align-items:center;">
+            <button onclick="toggleTimerPopout()" title="Pop out timer" style="background:none;border:none;color:rgba(255,255,255,0.4);cursor:pointer;font-size:12px;padding:0;" title="Pop out">⤢</button>
+            <button onclick="toggleTimer();" style="background:none;border:none;color:var(--accent);cursor:pointer;font-size:13px;padding:0;" id="sidebarTimerBtn">⏸</button>
+          </div>
         </div>
-        <div style="font-size:1.2rem;font-weight:800;color:white;font-family:var(--mono);letter-spacing:0.05em;" id="sidebarTimerDisplay">25:00</div>
+        <div style="font-size:1.2rem;font-weight:800;color:white;font-family:var(--mono);letter-spacing:0.05em;cursor:pointer;" id="sidebarTimerDisplay" onclick="nav('timer',document.querySelector('[data-page=timer]'))">90:00</div>
         <div style="height:3px;background:rgba(255,255,255,0.1);border-radius:99px;overflow:hidden;margin-top:6px;">
           <div id="sidebarTimerBar" style="height:100%;background:var(--accent);border-radius:99px;transition:width 1s linear;width:100%;"></div>
         </div>
@@ -791,11 +803,16 @@ label { font-size: 11px; color: var(--text2); font-weight: 600; display: block; 
     <div style="padding:20px 32px 0;">
       <div class="tab-row mb20">
         <div class="tab active" onclick="pathTab('browse',this)">Browse</div>
+        <div class="tab" onclick="pathTab('srs',this)">🧠 Due Today</div>
         <div class="tab" onclick="pathTab('test',this)">Test yourself</div>
       </div>
       <div id="pathBrowse">
         <div class="pill-row" id="pathPills"></div>
         <div id="pathList"></div>
+      </div>
+      <div id="pathSRS" style="display:none;">
+        <div class="g4 mb16" id="pathSrsStats"></div>
+        <div id="pathSrsArea"></div>
       </div>
       <div id="pathTest" style="display:none;">
         <div class="section-card mb16">
@@ -914,9 +931,9 @@ label { font-size: 11px; color: var(--text2); font-weight: 600; display: block; 
             <div id="timerSessionLabel" style="font-size:13px;color:var(--text2);margin-bottom:28px;">Session 1 of 4</div>
             <div style="display:flex;gap:4px;justify-content:center;margin-bottom:28px;" id="timerDots"></div>
             <div style="display:flex;gap:10px;justify-content:center;margin-bottom:12px;">
-              <button class="btn btn-ghost btn-sm" onclick="setTimerMode(25,5)" id="tmBtn25" style="border:1px solid var(--border);background:var(--navy);color:white;">25/5</button>
+              <button class="btn btn-ghost btn-sm" onclick="setTimerMode(25,5)" id="tmBtn25" style="border:1px solid var(--border);">25/5</button>
               <button class="btn btn-ghost btn-sm" onclick="setTimerMode(50,10)" id="tmBtn50" style="border:1px solid var(--border);">50/10</button>
-              <button class="btn btn-ghost btn-sm" onclick="setTimerMode(90,15)" id="tmBtn90" style="border:1px solid var(--border);">90/15</button>
+              <button class="btn btn-ghost btn-sm" onclick="setTimerMode(90,5)" id="tmBtn90" style="border:1px solid var(--border);background:var(--navy);color:white;">90/5</button>
             </div>
             <div style="display:flex;align-items:center;justify-content:center;gap:10px;margin-bottom:24px;">
               <span style="font-size:12px;color:var(--text2);font-weight:600;">Cycles:</span>
@@ -1120,23 +1137,26 @@ label { font-size: 11px; color: var(--text2); font-weight: 600; display: block; 
 </div>
 
 <div class="modal-bg" id="addPathModal">
-  <div class="modal" style="width:580px;">
+  <div class="modal" style="width:600px;max-height:90vh;overflow-y:auto;">
     <div class="modal-title">Add Pathology Card</div>
     <div class="mb12"><label>Condition name</label><input type="text" id="pName" placeholder="e.g. IgA Nephropathy"></div>
     <div class="g2 mb12">
       <div><label>Block</label><select id="pBlock"><option>GU</option><option>MSK</option><option>Neurology</option><option>GI</option><option>CVR</option><option>Core</option></select></div>
       <div><label>Subject</label><select id="pSubject"><option value="Pathology">Pathology</option><option>Physiology</option><option>Anatomy</option><option>Immunology</option><option>Haematology</option><option>General</option></select></div>
     </div>
-    <div class="mb12"><label>Pathophysiology</label><textarea id="pPathophys" placeholder="e.g. Mesangial IgA deposits → complement activation → glomerular injury…" style="min-height:60px;"></textarea></div>
-    <div class="mb12"><label>Clinical features</label><textarea id="pClinical" placeholder="e.g. Haematuria post-URTI, mild proteinuria, hypertension…" style="min-height:60px;"></textarea></div>
-    <div class="mb12"><label>Investigations</label><input type="text" id="pInvest" placeholder="e.g. Renal biopsy (gold standard), IgA levels, urinalysis"></div>
-    <div class="mb12"><label>Treatment</label><input type="text" id="pTreat" placeholder="e.g. ACEi/ARB, steroids if proteinuria >1g/day, supportive"></div>
+    <div class="mb12"><label>Causes / Aetiology</label><textarea id="pCauses" placeholder="e.g. Autoimmune, genetic, infectious, idiopathic…" style="min-height:55px;"></textarea></div>
+    <div class="mb12"><label>Types / Classification</label><textarea id="pTypes" placeholder="e.g. Primary vs secondary, Type I vs II, WHO classification…" style="min-height:55px;"></textarea></div>
+    <div class="mb12"><label>Pathophysiology</label><textarea id="pPathophys" placeholder="e.g. Mesangial IgA deposits → complement activation → glomerular injury…" style="min-height:65px;"></textarea></div>
+    <div class="mb12"><label>Clinical features</label><textarea id="pClinical" placeholder="e.g. Haematuria post-URTI, mild proteinuria, hypertension, loin pain…" style="min-height:65px;"></textarea></div>
+    <div class="mb12"><label>Investigations</label><textarea id="pInvest" placeholder="e.g. Urinalysis — haematuria&#10;Renal biopsy — IgA deposits (gold standard)&#10;Bloods — raised IgA in 50%&#10;BP monitoring" style="min-height:80px;"></textarea></div>
+    <div class="mb12"><label>Treatment / Management</label><textarea id="pTreat" placeholder="e.g. BP control with ACEi/ARB&#10;Steroids if proteinuria >1g/day&#10;Supportive — low salt diet&#10;Dialysis/transplant if ESKD" style="min-height:80px;"></textarea></div>
+    <div class="mb12"><label>Complications / Prognosis <span style="font-weight:400;color:var(--text3);">(optional)</span></label><textarea id="pComps" placeholder="e.g. 20-30% progress to ESKD over 20 years, worse if hypertension…" style="min-height:50px;"></textarea></div>
     <button class="btn btn-outline mb12" id="aiPBtn" onclick="aiCheckPath()" style="width:100%;justify-content:center;"><div class="spin"></div><span id="aiPTxt">✨ Check what I missed (AI)</span></button>
     <div id="aiPSug" style="display:none;background:var(--ai-sug-bg);border:1px solid var(--ai-sug-border);border-radius:var(--r);padding:14px;margin-bottom:12px;">
       <div style="font-size:10px;color:var(--accent);font-weight:700;letter-spacing:0.08em;text-transform:uppercase;margin-bottom:6px;">AI suggestions</div>
       <div id="aiPContent" style="font-size:12px;color:var(--text2);line-height:1.7;"></div>
     </div>
-    <div class="row" style="gap:8px;"><button class="btn btn-primary flex1" onclick="savePath()">Save card</button><button class="btn btn-outline" onclick="closeModal('addPathModal')">Cancel</button></div>
+    <div class="row" style="gap:8px;"><button class="btn btn-primary flex1" id="savePathBtn" onclick="savePath()">Save card</button><button class="btn btn-outline" onclick="closeModal('addPathModal')">Cancel</button></div>
     <div class="err-box" id="pErr"></div>
   </div>
 </div>
@@ -2062,11 +2082,151 @@ function setPathFilter(block,el){
   renderPaths(block);
 }
 
+// ── PATHOLOGY SRS ──
+const PATH_SRS_KEY='_ms_path_srs_';
+function getPathSRS(){return JSON.parse(localStorage.getItem(PATH_SRS_KEY+yr)||'{}');}
+function savePathSRS(d){localStorage.setItem(PATH_SRS_KEY+yr,JSON.stringify(d));}
+function getPathCard(id){const d=getPathSRS();return d[id]||{interval:1,easeFactor:2.5,repetitions:0,nextReview:null,lastReview:null};}
+function updatePathCard(id,quality){
+  const d=getPathSRS();let c=d[id]||{interval:1,easeFactor:2.5,repetitions:0};
+  if(quality<3){c.repetitions=0;c.interval=1;}
+  else{if(c.repetitions===0)c.interval=1;else if(c.repetitions===1)c.interval=6;else c.interval=Math.round(c.interval*c.easeFactor);c.repetitions++;}
+  c.easeFactor=Math.max(1.3,c.easeFactor+0.1-(5-quality)*(0.08+(5-quality)*0.02));
+  const next=new Date();next.setDate(next.getDate()+c.interval);
+  c.nextReview=next.toISOString().split('T')[0];c.lastReview=new Date().toISOString().split('T')[0];
+  d[id]=c;savePathSRS(d);
+}
+function isPathDue(id){const c=getPathCard(id);if(!c.nextReview)return true;return c.nextReview<=new Date().toISOString().split('T')[0];}
+
+let pathSrsQueue=[],pathSrsIdx=0,pathSrsResults=[];
+
 function pathTab(t,el){
   document.querySelectorAll('#page-path .tab').forEach(x=>x.classList.remove('active'));
   el.classList.add('active');
   document.getElementById('pathBrowse').style.display=t==='browse'?'block':'none';
+  document.getElementById('pathSRS').style.display=t==='srs'?'block':'none';
   document.getElementById('pathTest').style.display=t==='test'?'block':'none';
+  if(t==='srs')loadPathSRS();
+}
+
+function loadPathSRS(){
+  const today=new Date().toISOString().split('T')[0];
+  const srsData=getPathSRS();
+  const due=allPaths.filter(p=>isPathDue(p.id));
+  const upcoming=allPaths.filter(p=>{const c=getPathCard(p.id);return c.nextReview&&c.nextReview>today;});
+  const newCards=allPaths.filter(p=>!srsData[p.id]);
+  const statsEl=document.getElementById('pathSrsStats');
+  if(statsEl)statsEl.innerHTML=`
+    <div class="stat-card"><div class="stat-card-bar" style="background:linear-gradient(90deg,var(--red),transparent);"></div><div class="stat-icon" style="background:rgba(239,68,68,0.1);color:var(--red);">🔥</div><div class="stat-num">${due.length}</div><div class="stat-label">Due today</div></div>
+    <div class="stat-card"><div class="stat-card-bar" style="background:linear-gradient(90deg,var(--green),transparent);"></div><div class="stat-icon" style="background:rgba(16,185,129,0.1);color:var(--green);">✅</div><div class="stat-num">${upcoming.length}</div><div class="stat-label">Scheduled</div></div>
+    <div class="stat-card"><div class="stat-card-bar" style="background:linear-gradient(90deg,var(--accent),transparent);"></div><div class="stat-icon" style="background:rgba(6,182,212,0.1);color:var(--accent);">🆕</div><div class="stat-num">${newCards.length}</div><div class="stat-label">New cards</div></div>
+    <div class="stat-card"><div class="stat-card-bar" style="background:linear-gradient(90deg,var(--purple),transparent);"></div><div class="stat-icon" style="background:rgba(139,92,246,0.1);color:var(--purple);">🔬</div><div class="stat-num">${allPaths.length}</div><div class="stat-label">Total cards</div></div>`;
+  const area=document.getElementById('pathSrsArea');
+  if(!area)return;
+  if(!due.length){
+    area.innerHTML=`<div class="section-card" style="text-align:center;padding:48px;">
+      <div style="font-size:2rem;margin-bottom:12px;">🎉</div>
+      <div style="font-size:1.2rem;font-weight:800;color:var(--text);margin-bottom:8px;">All caught up!</div>
+      <div style="font-size:13px;color:var(--text2);margin-bottom:20px;">No pathology cards due today.</div>
+      ${newCards.length?`<button class="btn btn-teal" onclick="startPathSRS(true)">Start new cards (${newCards.length})</button>`:''}
+    </div>`;return;
+  }
+  area.innerHTML=`<div class="section-card mb16">
+    <div class="section-head"><div class="section-title">Ready to review</div><div class="section-sub">${due.length} cards due</div></div>
+    <div class="section-body">
+      ${due.slice(0,5).map(p=>`<div style="display:flex;align-items:center;gap:8px;padding:6px 0;border-bottom:1px solid var(--border);"><span class="dot d-${BC[p.block]||''}"></span><span style="font-size:13px;flex:1;">${esc(p.name)}</span><span class="badge badge-muted">${p.block}</span></div>`).join('')}
+      ${due.length>5?`<div style="font-size:12px;color:var(--text3);padding:8px 0;">...and ${due.length-5} more</div>`:''}
+      <button class="btn btn-teal mt12" style="font-size:14px;padding:10px 28px;" onclick="startPathSRS(false)">Start review session →</button>
+    </div>
+  </div>`;
+}
+
+function startPathSRS(newOnly){
+  const srsData=getPathSRS();
+  pathSrsQueue=newOnly?shuffle(allPaths.filter(p=>!srsData[p.id])):shuffle(allPaths.filter(p=>isPathDue(p.id)));
+  pathSrsIdx=0;pathSrsResults=[];
+  renderPathSRSCard();
+}
+
+function renderPathSRSCard(){
+  const area=document.getElementById('pathSrsArea');
+  if(pathSrsIdx>=pathSrsQueue.length){
+    const good=pathSrsResults.filter(r=>r>=3).length;
+    area.innerHTML=`<div class="section-card" style="text-align:center;padding:48px;">
+      <div style="font-size:2rem;margin-bottom:12px;">${good===pathSrsResults.length?'🏆':'💪'}</div>
+      <div style="font-size:1.2rem;font-weight:800;margin-bottom:8px;">Session complete!</div>
+      <div style="font-size:13px;color:var(--text2);margin-bottom:8px;">Scored well on <strong>${good} of ${pathSrsResults.length}</strong> cards</div>
+      <div style="display:flex;gap:4px;justify-content:center;margin-bottom:20px;">${pathSrsResults.map(r=>`<div style="width:12px;height:12px;border-radius:50%;background:${r>=3?'var(--green)':'var(--red)'}"></div>`).join('')}</div>
+      <button class="btn btn-teal" onclick="loadPathSRS()">Back to overview</button>
+    </div>`;return;
+  }
+  const p=pathSrsQueue[pathSrsIdx];
+  const card=getPathCard(p.id);
+  area.innerHTML=`
+    <div style="font-size:11px;color:var(--text2);margin-bottom:12px;display:flex;align-items:center;justify-content:space-between;">
+      <span>Card ${pathSrsIdx+1} of ${pathSrsQueue.length}</span>
+      <span>${!card.lastReview?'<span class="badge badge-teal">New</span>':`Last: ${card.lastReview}`}</span>
+    </div>
+    <div class="section-card" style="padding:32px;text-align:center;margin-bottom:16px;">
+      <div style="font-size:10px;font-weight:700;color:var(--text3);text-transform:uppercase;letter-spacing:0.1em;margin-bottom:12px;">${p.block} · Pathology</div>
+      <div style="font-size:2rem;font-weight:800;color:var(--text);margin-bottom:8px;">${esc(p.name)}</div>
+      <div style="font-size:13px;color:var(--text2);">What do you know about this condition?</div>
+      <div id="pathSrsBack" style="display:none;margin-top:24px;text-align:left;border-top:1px solid var(--border);padding-top:20px;">
+        <div style="display:grid;grid-template-columns:1fr 1fr;gap:14px;margin-bottom:16px;">
+          ${p.causes?`<div><div class="field-label">Causes</div><div class="field-val" style="white-space:pre-line;">${esc(p.causes)}</div></div>`:''}
+          ${p.types?`<div><div class="field-label">Types</div><div class="field-val" style="white-space:pre-line;">${esc(p.types)}</div></div>`:''}
+          ${p.pathophys?`<div><div class="field-label">Pathophysiology</div><div class="field-val" style="white-space:pre-line;">${esc(p.pathophys)}</div></div>`:''}
+          ${p.clinical?`<div><div class="field-label">Clinical features</div><div class="field-val" style="white-space:pre-line;">${esc(p.clinical)}</div></div>`:''}
+          ${p.investigations?`<div><div class="field-label">Investigations</div><div class="field-val" style="white-space:pre-line;">${esc(p.investigations)}</div></div>`:''}
+          ${p.treatment?`<div><div class="field-label">Treatment</div><div class="field-val" style="white-space:pre-line;">${esc(p.treatment)}</div></div>`:''}
+          ${p.complications?`<div style="grid-column:span 2"><div class="field-label">Complications</div><div class="field-val" style="white-space:pre-line;">${esc(p.complications)}</div></div>`:''}
+        </div>
+        <div style="font-size:12px;color:var(--text2);margin-bottom:12px;font-weight:600;">How well did you know this?</div>
+        <div style="display:flex;gap:8px;flex-wrap:wrap;justify-content:center;">
+          <button onclick="ratePathSRS(0)" style="flex:1;min-width:80px;padding:10px 8px;border-radius:var(--r);border:none;cursor:pointer;font-family:var(--font);font-size:12px;font-weight:700;background:rgba(239,68,68,0.15);color:var(--red);">❌ Blackout<br><span style="font-size:10px;font-weight:400;">Complete blank</span></button>
+          <button onclick="ratePathSRS(2)" style="flex:1;min-width:80px;padding:10px 8px;border-radius:var(--r);border:none;cursor:pointer;font-family:var(--font);font-size:12px;font-weight:700;background:rgba(245,158,11,0.1);color:var(--orange);">😐 Hard<br><span style="font-size:10px;font-weight:400;">Struggled</span></button>
+          <button onclick="ratePathSRS(3)" style="flex:1;min-width:80px;padding:10px 8px;border-radius:var(--r);border:none;cursor:pointer;font-family:var(--font);font-size:12px;font-weight:700;background:rgba(16,185,129,0.1);color:var(--green);">🙂 Okay<br><span style="font-size:10px;font-weight:400;">Got most of it</span></button>
+          <button onclick="ratePathSRS(5)" style="flex:1;min-width:80px;padding:10px 8px;border-radius:var(--r);border:none;cursor:pointer;font-family:var(--font);font-size:12px;font-weight:700;background:rgba(6,182,212,0.15);color:var(--accent);">🌟 Easy<br><span style="font-size:10px;font-weight:400;">Knew it all</span></button>
+        </div>
+      </div>
+    </div>
+    <div id="pathSrsRevealBtn" style="text-align:center;">
+      <button class="btn btn-outline" style="padding:10px 32px;font-size:14px;" onclick="revealPathSRS()">Reveal answer</button>
+    </div>`;
+}
+function revealPathSRS(){const b=document.getElementById('pathSrsBack');if(b)b.style.display='block';const r=document.getElementById('pathSrsRevealBtn');if(r)r.style.display='none';}
+function ratePathSRS(q){updatePathCard(pathSrsQueue[pathSrsIdx].id,q);pathSrsResults.push(q);pathSrsIdx++;renderPathSRSCard();}
+
+// Update renderPathCard test mode with all fields too
+function renderPathCard(){
+  const a=document.getElementById('pathTestArea');
+  if(pTestIdx>=pTestQs.length){
+    a.innerHTML=`<div class="section-card" style="text-align:center;padding:36px;"><div style="font-size:1.2rem;font-weight:800;color:var(--text);margin-bottom:8px;">Done! 🎉</div><div style="color:var(--text2);">Reviewed ${pTestQs.length} pathology cards</div><button class="btn btn-primary mt16" onclick="startPathTest()">Go again</button></div>`;return;
+  }
+  const p=pTestQs[pTestIdx];
+  a.innerHTML=`<div class="section-card">
+    <div class="section-head">
+      <div><div style="font-size:11px;color:var(--text2);">Card ${pTestIdx+1} of ${pTestQs.length}</div><div class="section-title" style="font-size:1.1rem;margin-top:4px;">${esc(p.name)}</div></div>
+      <div style="display:flex;gap:6px;">${p.subject?`<span class="badge badge-muted">${p.subject}</span>`:''}<span class="badge badge-muted">${p.block}</span></div>
+    </div>
+    <div class="section-body">
+      <div style="font-size:12px;color:var(--text2);margin-bottom:16px;">Recall everything you know about this condition</div>
+      <div id="pCardBack" style="display:none;">
+        <div style="display:grid;grid-template-columns:1fr 1fr;gap:14px;margin-bottom:16px;">
+          ${p.causes?`<div><div class="field-label">Causes</div><div class="field-val" style="white-space:pre-line;">${esc(p.causes)}</div></div>`:''}
+          ${p.types?`<div><div class="field-label">Types</div><div class="field-val" style="white-space:pre-line;">${esc(p.types)}</div></div>`:''}
+          ${p.pathophys?`<div><div class="field-label">Pathophysiology</div><div class="field-val" style="white-space:pre-line;">${esc(p.pathophys)}</div></div>`:''}
+          ${p.clinical?`<div><div class="field-label">Clinical features</div><div class="field-val" style="white-space:pre-line;">${esc(p.clinical)}</div></div>`:''}
+          ${p.investigations?`<div><div class="field-label">Investigations</div><div class="field-val" style="white-space:pre-line;">${esc(p.investigations)}</div></div>`:''}
+          ${p.treatment?`<div><div class="field-label">Treatment</div><div class="field-val" style="white-space:pre-line;">${esc(p.treatment)}</div></div>`:''}
+          ${p.complications?`<div style="grid-column:span 2"><div class="field-label">Complications</div><div class="field-val" style="white-space:pre-line;">${esc(p.complications)}</div></div>`:''}
+          ${p.ai_notes?`<div style="grid-column:span 2"><div class="field-label" style="color:var(--accent);">AI notes</div><div class="field-val" style="font-size:12px;">${esc(p.ai_notes)}</div></div>`:''}
+        </div>
+      </div>
+      <div id="pRevBtn"><button class="btn btn-outline" onclick="revPCard()">Reveal answer</button></div>
+      <div id="pActBtn" style="display:none;"><button class="btn btn-primary" onclick="nxtPCard()">Next card →</button></div>
+    </div>
+  </div>`;
 }
 
 async function loadPath(){
@@ -2085,14 +2245,18 @@ function renderPaths(block){
         <strong style="font-size:14px;flex:1;">${esc(p.name)}</strong>
         ${p.subject?`<span class="badge badge-muted" style="font-size:10px;">${p.subject}</span>`:''}
         <span class="badge badge-muted">${p.block}</span>
+        <span class="badge ${isPathDue(p.id)?'badge-red':'badge-muted'}" style="font-size:10px;">${isPathDue(p.id)?'Due':'✓'}</span>
         <button class="btn btn-xs btn-danger" onclick="delPath('${p.id}')">✕</button>
       </div>
       <div style="display:grid;grid-template-columns:1fr 1fr;gap:12px;">
-        <div><div class="field-label">Pathophysiology</div><div class="field-val" style="font-size:12px;">${esc(p.pathophys||'—')}</div></div>
-        <div><div class="field-label">Clinical features</div><div class="field-val" style="font-size:12px;">${esc(p.clinical||'—')}</div></div>
-        <div><div class="field-label">Investigations</div><div class="field-val" style="font-size:12px;">${esc(p.investigations||'—')}</div></div>
-        <div><div class="field-label">Treatment</div><div class="field-val" style="font-size:12px;">${esc(p.treatment||'—')}</div></div>
-        ${p.ai_notes?`<div style="grid-column:span 2"><div class="field-label" style="color:var(--accent);">AI additions</div><div class="field-val" style="font-size:12px;color:var(--text2);">${esc(p.ai_notes)}</div></div>`:''}
+        ${p.causes?`<div><div class="field-label">Causes / Aetiology</div><div class="field-val" style="font-size:12px;white-space:pre-line;">${esc(p.causes)}</div></div>`:''}
+        ${p.types?`<div><div class="field-label">Types / Classification</div><div class="field-val" style="font-size:12px;white-space:pre-line;">${esc(p.types)}</div></div>`:''}
+        ${p.pathophys?`<div><div class="field-label">Pathophysiology</div><div class="field-val" style="font-size:12px;white-space:pre-line;">${esc(p.pathophys)}</div></div>`:''}
+        ${p.clinical?`<div><div class="field-label">Clinical features</div><div class="field-val" style="font-size:12px;white-space:pre-line;">${esc(p.clinical)}</div></div>`:''}
+        ${p.investigations?`<div><div class="field-label">Investigations</div><div class="field-val" style="font-size:12px;white-space:pre-line;">${esc(p.investigations)}</div></div>`:''}
+        ${p.treatment?`<div><div class="field-label">Treatment</div><div class="field-val" style="font-size:12px;white-space:pre-line;">${esc(p.treatment)}</div></div>`:''}
+        ${p.complications?`<div style="grid-column:span 2"><div class="field-label">Complications / Prognosis</div><div class="field-val" style="font-size:12px;white-space:pre-line;">${esc(p.complications)}</div></div>`:''}
+        ${p.ai_notes?`<div style="grid-column:span 2"><div class="field-label" style="color:var(--accent);">AI additions</div><div class="field-val" style="font-size:12px;color:var(--text2);white-space:pre-line;">${esc(p.ai_notes)}</div></div>`:''}
       </div>
     </div>`).join('');
 }
@@ -2123,26 +2287,37 @@ What important facts are missing from this pathology card? Max 4 concise bullet 
 }
 
 async function savePath(){
+  const btn=document.getElementById('savePathBtn');
+  if(btn&&btn.disabled)return;
   const name=document.getElementById('pName').value.trim();
   if(!name){showErr('pErr','Condition name required.');return;}
+  if(btn){btn.disabled=true;btn.textContent='Saving…';}
   const ai=document.getElementById('aiPSug').style.display!=='none'?document.getElementById('aiPContent').textContent:'';
-  const{error}=await sb.from('path_cards').insert({
-    year:yr,
-    block:document.getElementById('pBlock').value,
-    subject:document.getElementById('pSubject').value,
-    name,
-    pathophys:document.getElementById('pPathophys').value.trim(),
-    clinical:document.getElementById('pClinical').value.trim(),
-    investigations:document.getElementById('pInvest').value.trim(),
-    treatment:document.getElementById('pTreat').value.trim(),
-    ai_notes:ai
-  });
-  if(error){showErr('pErr','Save failed: '+error.message);return;}
-  closeModal('addPathModal');
-  ['pName','pPathophys','pClinical','pInvest','pTreat'].forEach(id=>document.getElementById(id).value='');
-  document.getElementById('aiPSug').style.display='none';
-  hideErr('pErr');
-  loadPath();
+  try{
+    const{error}=await sb.from('path_cards').insert({
+      year:yr,
+      block:document.getElementById('pBlock').value,
+      subject:document.getElementById('pSubject').value,
+      name,
+      causes:(document.getElementById('pCauses')?.value||'').trim(),
+      types:(document.getElementById('pTypes')?.value||'').trim(),
+      pathophys:document.getElementById('pPathophys').value.trim(),
+      clinical:document.getElementById('pClinical').value.trim(),
+      investigations:document.getElementById('pInvest').value.trim(),
+      treatment:document.getElementById('pTreat').value.trim(),
+      complications:(document.getElementById('pComps')?.value||'').trim(),
+      ai_notes:ai
+    });
+    if(error)throw error;
+    closeModal('addPathModal');
+    ['pName','pCauses','pTypes','pPathophys','pClinical','pInvest','pTreat','pComps'].forEach(id=>{
+      const el=document.getElementById(id);if(el)el.value='';
+    });
+    const aiSug=document.getElementById('aiPSug');if(aiSug)aiSug.style.display='none';
+    hideErr('pErr');
+    loadPath();
+  }catch(e){showErr('pErr','Save failed: '+e.message);}
+  finally{if(btn){btn.disabled=false;btn.textContent='Save card';}}
 }
 
 async function delPath(id){
@@ -2157,45 +2332,8 @@ function startPathTest(){
   pTestQs=shuffle([...paths]);pTestIdx=0;renderPathCard();
 }
 
-function renderPathCard(){
-  const a=document.getElementById('pathTestArea');
-  if(pTestIdx>=pTestQs.length){
-    a.innerHTML=`<div class="section-card" style="text-align:center;padding:36px;">
-      <div style="font-size:1.2rem;font-weight:800;color:var(--text);margin-bottom:8px;">Done! 🎉</div>
-      <div style="color:var(--text2);">Reviewed ${pTestQs.length} pathology cards</div>
-      <button class="btn btn-primary mt16" onclick="startPathTest()">Go again</button>
-    </div>`;return;
-  }
-  const p=pTestQs[pTestIdx];
-  a.innerHTML=`<div class="section-card">
-    <div class="section-head">
-      <div>
-        <div style="font-size:11px;color:var(--text2);">Card ${pTestIdx+1} of ${pTestQs.length}</div>
-        <div class="section-title" style="font-size:1.1rem;margin-top:4px;">${esc(p.name)}</div>
-      </div>
-      <div style="display:flex;gap:6px;">
-        ${p.subject?`<span class="badge badge-muted">${p.subject}</span>`:''}
-        <span class="badge badge-muted">${p.block}</span>
-      </div>
-    </div>
-    <div class="section-body">
-      <div style="font-size:12px;color:var(--text2);margin-bottom:16px;">Recall everything you know about this condition</div>
-      <div id="pCardBack" style="display:none;">
-        <div style="display:grid;grid-template-columns:1fr 1fr;gap:14px;margin-bottom:16px;">
-          <div><div class="field-label">Pathophysiology</div><div class="field-val">${esc(p.pathophys||'—')}</div></div>
-          <div><div class="field-label">Clinical features</div><div class="field-val">${esc(p.clinical||'—')}</div></div>
-          <div><div class="field-label">Investigations</div><div class="field-val">${esc(p.investigations||'—')}</div></div>
-          <div><div class="field-label">Treatment</div><div class="field-val">${esc(p.treatment||'—')}</div></div>
-          ${p.ai_notes?`<div style="grid-column:span 2"><div class="field-label" style="color:var(--accent);">Extra</div><div class="field-val" style="font-size:12px;">${esc(p.ai_notes)}</div></div>`:''}
-        </div>
-      </div>
-      <div id="pRevBtn"><button class="btn btn-outline" onclick="revPCard()">Reveal answer</button></div>
-      <div id="pActBtn" style="display:none;"><button class="btn btn-primary" onclick="nxtPCard()">Next card →</button></div>
-    </div>
-  </div>`;
-}
 
-function revPCard(){document.getElementById('pCardBack').style.display='block';document.getElementById('pRevBtn').style.display='none';document.getElementById('pActBtn').style.display='block';}
+function revPCard(){const b=document.getElementById('pCardBack');if(b)b.style.display='block';const r=document.getElementById('pRevBtn');if(r)r.style.display='none';const a=document.getElementById('pActBtn');if(a)a.style.display='block';}
 function nxtPCard(){pTestIdx++;renderPathCard();}
 
 // ── REVIEW ──
@@ -4283,21 +4421,90 @@ function resetTimer(){
 function updateTimerDisplay(){
   const m=Math.floor(timerSeconds/60),s=timerSeconds%60;
   const timeStr=String(m).padStart(2,'0')+':'+String(s).padStart(2,'0');
-  const el=document.getElementById('timerDisplay');
-  if(el){el.textContent=timeStr;el.style.color=timerIsBreak?'var(--green)':timerSeconds<60?'var(--red)':'var(--text)';}
-  const lbl=document.getElementById('timerSessionLabel');
-  if(lbl)lbl.textContent=timerIsBreak?'Break '+(timerSession-1)+' of '+timerTotalSessions:'Session '+timerSession+' of '+timerTotalSessions;
+  const accentColor=timerIsBreak?'var(--green)':timerSeconds<60?'var(--red)':'var(--text)';
+  const modeStr=timerIsBreak?'BREAK ☕':'FOCUS · S'+timerSession+'/'+timerTotalSessions;
   const totalSecs=(timerIsBreak?timerBreakMin:timerWorkMin)*60;
   const pct=Math.round((timerSeconds/totalSecs)*100);
+  const barColor=timerIsBreak?'var(--green)':timerSeconds<60?'var(--red)':'var(--accent)';
+  // Main timer page
+  const el=document.getElementById('timerDisplay');
+  if(el){el.textContent=timeStr;el.style.color=accentColor;}
+  const lbl=document.getElementById('timerSessionLabel');
+  if(lbl)lbl.textContent=timerIsBreak?'Break '+(timerSession-1)+' of '+timerTotalSessions:'Session '+timerSession+' of '+timerTotalSessions;
+  // Sidebar mini timer
   const sidebar=document.getElementById('sidebarTimer');
   if(sidebar){
     sidebar.style.display=(timerRunning||timerSeconds<totalSecs)?'block':'none';
     const sd=document.getElementById('sidebarTimerDisplay');if(sd){sd.textContent=timeStr;sd.style.color=timerIsBreak?'var(--green)':timerSeconds<60?'#f87171':'white';}
-    const sb2=document.getElementById('sidebarTimerBar');if(sb2){sb2.style.width=pct+'%';sb2.style.background=timerIsBreak?'var(--green)':timerSeconds<60?'var(--red)':'var(--accent)';}
-    const sm=document.getElementById('sidebarTimerMode');if(sm)sm.textContent=timerIsBreak?'BREAK ☕':'FOCUS · S'+timerSession+'/'+timerTotalSessions;
+    const sb2=document.getElementById('sidebarTimerBar');if(sb2){sb2.style.width=pct+'%';sb2.style.background=barColor;}
+    const sm=document.getElementById('sidebarTimerMode');if(sm)sm.textContent=modeStr;
     const sbtn=document.getElementById('sidebarTimerBtn');if(sbtn)sbtn.textContent=timerRunning?'⏸':'▶';
   }
+  // Floating popout
+  const popout=document.getElementById('timerPopout');
+  if(popout&&popout.classList.contains('visible')){
+    const pt=document.getElementById('ptTime');if(pt){pt.textContent=timeStr;pt.style.color=timerIsBreak?'#4ade80':timerSeconds<60?'#f87171':'white';}
+    const pm=document.getElementById('ptMode');if(pm)pm.textContent=modeStr;
+    const pb=document.getElementById('ptBar');if(pb){pb.style.width=pct+'%';pb.style.background=timerIsBreak?'#4ade80':timerSeconds<60?'#f87171':'var(--accent)';}
+    const ps=document.getElementById('ptSession');if(ps)ps.textContent='Session '+timerSession+'/'+timerTotalSessions;
+    const pp=document.getElementById('ptPlayBtn');if(pp)pp.textContent=timerRunning?'⏸':'▶';
+  }
 }
+
+// ── FLOATING TIMER POPOUT ──
+let _popoutDragging=false,_popoutDragX=0,_popoutDragY=0;
+function toggleTimerPopout(){
+  const el=document.getElementById('timerPopout');
+  if(!el)return;
+  el.classList.toggle('visible');
+  if(el.classList.contains('visible')){
+    el.style.bottom='24px';el.style.right='24px';el.style.top='auto';el.style.left='auto';
+    updateTimerDisplay();
+  }
+}
+// Make popout draggable
+(function(){
+  function initDrag(){
+    const handle=document.getElementById('popoutDragHandle');
+    if(!handle)return;
+    handle.addEventListener('mousedown',e=>{
+      if(e.target.tagName==='BUTTON')return;
+      _popoutDragging=true;
+      const el=document.getElementById('timerPopout');
+      const rect=el.getBoundingClientRect();
+      _popoutDragX=e.clientX-rect.left;_popoutDragY=e.clientY-rect.top;
+      el.style.transition='none';el.style.bottom='auto';el.style.right='auto';
+      e.preventDefault();
+    });
+    document.addEventListener('mousemove',e=>{
+      if(!_popoutDragging)return;
+      const el=document.getElementById('timerPopout');if(!el)return;
+      const x=Math.max(0,Math.min(window.innerWidth-el.offsetWidth,e.clientX-_popoutDragX));
+      const y=Math.max(0,Math.min(window.innerHeight-el.offsetHeight,e.clientY-_popoutDragY));
+      el.style.left=x+'px';el.style.top=y+'px';
+    });
+    document.addEventListener('mouseup',()=>{_popoutDragging=false;});
+    handle.addEventListener('touchstart',e=>{
+      if(e.target.tagName==='BUTTON')return;
+      _popoutDragging=true;
+      const el=document.getElementById('timerPopout');
+      const rect=el.getBoundingClientRect();
+      _popoutDragX=e.touches[0].clientX-rect.left;_popoutDragY=e.touches[0].clientY-rect.top;
+      el.style.bottom='auto';el.style.right='auto';
+    });
+    document.addEventListener('touchmove',e=>{
+      if(!_popoutDragging)return;
+      const el=document.getElementById('timerPopout');if(!el)return;
+      const x=Math.max(0,Math.min(window.innerWidth-el.offsetWidth,e.touches[0].clientX-_popoutDragX));
+      const y=Math.max(0,Math.min(window.innerHeight-el.offsetHeight,e.touches[0].clientY-_popoutDragY));
+      el.style.left=x+'px';el.style.top=y+'px';
+      e.preventDefault();
+    },{passive:false});
+    document.addEventListener('touchend',()=>{_popoutDragging=false;});
+  }
+  if(document.readyState==='loading'){document.addEventListener('DOMContentLoaded',initDrag);}
+  else{initDrag();}
+})();
 
 function updateTimerDots(){
   const el=document.getElementById('timerDots');if(!el)return;
@@ -4480,7 +4687,7 @@ async function loadTimer(){
   renderHoursStats();
   if(!timerRunning&&timerSeconds===(timerWorkMin*60)&&timerSession===1){
     timerTotalSessions=2; // default 2 cycles
-    setTimerMode(25,5);
+    setTimerMode(90,5);
     setCycles(2);
   }
   updateTimerDisplay();
@@ -4572,5 +4779,22 @@ let _pt={};
 function startProg(pid,fid){let p=0;const el=document.getElementById(pid);if(el)el.style.display='block';_pt[pid]=setInterval(()=>{p=Math.min(p+Math.random()*4,88);const f=document.getElementById(fid);if(f)f.style.width=p+'%';},300);}
 function endProg(pid,fid){clearInterval(_pt[pid]);const f=document.getElementById(fid);if(f)f.style.width='100%';setTimeout(()=>{const el=document.getElementById(pid);if(el)el.style.display='none';if(f)f.style.width='0%';},500);}
 </script>
+
+<!-- FLOATING TIMER POPOUT -->
+<div id="timerPopout">
+  <div id="popoutDragHandle" style="cursor:move;">
+    <div class="pt-mode" id="ptMode">FOCUS SESSION</div>
+    <div class="pt-time" id="ptTime">90:00</div>
+    <div class="pt-bar"><div class="pt-bar-fill" id="ptBar" style="width:100%;"></div></div>
+    <div class="pt-controls">
+      <div style="font-size:11px;color:rgba(255,255,255,0.4);" id="ptSession">Session 1/2</div>
+      <div style="display:flex;gap:8px;align-items:center;">
+        <button onclick="toggleTimer()" id="ptPlayBtn" style="background:var(--accent);border:none;border-radius:6px;color:white;cursor:pointer;font-size:13px;padding:4px 12px;font-family:var(--font);font-weight:700;">▶</button>
+        <button onclick="toggleTimerPopout()" style="background:none;border:none;color:rgba(255,255,255,0.35);cursor:pointer;font-size:16px;padding:0;line-height:1;">✕</button>
+      </div>
+    </div>
+  </div>
+</div>
+
 </body>
 </html>
