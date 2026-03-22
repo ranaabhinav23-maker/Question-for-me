@@ -458,6 +458,7 @@ label { font-size: 11px; color: var(--text2); font-weight: 600; display: block; 
       <div class="nav-item" data-page="plan" onclick="nav('plan',this)"><span class="nav-icon">📅</span>Study Plan</div>
       <div class="nav-item" data-page="aiplanner" onclick="nav('aiplanner',this)"><span class="nav-icon">🤖</span>AI Planner</div>
       <div class="nav-item" data-page="drugs" onclick="nav('drugs',this)"><span class="nav-icon">💊</span>Drug Cards</div>
+      <div class="nav-item" data-page="path" onclick="nav('path',this)"><span class="nav-icon">🔬</span>Pathology Cards</div>
       <div class="nav-item" data-page="bugs" onclick="nav('bugs',this)"><span class="nav-icon">🦠</span>Bug Table</div>
     </div>
     <div class="sidebar-bottom">
@@ -784,6 +785,31 @@ label { font-size: 11px; color: var(--text2); font-weight: 600; display: block; 
     </div>
    </div>
 
+   <!-- PATHOLOGY CARDS -->
+   <div class="page" id="page-path">
+    <div class="page-hero"><div><div class="page-hero-title">Pathology Cards</div><div class="page-hero-sub">Write yourself · AI checks gaps · test by block</div></div><button class="btn btn-primary btn-sm" onclick="openAddPath()">＋ Add condition</button></div>
+    <div style="padding:20px 32px 0;">
+      <div class="tab-row mb20">
+        <div class="tab active" onclick="pathTab('browse',this)">Browse</div>
+        <div class="tab" onclick="pathTab('test',this)">Test yourself</div>
+      </div>
+      <div id="pathBrowse">
+        <div class="pill-row" id="pathPills"></div>
+        <div id="pathList"></div>
+      </div>
+      <div id="pathTest" style="display:none;">
+        <div class="section-card mb16">
+          <div class="section-head"><div class="section-title">Select blocks to test</div></div>
+          <div class="section-body">
+            <div class="pill-row" id="pathTestPills"></div>
+            <button class="btn btn-primary mt8" onclick="startPathTest()">Start test</button>
+          </div>
+        </div>
+        <div id="pathTestArea"></div>
+      </div>
+    </div>
+   </div>
+
    <!-- BUGS -->
    <div class="page" id="page-bugs">
     <div class="page-hero"><div><div class="page-hero-title">Bug Table</div><div class="page-hero-sub">Build your master microbiology reference</div></div><button class="btn btn-primary btn-sm" onclick="openAddBug()">＋ Add bug</button></div>
@@ -890,7 +916,7 @@ label { font-size: 11px; color: var(--text2); font-weight: 600; display: block; 
             <div style="display:flex;gap:10px;justify-content:center;margin-bottom:12px;">
               <button class="btn btn-ghost btn-sm" onclick="setTimerMode(25,5)" id="tmBtn25" style="border:1px solid var(--border);background:var(--navy);color:white;">25/5</button>
               <button class="btn btn-ghost btn-sm" onclick="setTimerMode(50,10)" id="tmBtn50" style="border:1px solid var(--border);">50/10</button>
-              <button class="btn btn-ghost btn-sm" onclick="setTimerMode(90,15)" id="tmBtn90" style="border:1px solid var(--border);">90/05</button>
+              <button class="btn btn-ghost btn-sm" onclick="setTimerMode(90,15)" id="tmBtn90" style="border:1px solid var(--border);">90/15</button>
             </div>
             <div style="display:flex;align-items:center;justify-content:center;gap:10px;margin-bottom:24px;">
               <span style="font-size:12px;color:var(--text2);font-weight:600;">Cycles:</span>
@@ -1091,6 +1117,28 @@ label { font-size: 11px; color: var(--text2); font-weight: 600; display: block; 
 </div>
 <div class="modal-bg" id="addBugModal">
   <div class="modal"><div class="modal-title">Add bug</div><div class="mb12"><label>Bug name</label><input type="text" id="bName" placeholder="e.g. Staphylococcus aureus"></div><div class="g2 mb12"><div><label>Gram stain</label><select id="bGram"><option value="+ve">Gram +ve</option><option value="-ve">Gram -ve</option><option value="—">N/A</option></select></div><div><label>Type</label><input type="text" id="bType" placeholder="e.g. Cocci, intracellular"></div></div><div class="mb12"><label>Causes</label><input type="text" id="bCauses" placeholder="e.g. Skin, endocarditis, osteomyelitis"></div><div class="mb12"><label>Treatment</label><input type="text" id="bTx" placeholder="e.g. Flucloxacillin (MSSA), Vancomycin (MRSA)"></div><div class="mb12"><label>Block</label><select id="bBlock"><option>GU</option><option>MSK</option><option>Neurology</option><option>GI</option><option>CVR</option><option>Core</option></select></div><button class="btn btn-outline mb12" id="aiBBtn" onclick="aiCheckBug()" style="width:100%;justify-content:center;"><div class="spin"></div><span id="aiBTxt">✨ Check what I missed (AI)</span></button><div id="aiBSug" style="display:none;background:var(--ai-sug-bg);border:1px solid var(--ai-sug-border);border-radius:var(--r);padding:14px;margin-bottom:12px;"><div style="font-size:10px;color:var(--accent);font-weight:700;letter-spacing:0.08em;text-transform:uppercase;margin-bottom:6px;">AI suggestions</div><div id="aiBContent" style="font-size:12px;color:var(--text2);line-height:1.7;"></div></div><div class="row" style="gap:8px;"><button class="btn btn-primary flex1" onclick="saveBug()">Save bug</button><button class="btn btn-outline" onclick="closeModal('addBugModal')">Cancel</button></div><div class="err-box" id="bErr"></div></div>
+</div>
+
+<div class="modal-bg" id="addPathModal">
+  <div class="modal" style="width:580px;">
+    <div class="modal-title">Add Pathology Card</div>
+    <div class="mb12"><label>Condition name</label><input type="text" id="pName" placeholder="e.g. IgA Nephropathy"></div>
+    <div class="g2 mb12">
+      <div><label>Block</label><select id="pBlock"><option>GU</option><option>MSK</option><option>Neurology</option><option>GI</option><option>CVR</option><option>Core</option></select></div>
+      <div><label>Subject</label><select id="pSubject"><option value="Pathology">Pathology</option><option>Physiology</option><option>Anatomy</option><option>Immunology</option><option>Haematology</option><option>General</option></select></div>
+    </div>
+    <div class="mb12"><label>Pathophysiology</label><textarea id="pPathophys" placeholder="e.g. Mesangial IgA deposits → complement activation → glomerular injury…" style="min-height:60px;"></textarea></div>
+    <div class="mb12"><label>Clinical features</label><textarea id="pClinical" placeholder="e.g. Haematuria post-URTI, mild proteinuria, hypertension…" style="min-height:60px;"></textarea></div>
+    <div class="mb12"><label>Investigations</label><input type="text" id="pInvest" placeholder="e.g. Renal biopsy (gold standard), IgA levels, urinalysis"></div>
+    <div class="mb12"><label>Treatment</label><input type="text" id="pTreat" placeholder="e.g. ACEi/ARB, steroids if proteinuria >1g/day, supportive"></div>
+    <button class="btn btn-outline mb12" id="aiPBtn" onclick="aiCheckPath()" style="width:100%;justify-content:center;"><div class="spin"></div><span id="aiPTxt">✨ Check what I missed (AI)</span></button>
+    <div id="aiPSug" style="display:none;background:var(--ai-sug-bg);border:1px solid var(--ai-sug-border);border-radius:var(--r);padding:14px;margin-bottom:12px;">
+      <div style="font-size:10px;color:var(--accent);font-weight:700;letter-spacing:0.08em;text-transform:uppercase;margin-bottom:6px;">AI suggestions</div>
+      <div id="aiPContent" style="font-size:12px;color:var(--text2);line-height:1.7;"></div>
+    </div>
+    <div class="row" style="gap:8px;"><button class="btn btn-primary flex1" onclick="savePath()">Save card</button><button class="btn btn-outline" onclick="closeModal('addPathModal')">Cancel</button></div>
+    <div class="err-box" id="pErr"></div>
+  </div>
 </div>
 <div class="modal-bg" id="targetModal">
   <div class="modal"><div class="modal-title">Today's targets</div><div class="mb16"><label>Add a target</label><div class="row" style="gap:8px;"><input type="text" id="targetInput" placeholder="e.g. GU lecture 12 — renal tubular acidosis" style="flex:1;" onkeydown="if(event.key==='Enter')addTarget()"><select id="targetBlock" style="width:110px;"><option>GU</option><option>MSK</option><option>Neurology</option><option>GI</option><option>CVR</option><option>Core</option></select><button class="btn btn-primary btn-sm" onclick="addTarget()">Add</button></div></div><div id="targetModalList" class="mb12"></div><button class="btn btn-ghost" onclick="closeModal('targetModal')">Done</button></div>
@@ -1348,6 +1396,7 @@ function nav(page,el){
   if(page==='review'){_allWrongAnswers=null;loadReview();}
   if(page==='lectures')loadLecs();
   if(page==='drugs')loadDrugs();
+  if(page==='path')loadPath();
   if(page==='bugs')loadBugs();
 }
 
@@ -1362,7 +1411,10 @@ function buildPills(){
   // Review subject pills — single select
   const rsp=document.getElementById('reviewSubjPills');
   if(rsp)rsp.innerHTML=`<span class="subj-pill active" onclick="setReviewSubjF('all',this)">All subjects</span>`+SUBJECTS.map(s=>`<span class="subj-pill" onclick="setReviewSubjF('${s}',this)">${s}</span>`).join('');
-  ['drugTestPills','bugTestPills'].forEach(id=>{document.getElementById(id).innerHTML=BLOCKS.map(b=>`<span class="pill pill-${BC[b]} active" onclick="toggleTestPill('${id}','${b}',this)">${b}</span>`).join('');});
+  ['drugTestPills','bugTestPills','pathTestPills'].forEach(id=>{document.getElementById(id).innerHTML=BLOCKS.map(b=>`<span class="pill pill-${BC[b]} active" onclick="toggleTestPill('${id}','${b}',this)">${b}</span>`).join('');});
+  // Path browse pills
+  const pathPillsEl=document.getElementById('pathPills');
+  if(pathPillsEl)pathPillsEl.innerHTML=`<span class="pill pill-all active" onclick="setPathFilter('all',this)">All</span>`+BLOCKS.map(b=>`<span class="pill pill-${BC[b]}" onclick="setPathFilter('${b}',this)">${b}</span>`).join('');
   document.getElementById('mockBlockPills').innerHTML=BLOCKS.map(b=>`<span class="pill pill-${BC[b]} active" onclick="this.classList.toggle('active')">${b}</span>`).join('');
   document.getElementById('mockSubjectPills').innerHTML=`<span class="pill pill-all active" onclick="toggleMockSubjectPill('all',this)">All subjects</span>`+SUBJECTS.map(s=>`<span class="pill" onclick="toggleMockSubjectPill('${s}',this)">${s}</span>`).join('');
   document.querySelectorAll('input[name="recallSrc"]').forEach(r=>r.addEventListener('change',()=>{
@@ -1998,6 +2050,153 @@ function startBugTest(){const bugs=allBugs.filter(b=>selBugBlocks.has(b.block));
 function renderBugCard(){const a=document.getElementById('bugTestArea');if(bTestIdx>=bTestQs.length){a.innerHTML=`<div class="section-card" style="text-align:center;padding:36px;"><div style="font-size:1.2rem;font-weight:800;color:var(--text);margin-bottom:8px;">Done! 🎉</div><div style="color:var(--text2);">Reviewed ${bTestQs.length} bugs</div><button class="btn btn-primary mt16" onclick="startBugTest()">Go again</button></div>`;return;}const b=bTestQs[bTestIdx];a.innerHTML=`<div class="section-card"><div class="section-head"><div><div style="font-size:11px;color:var(--text2);">Bug ${bTestIdx+1} of ${bTestQs.length}</div><div class="section-title" style="font-size:1.1rem;margin-top:4px;">${esc(b.name)}</div></div><span class="badge badge-muted">${b.block}</span></div><div class="section-body"><div style="font-size:12px;color:var(--text2);margin-bottom:16px;">What do you remember?</div><div id="bCardBack" style="display:none;"><div class="g2" style="gap:14px;margin-bottom:16px;"><div><div class="field-label">Gram</div><div class="field-val">${b.gram}</div></div><div><div class="field-label">Type</div><div class="field-val">${esc(b.type||'—')}</div></div><div><div class="field-label">Causes</div><div class="field-val">${esc(b.causes||'—')}</div></div><div><div class="field-label">Treatment</div><div class="field-val">${esc(b.treatment||'—')}</div></div>${b.ai_notes?`<div style="grid-column:span 2"><div class="field-label" style="color:var(--accent);">Extra</div><div class="field-val" style="font-size:12px;">${esc(b.ai_notes)}</div></div>`:''}</div></div><div id="bRevBtn"><button class="btn btn-outline" onclick="revBCard()">Reveal answer</button></div><div id="bActBtn" style="display:none;margin-top:12px;"><button class="btn btn-primary" onclick="nxtBCard()">Next bug →</button></div></div></div>`;}
 function revBCard(){document.getElementById('bCardBack').style.display='block';document.getElementById('bRevBtn').style.display='none';document.getElementById('bActBtn').style.display='block';}
 function nxtBCard(){bTestIdx++;renderBugCard();}
+
+// ── PATHOLOGY CARDS ──
+let allPaths=[];
+let pTestQs=[],pTestIdx=0;
+let selPathBlocks=new Set(BLOCKS);
+
+function setPathFilter(block,el){
+  document.querySelectorAll('#pathPills .pill').forEach(p=>p.classList.remove('active'));
+  el.classList.add('active');
+  renderPaths(block);
+}
+
+function pathTab(t,el){
+  document.querySelectorAll('#page-path .tab').forEach(x=>x.classList.remove('active'));
+  el.classList.add('active');
+  document.getElementById('pathBrowse').style.display=t==='browse'?'block':'none';
+  document.getElementById('pathTest').style.display=t==='test'?'block':'none';
+}
+
+async function loadPath(){
+  const{data}=await sb.from('path_cards').select('*').eq('year',yr).order('created_at');
+  allPaths=data||[];
+  renderPaths('all');
+}
+
+function renderPaths(block){
+  const paths=block==='all'?allPaths:allPaths.filter(p=>p.block===block);
+  const el=document.getElementById('pathList');
+  if(!paths.length){el.innerHTML=`<div class="empty"><span class="empty-ico">🔬</span>No pathology cards yet. Add your first condition.</div>`;return;}
+  el.innerHTML=paths.map(p=>`
+    <div class="data-card">
+      <div class="row mb12">
+        <strong style="font-size:14px;flex:1;">${esc(p.name)}</strong>
+        ${p.subject?`<span class="badge badge-muted" style="font-size:10px;">${p.subject}</span>`:''}
+        <span class="badge badge-muted">${p.block}</span>
+        <button class="btn btn-xs btn-danger" onclick="delPath('${p.id}')">✕</button>
+      </div>
+      <div style="display:grid;grid-template-columns:1fr 1fr;gap:12px;">
+        <div><div class="field-label">Pathophysiology</div><div class="field-val" style="font-size:12px;">${esc(p.pathophys||'—')}</div></div>
+        <div><div class="field-label">Clinical features</div><div class="field-val" style="font-size:12px;">${esc(p.clinical||'—')}</div></div>
+        <div><div class="field-label">Investigations</div><div class="field-val" style="font-size:12px;">${esc(p.investigations||'—')}</div></div>
+        <div><div class="field-label">Treatment</div><div class="field-val" style="font-size:12px;">${esc(p.treatment||'—')}</div></div>
+        ${p.ai_notes?`<div style="grid-column:span 2"><div class="field-label" style="color:var(--accent);">AI additions</div><div class="field-val" style="font-size:12px;color:var(--text2);">${esc(p.ai_notes)}</div></div>`:''}
+      </div>
+    </div>`).join('');
+}
+
+function openAddPath(){
+  document.getElementById('aiPSug').style.display='none';
+  openModal('addPathModal');
+}
+
+async function aiCheckPath(){
+  const name=document.getElementById('pName').value.trim();
+  if(!name){showErr('pErr','Enter condition name first.');return;}
+  setBusy('aiPBtn','aiPTxt','Checking…',true);
+  const prompt=`UK Year 2 pathology card:
+Condition: ${name}
+Pathophysiology: ${document.getElementById('pPathophys').value||'blank'}
+Clinical features: ${document.getElementById('pClinical').value||'blank'}
+Investigations: ${document.getElementById('pInvest').value||'blank'}
+Treatment: ${document.getElementById('pTreat').value||'blank'}
+What important facts are missing from this pathology card? Max 4 concise bullet points covering pathophys, clinical, investigations, or management. If the card looks complete say "Looks good."`;
+  try{
+    const r=await fetch('https://mymedicinefriend.ranaabhinav23.workers.dev',{method:'POST',headers:{'Content-Type':'application/json'},body:JSON.stringify({model:'claude-haiku-4-5-20251001',max_tokens:400,messages:[{role:'user',content:prompt}]})});
+    const d=await r.json();
+    document.getElementById('aiPContent').textContent=(d.content?.[0]?.text||'').trim();
+    document.getElementById('aiPSug').style.display='block';
+  }catch(e){showErr('pErr',e.message);}
+  finally{setBusy('aiPBtn','aiPTxt','✨ Check what I missed (AI)',false);}
+}
+
+async function savePath(){
+  const name=document.getElementById('pName').value.trim();
+  if(!name){showErr('pErr','Condition name required.');return;}
+  const ai=document.getElementById('aiPSug').style.display!=='none'?document.getElementById('aiPContent').textContent:'';
+  const{error}=await sb.from('path_cards').insert({
+    year:yr,
+    block:document.getElementById('pBlock').value,
+    subject:document.getElementById('pSubject').value,
+    name,
+    pathophys:document.getElementById('pPathophys').value.trim(),
+    clinical:document.getElementById('pClinical').value.trim(),
+    investigations:document.getElementById('pInvest').value.trim(),
+    treatment:document.getElementById('pTreat').value.trim(),
+    ai_notes:ai
+  });
+  if(error){showErr('pErr','Save failed: '+error.message);return;}
+  closeModal('addPathModal');
+  ['pName','pPathophys','pClinical','pInvest','pTreat'].forEach(id=>document.getElementById(id).value='');
+  document.getElementById('aiPSug').style.display='none';
+  hideErr('pErr');
+  loadPath();
+}
+
+async function delPath(id){
+  await sb.from('path_cards').delete().eq('id',id);
+  loadPath();
+}
+
+// Pathology test mode
+function startPathTest(){
+  const paths=allPaths.filter(p=>selPathBlocks.has(p.block));
+  if(!paths.length){document.getElementById('pathTestArea').innerHTML='<div class="empty">No pathology cards in selected blocks.</div>';return;}
+  pTestQs=shuffle([...paths]);pTestIdx=0;renderPathCard();
+}
+
+function renderPathCard(){
+  const a=document.getElementById('pathTestArea');
+  if(pTestIdx>=pTestQs.length){
+    a.innerHTML=`<div class="section-card" style="text-align:center;padding:36px;">
+      <div style="font-size:1.2rem;font-weight:800;color:var(--text);margin-bottom:8px;">Done! 🎉</div>
+      <div style="color:var(--text2);">Reviewed ${pTestQs.length} pathology cards</div>
+      <button class="btn btn-primary mt16" onclick="startPathTest()">Go again</button>
+    </div>`;return;
+  }
+  const p=pTestQs[pTestIdx];
+  a.innerHTML=`<div class="section-card">
+    <div class="section-head">
+      <div>
+        <div style="font-size:11px;color:var(--text2);">Card ${pTestIdx+1} of ${pTestQs.length}</div>
+        <div class="section-title" style="font-size:1.1rem;margin-top:4px;">${esc(p.name)}</div>
+      </div>
+      <div style="display:flex;gap:6px;">
+        ${p.subject?`<span class="badge badge-muted">${p.subject}</span>`:''}
+        <span class="badge badge-muted">${p.block}</span>
+      </div>
+    </div>
+    <div class="section-body">
+      <div style="font-size:12px;color:var(--text2);margin-bottom:16px;">Recall everything you know about this condition</div>
+      <div id="pCardBack" style="display:none;">
+        <div style="display:grid;grid-template-columns:1fr 1fr;gap:14px;margin-bottom:16px;">
+          <div><div class="field-label">Pathophysiology</div><div class="field-val">${esc(p.pathophys||'—')}</div></div>
+          <div><div class="field-label">Clinical features</div><div class="field-val">${esc(p.clinical||'—')}</div></div>
+          <div><div class="field-label">Investigations</div><div class="field-val">${esc(p.investigations||'—')}</div></div>
+          <div><div class="field-label">Treatment</div><div class="field-val">${esc(p.treatment||'—')}</div></div>
+          ${p.ai_notes?`<div style="grid-column:span 2"><div class="field-label" style="color:var(--accent);">Extra</div><div class="field-val" style="font-size:12px;">${esc(p.ai_notes)}</div></div>`:''}
+        </div>
+      </div>
+      <div id="pRevBtn"><button class="btn btn-outline" onclick="revPCard()">Reveal answer</button></div>
+      <div id="pActBtn" style="display:none;"><button class="btn btn-primary" onclick="nxtPCard()">Next card →</button></div>
+    </div>
+  </div>`;
+}
+
+function revPCard(){document.getElementById('pCardBack').style.display='block';document.getElementById('pRevBtn').style.display='none';document.getElementById('pActBtn').style.display='block';}
+function nxtPCard(){pTestIdx++;renderPathCard();}
 
 // ── REVIEW ──
 // ── REVIEW FILTERS ──
