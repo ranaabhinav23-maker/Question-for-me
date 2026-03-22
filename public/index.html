@@ -940,9 +940,11 @@ label { font-size: 11px; color: var(--text2); font-weight: 600; display: block; 
       <div id="timerFocusTab">
         <div class="g2">
           <div class="section-card" style="text-align:center;padding:40px 24px;">
-            <div id="timerMode" style="font-size:11px;font-weight:700;color:var(--text3);text-transform:uppercase;letter-spacing:0.12em;margin-bottom:16px;">FOCUS SESSION</div>
-            <div id="timerDisplay" style="font-size:5rem;font-weight:800;color:var(--text);letter-spacing:-0.04em;font-family:var(--mono);margin-bottom:8px;">25:00</div>
-            <div id="timerSessionLabel" style="font-size:13px;color:var(--text2);margin-bottom:28px;">Session 1 of 4</div>
+            <div id="timerMode" style="font-size:11px;font-weight:700;color:var(--text3);text-transform:uppercase;letter-spacing:0.12em;margin-bottom:8px;">FOCUS SESSION</div>
+            <!-- Ends-at clock -->
+            <div id="timerEndsAt" style="font-size:12px;color:var(--accent);font-weight:600;margin-bottom:12px;min-height:18px;"></div>
+            <div id="timerDisplay" style="font-size:5rem;font-weight:800;color:var(--text);letter-spacing:-0.04em;font-family:var(--mono);margin-bottom:8px;">90:00</div>
+            <div id="timerSessionLabel" style="font-size:13px;color:var(--text2);margin-bottom:28px;">Session 1 of 2</div>
             <div style="display:flex;gap:4px;justify-content:center;margin-bottom:28px;" id="timerDots"></div>
             <div style="display:flex;gap:10px;justify-content:center;margin-bottom:12px;">
               <button class="btn btn-ghost btn-sm" onclick="setTimerMode(25,5)" id="tmBtn25" style="border:1px solid var(--border);">25/5</button>
@@ -964,7 +966,12 @@ label { font-size: 11px; color: var(--text2); font-weight: 600; display: block; 
               <button class="btn btn-teal" id="timerStartBtn" onclick="toggleTimer()" style="padding:12px 36px;font-size:15px;">▶ Start</button>
               <button class="btn btn-outline" onclick="resetTimer()">↺ Reset</button>
             </div>
-            <div style="margin-top:20px;">
+            <!-- Notification permission -->
+            <div id="notifRow" style="margin-top:14px;display:flex;align-items:center;justify-content:center;gap:8px;">
+              <span style="font-size:11px;color:var(--text3);" id="notifStatus">🔔 Notifications off</span>
+              <button class="btn btn-xs btn-outline" id="notifBtn" onclick="requestNotifPermission()" style="font-size:10px;">Enable</button>
+            </div>
+            <div style="margin-top:14px;">
               <input type="text" id="timerTask" placeholder="What are you working on? (optional)" style="max-width:280px;text-align:center;font-size:13px;padding:8px 12px;">
             </div>
           </div>
@@ -4530,6 +4537,33 @@ let timerInterval=null,timerSeconds=0,timerRunning=false,timerIsBreak=false;
 let timerWorkMin=25,timerBreakMin=5,timerSession=1,timerTotalSessions=4;
 let timerStartTime=null,timerTaskName='';
 let timerEndAt=null; // wall-clock end time — survives tab throttling
+let _timerWorker=null; // Web Worker — never throttled in background tabs
+
+function getTimerWorker(){
+  if(_timerWorker)return _timerWorker;
+  // Inline worker via Blob — no separate file needed
+  const workerCode=`
+    let _iv=null;
+    self.onmessage=function(e){
+      if(e.data==='start'){
+        if(_iv)return;
+        _iv=setInterval(()=>self.postMessage('tick'),500);
+      } else if(e.data==='stop'){
+        clearInterval(_iv);_iv=null;
+      }
+    };
+  `;
+  try{
+    const blob=new Blob([workerCode],{type:'application/javascript'});
+    _timerWorker=new Worker(URL.createObjectURL(blob));
+    _timerWorker.onmessage=()=>timerTick();
+    return _timerWorker;
+  }catch(e){
+    // Fallback to setInterval if Workers not supported
+    console.warn('Web Worker not available, using setInterval');
+    return null;
+  }
+}
 let _timerAllSessions=[];
 let _timerHistoryWeekOffset=0;
 
@@ -4592,8 +4626,10 @@ function startTimerRun(){
   const mainBtn=document.getElementById('timerStartBtn');
   if(mainBtn)mainBtn.textContent='⏸ Pause';
   updateTimerDisplay();
-  clearInterval(timerInterval);
-  timerInterval=setInterval(timerTick,500); // poll twice per second for responsiveness
+  // Use Web Worker for tick — never throttled in background tabs
+  const worker=getTimerWorker();
+  if(worker){worker.postMessage('start');}
+  else{clearInterval(timerInterval);timerInterval=setInterval(timerTick,500);}
 }
 
 function timerTick(){
@@ -4614,30 +4650,34 @@ function onTimerSegmentEnd(){
     logTimerSession(timerWorkMin,timerTaskName).then(()=>{renderTimerLog();renderHoursStats();});
     timerSession++;
     if(timerSession>timerTotalSessions){
-      timerSession=1;
+      if(_timerWorker)_timerWorker.postMessage('stop');
+      timerSession=1;timerRunning=false;timerEndAt=null;
+      // All done — fire notification + ding
+      fireNotification('All done! 🎉',`${timerTotalSessions} session${timerTotalSessions>1?'s':''} complete. Brilliant work — take a proper break.`);
       const m=document.getElementById('timerMode');if(m)m.textContent='ALL DONE! 🎉';
       const b=document.getElementById('timerStartBtn');if(b)b.textContent='▶ Start';
+      const ea=document.getElementById('timerEndsAt');if(ea)ea.textContent='';
       timerStartTime=null;
       updateTimerDisplay();updateTimerDots();
       return;
     }
-    // Start break
+    // Focus done → break starting — notify
+    fireNotification('Focus done! ☕',`Session ${timerSession-1} complete. ${timerBreakMin} min break — step away.`);
     timerIsBreak=true;timerSeconds=timerBreakMin*60;
     timerEndAt=Date.now()+(timerSeconds*1000);
     const m=document.getElementById('timerMode');if(m)m.textContent='BREAK TIME ☕';
-    const b=document.getElementById('timerStartBtn');if(b)b.textContent='▶ Start break';
+    const b=document.getElementById('timerStartBtn');if(b)b.textContent='⏸ Break';
     timerRunning=true;
-    clearInterval(timerInterval);
-    timerInterval=setInterval(timerTick,500);
+    const w1=getTimerWorker();if(w1){w1.postMessage('start');}else{clearInterval(timerInterval);timerInterval=setInterval(timerTick,500);}
   }else{
-    // Break complete — start next focus session automatically
+    // Break done → next session — notify
+    fireNotification('Break over! 📚',`Session ${timerSession} of ${timerTotalSessions} — back to it.`);
     timerIsBreak=false;timerSeconds=timerWorkMin*60;timerStartTime=null;
     timerEndAt=Date.now()+(timerSeconds*1000);
     const m=document.getElementById('timerMode');if(m)m.textContent='FOCUS SESSION';
-    const b=document.getElementById('timerStartBtn');if(b)b.textContent='▶ Start';
+    const b=document.getElementById('timerStartBtn');if(b)b.textContent='⏸ Pause';
     timerRunning=true;
-    clearInterval(timerInterval);
-    timerInterval=setInterval(timerTick,500);
+    const w2=getTimerWorker();if(w2){w2.postMessage('start');}else{clearInterval(timerInterval);timerInterval=setInterval(timerTick,500);}
   }
   updateTimerDisplay();updateTimerDots();
 }
@@ -4646,6 +4686,7 @@ function pauseTimer(){
   // Save remaining seconds at pause time so resume is accurate
   if(timerEndAt)timerSeconds=Math.max(0,Math.ceil((timerEndAt-Date.now())/1000));
   timerEndAt=null;
+  if(_timerWorker)_timerWorker.postMessage('stop');
   clearInterval(timerInterval);timerRunning=false;
   const b=document.getElementById('timerStartBtn');if(b)b.textContent='▶ Resume';
   const s=document.getElementById('sidebarTimerBtn');if(s)s.textContent='▶';
@@ -4685,6 +4726,10 @@ function updateTimerDisplay(){
     const sm=document.getElementById('sidebarTimerMode');if(sm)sm.textContent=modeStr;
     const sbtn=document.getElementById('sidebarTimerBtn');if(sbtn)sbtn.textContent=timerRunning?'⏸':'▶';
   }
+  // Ends-at label
+  const endsAtStr=timerRunning&&timerEndAt?getEndsAtStr(getTotalSessionEndTime()):'';
+  const ea=document.getElementById('timerEndsAt');if(ea)ea.textContent=endsAtStr;
+
   // Floating popout
   const popout=document.getElementById('timerPopout');
   if(popout&&popout.classList.contains('visible')){
@@ -4693,6 +4738,7 @@ function updateTimerDisplay(){
     const pb=document.getElementById('ptBar');if(pb){pb.style.width=pct+'%';pb.style.background=timerIsBreak?'#4ade80':timerSeconds<60?'#f87171':'var(--accent)';}
     const ps=document.getElementById('ptSession');if(ps)ps.textContent='Session '+timerSession+'/'+timerTotalSessions;
     const pp=document.getElementById('ptPlayBtn');if(pp)pp.textContent=timerRunning?'⏸':'▶';
+    const pe=document.getElementById('ptEndsAt');if(pe)pe.textContent=endsAtStr;
   }
 }
 
@@ -4720,6 +4766,86 @@ document.addEventListener('visibilitychange',()=>{
     }
   }
 });
+
+// ── NOTIFICATIONS + ENDS-AT ──
+function requestNotifPermission(){
+  if(!('Notification' in window)){
+    const s=document.getElementById('notifStatus');if(s)s.textContent='🔕 Not supported';return;
+  }
+  Notification.requestPermission().then(p=>{
+    updateNotifUI(p);
+    if(p==='granted'){
+      // Show a test notification
+      new Notification('Medic Meduvita 🎉',{body:'Notifications enabled! You will hear a ding when your session ends.',icon:'/favicon.ico',silent:false});
+    }
+  });
+}
+
+function updateNotifUI(permission){
+  const status=document.getElementById('notifStatus');
+  const btn=document.getElementById('notifBtn');
+  if(!status)return;
+  if(permission==='granted'){
+    status.textContent='🔔 Notifications on';
+    if(btn)btn.style.display='none';
+  } else if(permission==='denied'){
+    status.textContent='🔕 Notifications blocked';
+    if(btn){btn.textContent='How to enable';btn.onclick=()=>alert('Go to your browser settings → Site permissions → Notifications → Allow for this site.');}
+  } else {
+    status.textContent='🔔 Notifications off';
+    if(btn){btn.textContent='Enable';btn.style.display='';}
+  }
+}
+
+function fireNotification(title,body){
+  // Play a ding sound via AudioContext
+  try{
+    const ctx=new(window.AudioContext||window.webkitAudioContext)();
+    [0,150,300].forEach(delay=>{
+      const osc=ctx.createOscillator();
+      const gain=ctx.createGain();
+      osc.connect(gain);gain.connect(ctx.destination);
+      osc.frequency.value=880;osc.type='sine';
+      gain.gain.setValueAtTime(0.3,ctx.currentTime+delay/1000);
+      gain.gain.exponentialRampToValueAtTime(0.001,ctx.currentTime+delay/1000+0.4);
+      osc.start(ctx.currentTime+delay/1000);
+      osc.stop(ctx.currentTime+delay/1000+0.4);
+    });
+  }catch(e){}
+  // Browser notification
+  if(Notification.permission==='granted'){
+    try{new Notification(title,{body,icon:'/favicon.ico',silent:false,requireInteraction:false});}catch(e){}
+  }
+}
+
+function getEndsAtStr(endTimestamp){
+  if(!endTimestamp)return'';
+  const end=new Date(endTimestamp);
+  return 'ends at '+end.toLocaleTimeString('en-GB',{hour:'2-digit',minute:'2-digit'});
+}
+
+function getTotalSessionEndTime(){
+  // Calculate when ALL remaining sessions + breaks end
+  if(!timerEndAt)return null;
+  // Current segment end is timerEndAt
+  // After that: remaining sessions
+  const sessionsLeft=timerTotalSessions-timerSession;
+  let extra=0;
+  if(!timerIsBreak){
+    // We're in a focus session — break comes after, then more focus sessions
+    extra+=timerBreakMin*60*1000; // next break
+    extra+=sessionsLeft*(timerWorkMin+timerBreakMin)*60*1000; // remaining full cycles
+  }else{
+    // We're in a break — next focus sessions
+    extra+=sessionsLeft*(timerWorkMin+timerBreakMin)*60*1000;
+  }
+  return timerEndAt+extra;
+}
+
+// Check notification permission on load
+if('Notification' in window){
+  updateNotifUI(Notification.permission);
+}
 
 // Make popout draggable
 (function(){
@@ -5044,6 +5170,7 @@ function endProg(pid,fid){clearInterval(_pt[pid]);const f=document.getElementByI
   <div id="popoutDragHandle" style="cursor:move;">
     <div class="pt-mode" id="ptMode">FOCUS SESSION</div>
     <div class="pt-time" id="ptTime">90:00</div>
+    <div id="ptEndsAt" style="font-size:10px;color:rgba(6,182,212,0.8);margin-bottom:4px;"></div>
     <div class="pt-bar"><div class="pt-bar-fill" id="ptBar" style="width:100%;"></div></div>
     <div class="pt-controls">
       <div style="font-size:11px;color:rgba(255,255,255,0.4);" id="ptSession">Session 1/2</div>
