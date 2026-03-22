@@ -747,14 +747,14 @@ label { font-size: 11px; color: var(--text2); font-weight: 600; display: block; 
 
    <!-- REVIEW -->
    <div class="page" id="page-review">
-    <div class="page-hero"><div class="page-hero-title">Review Wrong Answers</div><div class="page-hero-sub">Every question you got wrong — filter by block and subject</div></div>
+    <div class="page-hero"><div class="page-hero-title">Review Wrong Answers</div><div class="page-hero-sub">Filter by block and subject then start review</div></div>
     <div style="padding:24px 32px 0;">
       <div class="section-card mb16">
-        <div class="section-head"><div class="section-title">Filter</div></div>
+        <div class="section-head"><div class="section-title">Filter</div><div id="reviewTotalBadge" style="font-size:12px;color:var(--text2);"></div></div>
         <div class="section-body">
           <label>Block</label>
-          <div class="pill-row" id="reviewPills"></div>
-          <label style="margin-top:8px;display:block;">Subject <span style="font-weight:400;color:var(--text3);">(optional)</span></label>
+          <div class="pill-row" id="reviewBlockPills"></div>
+          <label style="margin-top:4px;display:block;">Subject</label>
           <div class="pill-row" id="reviewSubjPills"></div>
           <button class="btn btn-primary mt8" onclick="startReview()">Start review</button>
         </div>
@@ -1324,6 +1324,7 @@ function nav(page,el){
   if(page==='mock'){resetMockSetup();_notePickerAll=[];}
   if(page==='recall'){resetRecallSetup();_notePickerAll=[];}
   if(page==='dashboard')loadDash();
+  if(page==='review'){_allWrongAnswers=null;loadReview();}
   if(page==='lectures')loadLecs();
   if(page==='drugs')loadDrugs();
   if(page==='bugs')loadBugs();
@@ -1333,8 +1334,11 @@ function buildPills(){
   document.getElementById('lecBlockPills').innerHTML=`<span class="pill pill-all active" onclick="setLecF('block','all',this)">All blocks</span>`+BLOCKS.map(b=>`<span class="pill pill-${BC[b]}" onclick="setLecF('block','${b}',this)">${b}</span>`).join('');
   document.getElementById('lecSubjPills').innerHTML=`<span class="subj-pill active" onclick="setLecF('subj','all',this)">All subjects</span>`+SUBJECTS.map(s=>`<span class="subj-pill" onclick="setLecF('subj','${s}',this)">${s}</span>`).join('');
   document.getElementById('lecPassPills').innerHTML=`<span class="subj-pill active" onclick="setLecF('pass','all',this)">All</span><span class="subj-pill" onclick="setLecF('pass','none',this)">Not started</span><span class="subj-pill" onclick="setLecF('pass','p1',this)">Pass 1 done</span><span class="subj-pill" onclick="setLecF('pass','p2',this)">Both passes</span>`;
-  ['drugPills','bugPills','reviewPills'].forEach(id=>{document.getElementById(id).innerHTML=BLOCKS.map(b=>`<span class="pill pill-${BC[b]} active" onclick="togglePill('${id}','${b}',this)">${b}</span>`).join('');});
-  // Review subject pills
+  ['drugPills','bugPills'].forEach(id=>{document.getElementById(id).innerHTML=BLOCKS.map(b=>`<span class="pill pill-${BC[b]} active" onclick="togglePill('${id}','${b}',this)">${b}</span>`).join('');});
+  // Review block pills — single select with All option
+  const rbp=document.getElementById('reviewBlockPills');
+  if(rbp)rbp.innerHTML=`<span class="pill pill-all active" onclick="setReviewBlockF('all',this)">All blocks</span>`+BLOCKS.map(b=>`<span class="pill pill-${BC[b]}" onclick="setReviewBlockF('${b}',this)">${b}</span>`).join('');
+  // Review subject pills — single select
   const rsp=document.getElementById('reviewSubjPills');
   if(rsp)rsp.innerHTML=`<span class="subj-pill active" onclick="setReviewSubjF('all',this)">All subjects</span>`+SUBJECTS.map(s=>`<span class="subj-pill" onclick="setReviewSubjF('${s}',this)">${s}</span>`).join('');
   ['drugTestPills','bugTestPills'].forEach(id=>{document.getElementById(id).innerHTML=BLOCKS.map(b=>`<span class="pill pill-${BC[b]} active" onclick="toggleTestPill('${id}','${b}',this)">${b}</span>`).join('');});
@@ -1727,6 +1731,7 @@ async function subMCQ(){
   try{await sb.from('mcq_sessions').insert({year:yr,block,total:mcqQs.length,score,questions:mcqQs});}catch(e){console.warn('mcq session save:',e);}
   // Save wrong answers with subject field
   if(wrongs.length){try{await sb.from('wrong_answers').insert(wrongs);}catch(e){console.warn('wrong answers save:',e);}}
+  _allWrongAnswers=null; // clear cache so review page reloads fresh
   // Save ALL generated questions to shared question bank
   try{
     const bankRows=mcqQs.map(q=>({
@@ -1974,34 +1979,57 @@ function revBCard(){document.getElementById('bCardBack').style.display='block';d
 function nxtBCard(){bTestIdx++;renderBugCard();}
 
 // ── REVIEW ──
-let _reviewSubjF='all';
+// ── REVIEW FILTERS ──
+let _reviewBlockF='all', _reviewSubjF='all';
+let _allWrongAnswers=null; // cache
+
+function setReviewBlockF(val,el){
+  _reviewBlockF=val;
+  document.querySelectorAll('#reviewBlockPills .pill').forEach(p=>p.classList.remove('active'));
+  el.classList.add('active');
+  updateReviewBadge();
+}
 function setReviewSubjF(val,el){
   _reviewSubjF=val;
   document.querySelectorAll('#reviewSubjPills .subj-pill').forEach(p=>p.classList.remove('active'));
   el.classList.add('active');
+  updateReviewBadge();
+}
+function getFilteredWrongs(){
+  let data=_allWrongAnswers||[];
+  if(_reviewBlockF!=='all') data=data.filter(w=>w.block===_reviewBlockF);
+  if(_reviewSubjF!=='all') data=data.filter(w=>(w.subject||'')===_reviewSubjF);
+  return data;
+}
+function updateReviewBadge(){
+  const el=document.getElementById('reviewTotalBadge');
+  if(!el||!_allWrongAnswers)return;
+  const n=getFilteredWrongs().length;
+  el.textContent=n+' question'+(n!==1?'s':'');
+}
+async function loadReview(){
+  const{data}=await sb.from('wrong_answers').select('*').eq('year',yr).eq('resolved',false).order('created_at',{ascending:false});
+  _allWrongAnswers=data||[];
+  updateReviewBadge();
 }
 async function startReview(){
-  const blocks=getActivePills('reviewPills');
-  let q=sb.from('wrong_answers').select('*').eq('year',yr).eq('resolved',false);
-  if(blocks.length)q=q.in('block',blocks);
-  const{data}=await q;
-  let filtered=data||[];
-  // Subject filter — works even if subject field is missing on old records
-  if(_reviewSubjF!=='all'){
-    filtered=filtered.filter(w=>(w.subject||'')=== _reviewSubjF);
-    // If no results with subject filter, show all for that block with a note
-    if(!filtered.length&&(data||[]).length){
-      document.getElementById('reviewArea').innerHTML=`<div class="empty"><span class="empty-ico">📂</span>No wrong answers tagged as <strong>${_reviewSubjF}</strong>.<br><span style="font-size:12px;color:var(--text3);">Older wrong answers may not have a subject tag. Try "All subjects".</span></div>`;
-      return;
-    }
+  // Load fresh if not cached
+  if(!_allWrongAnswers){
+    const{data}=await sb.from('wrong_answers').select('*').eq('year',yr).eq('resolved',false).order('created_at',{ascending:false});
+    _allWrongAnswers=data||[];
   }
+  const filtered=getFilteredWrongs();
   revQs=shuffle(filtered);revIdx=0;revPk={};
-  if(!revQs.length){document.getElementById('reviewArea').innerHTML='<div class="empty"><span class="empty-ico">🎉</span>No wrong answers match this filter!</div>';return;}
+  const area=document.getElementById('reviewArea');
+  if(!revQs.length){
+    area.innerHTML='<div class="empty"><span class="empty-ico">🎉</span>No wrong answers match this filter!<br><span style="font-size:12px;color:var(--text3);">Try a different block or subject, or you've cleared them all!</span></div>';
+    return;
+  }
   renderRev();
 }
 function renderRev(){const a=document.getElementById('reviewArea');if(revIdx>=revQs.length){a.innerHTML=`<div class="section-card" style="text-align:center;padding:36px;"><div style="font-size:1.2rem;font-weight:800;color:var(--text);margin-bottom:8px;">Review complete! 🎉</div><div style="color:var(--text2);">Went through ${revQs.length} wrong answers</div><button class="btn btn-primary mt16" onclick="startReview()">Go again</button></div>`;updateWrongBadge();return;}const q=revQs[revIdx];revPk={};a.innerHTML=`<div style="font-size:11px;color:var(--text2);margin-bottom:10px;">Question ${revIdx+1} of ${revQs.length} · <span class="badge badge-muted">${q.block}</span></div><div class="q-card"><div class="q-text"><strong>${esc(q.question)}</strong></div><div>${(q.options||[]).map((o,j)=>`<div class="opt" id="ro${j}" onclick="rPick(${j})"><input type="radio" name="rq" value="${j}"><span>${esc(o)}</span></div>`).join('')}</div><div class="expl" id="rExp"><strong style="color:var(--accent);">Explanation:</strong> ${esc(q.explanation||'')}</div><div class="row mt12" style="gap:8px;"><button class="btn btn-primary btn-sm" onclick="subRev()">Check answer</button><button class="btn btn-ghost btn-sm" onclick="skipRev()">Skip</button></div></div>`;}
 function rPick(oi){revPk={ans:oi};document.querySelectorAll('[id^="ro"]').forEach((el,j)=>el.style.borderColor=j===oi?'var(--accent)':'');}
-async function subRev(){if(revPk.ans===undefined)return;const q=revQs[revIdx],cor=q.correct,sel=revPk.ans;document.querySelectorAll('input[name="rq"]').forEach(r=>r.disabled=true);document.querySelectorAll('[id^="ro"]').forEach(el=>el.classList.add('locked'));const se=document.getElementById(`ro${sel}`),ce=document.getElementById(`ro${cor}`);if(sel===cor){se.classList.add('correct');await sb.from('wrong_answers').update({resolved:true}).eq('id',q.id);}else{if(se)se.classList.add('incorrect');if(ce)ce.classList.add('reveal');}document.getElementById('rExp').classList.add('show');setTimeout(()=>{revIdx++;renderRev();},sel===cor?900:2200);}
+async function subRev(){if(revPk.ans===undefined)return;const q=revQs[revIdx],cor=q.correct,sel=revPk.ans;document.querySelectorAll('input[name="rq"]').forEach(r=>r.disabled=true);document.querySelectorAll('[id^="ro"]').forEach(el=>el.classList.add('locked'));const se=document.getElementById(`ro${sel}`),ce=document.getElementById(`ro${cor}`);if(sel===cor){se.classList.add('correct');await sb.from('wrong_answers').update({resolved:true}).eq('id',q.id);_allWrongAnswers=null;updateWrongBadge();}else{if(se)se.classList.add('incorrect');if(ce)ce.classList.add('reveal');}document.getElementById('rExp').classList.add('show');setTimeout(()=>{revIdx++;renderRev();},sel===cor?900:2200);}
 function skipRev(){revIdx++;renderRev();}
 
 // ── YEAR ──
