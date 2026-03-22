@@ -420,6 +420,9 @@ label { font-size: 11px; color: var(--text2); font-weight: 600; display: block; 
       <div class="spin"></div>Unlock
     </button>
     <div class="lock-err" id="lockErr"></div>
+    <div style="margin-top:16px;font-size:11px;color:rgba(255,255,255,0.25);text-align:center;">
+      Password: V@nshr@na &nbsp;·&nbsp; <span onclick="hardResetLock()" style="cursor:pointer;text-decoration:underline;">having trouble?</span>
+    </div>
   </div>
 </div>
 
@@ -884,10 +887,21 @@ label { font-size: 11px; color: var(--text2); font-weight: 600; display: block; 
             <div id="timerDisplay" style="font-size:5rem;font-weight:800;color:var(--text);letter-spacing:-0.04em;font-family:var(--mono);margin-bottom:8px;">25:00</div>
             <div id="timerSessionLabel" style="font-size:13px;color:var(--text2);margin-bottom:28px;">Session 1 of 4</div>
             <div style="display:flex;gap:4px;justify-content:center;margin-bottom:28px;" id="timerDots"></div>
-            <div style="display:flex;gap:10px;justify-content:center;margin-bottom:24px;">
+            <div style="display:flex;gap:10px;justify-content:center;margin-bottom:12px;">
               <button class="btn btn-ghost btn-sm" onclick="setTimerMode(25,5)" id="tmBtn25" style="border:1px solid var(--border);background:var(--navy);color:white;">25/5</button>
               <button class="btn btn-ghost btn-sm" onclick="setTimerMode(50,10)" id="tmBtn50" style="border:1px solid var(--border);">50/10</button>
               <button class="btn btn-ghost btn-sm" onclick="setTimerMode(90,15)" id="tmBtn90" style="border:1px solid var(--border);">90/15</button>
+            </div>
+            <div style="display:flex;align-items:center;justify-content:center;gap:10px;margin-bottom:24px;">
+              <span style="font-size:12px;color:var(--text2);font-weight:600;">Cycles:</span>
+              <div style="display:flex;gap:4px;" id="cycleButtons">
+                <button class="btn btn-xs btn-ghost" onclick="setCycles(1)" id="cyc1" style="border:1px solid var(--border);min-width:30px;">1</button>
+                <button class="btn btn-xs btn-ghost" onclick="setCycles(2)" id="cyc2" style="border:1px solid var(--border);min-width:30px;background:var(--navy);color:white;">2</button>
+                <button class="btn btn-xs btn-ghost" onclick="setCycles(3)" id="cyc3" style="border:1px solid var(--border);min-width:30px;">3</button>
+                <button class="btn btn-xs btn-ghost" onclick="setCycles(4)" id="cyc4" style="border:1px solid var(--border);min-width:30px;">4</button>
+                <button class="btn btn-xs btn-ghost" onclick="setCycles(5)" id="cyc5" style="border:1px solid var(--border);min-width:30px;">5</button>
+                <button class="btn btn-xs btn-ghost" onclick="setCycles(6)" id="cyc6" style="border:1px solid var(--border);min-width:30px;">6</button>
+              </div>
             </div>
             <div style="display:flex;gap:12px;justify-content:center;">
               <button class="btn btn-teal" id="timerStartBtn" onclick="toggleTimer()" style="padding:12px 36px;font-size:15px;">▶ Start</button>
@@ -1285,6 +1299,13 @@ function unlock(){
   document.getElementById('lock').style.display='none';
   document.getElementById('app').style.display='block';
   init();
+}
+function hardResetLock(){
+  fails=0;lockTil=0;
+  document.getElementById('lockErr').textContent='';
+  document.getElementById('pwInput').value='';
+  document.getElementById('pwInput').focus();
+  alert('Reset done. Password is: V@nshr@na');
 }
 
 // ── SINGLE DOMContentLoaded ──
@@ -2022,7 +2043,7 @@ async function startReview(){
   revQs=shuffle(filtered);revIdx=0;revPk={};
   const area=document.getElementById('reviewArea');
   if(!revQs.length){
-    area.innerHTML='<div class="empty"><span class="empty-ico">🎉</span>No wrong answers match this filter!<br><span style="font-size:12px;color:var(--text3);">Try a different block or subject, or you've cleared them all!</span></div>';
+    area.innerHTML=`<div class="empty"><span class="empty-ico">🎉</span>No wrong answers match this filter!<br><span style="font-size:12px;color:var(--text3);">Try a different block or subject, or you've cleared them all!</span></div>`;
     return;
   }
   renderRev();
@@ -3990,9 +4011,18 @@ function timerTab(t,el){
   if(t==='history')renderTimerHistory();
 }
 
+function setCycles(n){
+  timerTotalSessions=n;
+  document.querySelectorAll('[id^="cyc"]').forEach(b=>{b.style.background='';b.style.color='';});
+  const btn=document.getElementById('cyc'+n);
+  if(btn){btn.style.background='var(--navy)';btn.style.color='white';}
+  // Reset session counter if we reduced cycles below current
+  if(timerSession>timerTotalSessions){timerSession=1;}
+  updateTimerDots();
+}
 function setTimerMode(work,brk){
   timerWorkMin=work;timerBreakMin=brk;
-  timerTotalSessions=work===25?4:work===50?3:2;
+  // Don't override timerTotalSessions — let user pick cycles separately
   resetTimer();
   document.querySelectorAll('[id^="tmBtn"]').forEach(b=>{b.style.background='';b.style.color='';});
   const btn=document.getElementById('tmBtn'+work);
@@ -4249,7 +4279,11 @@ async function loadTimer(){
   await loadTimerSessions();
   renderTimerLog();
   renderHoursStats();
-  if(!timerRunning&&timerSeconds===(timerWorkMin*60)&&timerSession===1)setTimerMode(25,5);
+  if(!timerRunning&&timerSeconds===(timerWorkMin*60)&&timerSession===1){
+    timerTotalSessions=2; // default 2 cycles
+    setTimerMode(25,5);
+    setCycles(2);
+  }
   updateTimerDisplay();
   updateTimerDots();
   const mainBtn=document.getElementById('timerStartBtn');
