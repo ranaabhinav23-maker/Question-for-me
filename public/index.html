@@ -642,6 +642,8 @@ label { font-size: 11px; color: var(--text2); font-weight: 600; display: block; 
           </div>
           <div style="display:flex;flex-wrap:wrap;gap:14px;margin-top:16px;">
             <div style="min-width:90px;"><label>Questions</label><select id="mcqNum"><option value="5">5</option><option value="10" selected>10</option><option value="15">15</option><option value="20">20</option></select></div>
+            <div style="min-width:130px;"><label>Block</label><select id="mcqBlockSelect"><option value="">Auto-detect</option><option>GU</option><option>MSK</option><option>Neurology</option><option>GI</option><option>CVR</option><option>Core</option></select></div>
+            <div style="min-width:140px;"><label>Subject</label><select id="mcqSubjectSelect"><option value="">Auto-detect</option><option>Anatomy</option><option>Physiology</option><option>Pharmacology</option><option>Microbiology</option><option>Immunology</option><option>Pathology</option><option>Biochemistry</option><option>Haematology</option><option>General</option></select></div>
             <div style="min-width:170px;"><label>Difficulty</label><select id="mcqDiff"><option value="mixed" selected>Mixed</option><option value="easy">Recall / Easy</option><option value="medium">Applied / Medium</option><option value="hard">Clinical / Hard</option></select></div>
             <div style="margin-top:auto;"><button class="btn btn-primary" id="mcqBtn" onclick="genMCQ()"><div class="spin"></div><span id="mcqTxt">Generate questions</span></button></div>
           </div>
@@ -653,8 +655,20 @@ label { font-size: 11px; color: var(--text2); font-weight: 600; display: block; 
         <div><div style="font-size:10px;color:var(--text2);margin-bottom:2px;font-weight:600;letter-spacing:0.06em;text-transform:uppercase;">Score</div><div class="score-num" id="mcqScoreNum">—</div></div>
         <div style="font-size:14px;font-weight:700;" id="mcqScoreMsg"></div>
         <div id="mcqWrongFlashBtn" style="display:none;">
-          <button class="btn btn-outline btn-sm" onclick="wrongToFlashcards()">🃏 Make flashcards from wrong answers</button>
+          <button class="btn btn-outline btn-sm" onclick="openFlashcardSelector()">🃏 Make flashcards from wrong answers</button>
         </div>
+      </div>
+      <!-- Flashcard selector -->
+      <div id="mcqFlashSelector" style="display:none;background:var(--surface);border:1px solid var(--border);border-radius:var(--r2);padding:16px;margin-bottom:16px;">
+        <div style="font-size:13px;font-weight:700;color:var(--text);margin-bottom:12px;">Select which wrong answers to convert to flashcards</div>
+        <div id="mcqFlashList" style="display:flex;flex-direction:column;gap:8px;margin-bottom:12px;max-height:300px;overflow-y:auto;"></div>
+        <div style="display:flex;gap:8px;">
+          <button class="btn btn-xs btn-outline" onclick="toggleAllFlashSel(true)">Select all</button>
+          <button class="btn btn-xs btn-ghost" onclick="toggleAllFlashSel(false)">Clear</button>
+          <button class="btn btn-teal btn-sm" style="margin-left:auto;" onclick="wrongToFlashcards()"><div class="spin" id="flashSelSpin"></div><span id="flashSelTxt">Generate flashcards</span></button>
+          <button class="btn btn-ghost btn-sm" onclick="document.getElementById('mcqFlashSelector').style.display='none'">Cancel</button>
+        </div>
+        <div class="err-box" id="flashSelErr"></div>
       </div>
       <div id="mcqQs"></div>
     </div>
@@ -1037,8 +1051,12 @@ label { font-size: 11px; color: var(--text2); font-weight: 600; display: block; 
         <div style="border-top:1px solid var(--border);flex-shrink:0;">
           <div style="padding:10px 16px 6px;display:flex;align-items:center;justify-content:space-between;">
             <span style="font-size:10px;font-weight:700;color:var(--text3);text-transform:uppercase;letter-spacing:0.1em;">Notion Links</span>
-            <button class="btn btn-xs btn-outline" onclick="openModal('notionLinkModal')" style="font-size:10px;padding:2px 8px;">＋ Add</button>
+            <div style="display:flex;gap:4px;">
+              <button class="btn btn-xs btn-outline" id="notionSyncBtn" onclick="syncAllNotion()" style="font-size:10px;padding:2px 8px;" title="Re-sync all imported notes from Notion">↻ Sync</button>
+              <button class="btn btn-xs btn-outline" onclick="openModal('notionLinkModal')" style="font-size:10px;padding:2px 8px;">＋ Add</button>
+            </div>
           </div>
+          <div id="notionSyncStatus" style="padding:0 16px 4px;font-size:10px;color:var(--text3);display:none;"></div>
           <div id="notionLinksList" style="padding:0 16px 12px;max-height:160px;overflow-y:auto;"></div>
         </div>
       </div>
@@ -1764,6 +1782,9 @@ async function genMCQ(){
   }
 
   // ── FROM NOTES ──
+  // Always read manual block/subject selectors — override auto-detect if set
+  const manualBlock=document.getElementById('mcqBlockSelect')?.value||'';
+  const manualSubject=document.getElementById('mcqSubjectSelect')?.value||'';
   let notes='', block='', subject='';
   if(src==='note'){
     const ids=getCheckedNoteIds('mcqNoteCheckList');
@@ -1771,11 +1792,12 @@ async function genMCQ(){
     notes=await getNotesContent(ids);
     if(notes.length<20){showErr('mcqErr','Selected notes seem empty.');return;}
     const first=_notePickerAll.find(n=>n.id===ids[0]);
-    block=first?.block||'';subject=first?.subject||'';
+    block=manualBlock||first?.block||'';subject=manualSubject||first?.subject||'';
   }else{
     // ── PASTE TEXT ──
     notes=document.getElementById('mcqNotes').value.trim();
     if(!notes||notes.length<20){showErr('mcqErr','Paste some notes first.');return;}
+    block=manualBlock;subject=manualSubject;
   }
 
   setBusy('mcqBtn','mcqTxt','Generating…',true);hideErr('mcqErr');startProg('mcqProg','mcqFill');
@@ -2385,7 +2407,62 @@ async function startReview(){
   }
   renderRev();
 }
-function renderRev(){const a=document.getElementById('reviewArea');if(revIdx>=revQs.length){a.innerHTML=`<div class="section-card" style="text-align:center;padding:36px;"><div style="font-size:1.2rem;font-weight:800;color:var(--text);margin-bottom:8px;">Review complete! 🎉</div><div style="color:var(--text2);">Went through ${revQs.length} wrong answers</div><button class="btn btn-primary mt16" onclick="startReview()">Go again</button></div>`;updateWrongBadge();return;}const q=revQs[revIdx];revPk={};a.innerHTML=`<div style="font-size:11px;color:var(--text2);margin-bottom:10px;">Question ${revIdx+1} of ${revQs.length} · <span class="badge badge-muted">${q.block}</span></div><div class="q-card"><div class="q-text"><strong>${esc(q.question)}</strong></div><div>${(q.options||[]).map((o,j)=>`<div class="opt" id="ro${j}" onclick="rPick(${j})"><input type="radio" name="rq" value="${j}"><span>${esc(o)}</span></div>`).join('')}</div><div class="expl" id="rExp"><strong style="color:var(--accent);">Explanation:</strong> ${esc(q.explanation||'')}</div><div class="row mt12" style="gap:8px;"><button class="btn btn-primary btn-sm" onclick="subRev()">Check answer</button><button class="btn btn-ghost btn-sm" onclick="skipRev()">Skip</button></div></div>`;}
+function renderRev(){
+  const a=document.getElementById('reviewArea');
+  if(revIdx>=revQs.length){
+    a.innerHTML=`<div class="section-card" style="text-align:center;padding:36px;"><div style="font-size:1.2rem;font-weight:800;color:var(--text);margin-bottom:8px;">Review complete! 🎉</div><div style="color:var(--text2);">Went through ${revQs.length} wrong answers</div><button class="btn btn-primary mt16" onclick="startReview()">Go again</button></div>`;
+    updateWrongBadge();return;
+  }
+  const q=revQs[revIdx];revPk={};
+  const blockColor={'GU':'#ec4899','MSK':'#3b82f6','Neurology':'#10b981','GI':'#f97316','CVR':'#ef4444','Core':'#8b5cf6'}[q.block]||'var(--text3)';
+  a.innerHTML=`
+    <div style="font-size:11px;color:var(--text2);margin-bottom:10px;display:flex;align-items:center;gap:8px;flex-wrap:wrap;">
+      <span>Question ${revIdx+1} of ${revQs.length}</span>
+      ${q.block?`<span class="badge badge-muted" style="border-color:${blockColor};color:${blockColor};">${q.block}</span>`:'<span class="badge badge-red">No block</span>'}
+      ${q.subject?`<span class="badge badge-muted">${q.subject}</span>`:'<span class="badge badge-orange">No subject</span>'}
+      <button onclick="openTagInline(${revIdx})" style="background:none;border:1px dashed var(--border2);border-radius:4px;padding:2px 8px;font-size:10px;color:var(--text3);cursor:pointer;font-family:var(--font);">✏ tag</button>
+    </div>
+    <div id="tagInlineArea" style="display:none;background:var(--surface2);border:1px solid var(--border);border-radius:var(--r);padding:12px;margin-bottom:12px;">
+      <div style="font-size:12px;font-weight:700;color:var(--text);margin-bottom:10px;">Tag this question with block and subject</div>
+      <div style="display:flex;gap:10px;flex-wrap:wrap;align-items:flex-end;">
+        <div><label>Block</label><select id="tagBlockSel" style="padding:6px 10px;font-size:12px;"><option value="">— none —</option><option>GU</option><option>MSK</option><option>Neurology</option><option>GI</option><option>CVR</option><option>Core</option></select></div>
+        <div><label>Subject</label><select id="tagSubjectSel" style="padding:6px 10px;font-size:12px;"><option value="">— none —</option><option>Anatomy</option><option>Physiology</option><option>Pharmacology</option><option>Microbiology</option><option>Immunology</option><option>Pathology</option><option>Biochemistry</option><option>Haematology</option><option>General</option></select></div>
+        <button class="btn btn-teal btn-sm" onclick="saveRevTag(${revIdx})">Save</button>
+        <button class="btn btn-ghost btn-sm" onclick="document.getElementById('tagInlineArea').style.display='none'">Cancel</button>
+      </div>
+    </div>
+    <div class="q-card">
+      <div class="q-text"><strong>${esc(q.question)}</strong></div>
+      <div>${(q.options||[]).map((o,j)=>`<div class="opt" id="ro${j}" onclick="rPick(${j})"><input type="radio" name="rq" value="${j}"><span>${esc(o)}</span></div>`).join('')}</div>
+      <div class="expl" id="rExp"><strong style="color:var(--accent);">Explanation:</strong> ${esc(q.explanation||'')}</div>
+      <div class="row mt12" style="gap:8px;">
+        <button class="btn btn-primary btn-sm" onclick="subRev()">Check answer</button>
+        <button class="btn btn-ghost btn-sm" onclick="skipRev()">Skip</button>
+      </div>
+    </div>`;
+}
+function openTagInline(idx){
+  const q=revQs[idx];
+  const area=document.getElementById('tagInlineArea');
+  if(!area)return;
+  area.style.display='block';
+  const bsel=document.getElementById('tagBlockSel');
+  const ssel=document.getElementById('tagSubjectSel');
+  if(bsel)bsel.value=q.block||'';
+  if(ssel)ssel.value=q.subject||'';
+}
+async function saveRevTag(idx){
+  const q=revQs[idx];
+  const block=document.getElementById('tagBlockSel')?.value||'';
+  const subject=document.getElementById('tagSubjectSel')?.value||'';
+  try{
+    await sb.from('wrong_answers').update({block,subject}).eq('id',q.id);
+    q.block=block;q.subject=subject;
+    _allWrongAnswers=null; // clear cache
+    document.getElementById('tagInlineArea').style.display='none';
+    renderRev(); // re-render to show updated tags
+  }catch(e){console.error('Tag save failed:',e);}
+}
 function rPick(oi){revPk={ans:oi};document.querySelectorAll('[id^="ro"]').forEach((el,j)=>el.style.borderColor=j===oi?'var(--accent)':'');}
 async function subRev(){if(revPk.ans===undefined)return;const q=revQs[revIdx],cor=q.correct,sel=revPk.ans;document.querySelectorAll('input[name="rq"]').forEach(r=>r.disabled=true);document.querySelectorAll('[id^="ro"]').forEach(el=>el.classList.add('locked'));const se=document.getElementById(`ro${sel}`),ce=document.getElementById(`ro${cor}`);if(sel===cor){se.classList.add('correct');await sb.from('wrong_answers').update({resolved:true}).eq('id',q.id);_allWrongAnswers=null;updateWrongBadge();}else{if(se)se.classList.add('incorrect');if(ce)ce.classList.add('reveal');}document.getElementById('rExp').classList.add('show');setTimeout(()=>{revIdx++;renderRev();},sel===cor?900:2200);}
 function skipRev(){revIdx++;renderRev();}
@@ -2972,15 +3049,109 @@ function saveNotionLink(){saveNotionLinkOnly();}
 
 function renderNotionLinks(){
   const el=document.getElementById('notionLinksList');
-  if(!notionLinks.length){el.innerHTML=`<div style="font-size:11px;color:var(--text3);text-align:center;padding:8px 0;">No Notion pages yet.<br>Click + Add to import.</div>`;return;}
+  if(!el)return;
+  const imported=notionLinks.filter(l=>l.imported&&l.noteId);
+  const viewOnly=notionLinks.filter(l=>!l.imported||!l.noteId);
+  if(!notionLinks.length){
+    el.innerHTML=`<div style="font-size:11px;color:var(--text3);text-align:center;padding:8px 0;">No Notion pages yet.<br>Click + Add to import.</div>`;
+    return;
+  }
   el.innerHTML=notionLinks.map(l=>`<div class="notion-link-card">
-    <span class="notion-ico">${l.imported?'✅':'🔗'}</span>
+    <span class="notion-ico">${l.syncing?'⏳':l.imported?'✅':'🔗'}</span>
     <div class="notion-link-card-body" onclick="${l.imported&&l.noteId?`openNote('${l.noteId}')`:`viewNotionPage(${l.id})`}" style="cursor:pointer;">
       <div class="notion-link-card-title">${esc(l.name)}</div>
-      <div class="notion-link-card-url">${l.imported?'<span style="color:var(--green);font-size:10px;">Imported as note</span>':'View only · '+esc(l.url.substring(0,35))+'…'}</div>
+      <div class="notion-link-card-url">
+        ${l.imported
+          ?`<span style="color:var(--green);font-size:10px;">Imported</span>${l.lastSync?` <span style="color:var(--text3);font-size:10px;">· synced ${timeAgo(l.lastSync)}</span>`:''}`
+          :`View only · ${esc(l.url.substring(0,30))}…`}
+      </div>
     </div>
-    <button class="btn btn-xs btn-danger" onclick="removeNotionLink(${l.id})">✕</button>
+    <div style="display:flex;gap:4px;flex-shrink:0;">
+      ${l.imported&&l.noteId?`<button class="btn btn-xs btn-outline" onclick="syncOneNotion(${l.id})" title="Sync from Notion" style="font-size:10px;">↻</button>`:''}
+      <button class="btn btn-xs btn-danger" onclick="removeNotionLink(${l.id})">✕</button>
+    </div>
   </div>`).join('');
+}
+
+async function syncOneNotion(linkId){
+  const link=notionLinks.find(l=>l.id===linkId);
+  if(!link||!link.noteId)return;
+  // Extract page ID from URL
+  const pageId=extractNotionPageId(link.url);
+  if(!pageId){alert('Cannot extract page ID from URL: '+link.url);return;}
+  // Mark as syncing
+  link.syncing=true;renderNotionLinks();
+  try{
+    const r=await fetch(NOTION_WORKER,{method:'POST',headers:{'Content-Type':'application/json'},body:JSON.stringify({pageId})});
+    const d=await r.json();
+    if(!r.ok||d.error)throw new Error(d.error||'Worker error');
+    // Update note content in Supabase
+    await sb.from('notes').update({
+      content:d.html||'',
+      title:d.title||link.name,
+      updated_at:new Date().toISOString()
+    }).eq('id',link.noteId);
+    // Update local cache
+    const localNote=allNotes.find(n=>n.id===link.noteId);
+    if(localNote){localNote.content=d.html||'';localNote.title=d.title||link.name;localNote.updated_at=new Date().toISOString();}
+    // If this note is currently open, refresh it
+    if(activeNoteId===link.noteId){
+      document.getElementById('noteEditor').innerHTML=d.html||'';
+    }
+    link.lastSync=new Date().toISOString();
+    link.name=d.title||link.name;
+    link.syncing=false;
+    localStorage.setItem('_ms_notion_links',JSON.stringify(notionLinks));
+    renderNotionLinks();
+    renderNotesList();
+    // Show brief indicator
+    const status=document.getElementById('notionSyncStatus');
+    if(status){status.style.display='block';status.textContent=`✓ "${link.name}" synced`;setTimeout(()=>{status.style.display='none';},3000);}
+  }catch(e){
+    link.syncing=false;renderNotionLinks();
+    const status=document.getElementById('notionSyncStatus');
+    if(status){status.style.display='block';status.style.color='var(--red)';status.textContent=`✗ Sync failed: ${e.message}`;setTimeout(()=>{status.style.display='none';status.style.color='var(--text3)';},5000);}
+  }
+}
+
+async function syncAllNotion(){
+  const toSync=notionLinks.filter(l=>l.imported&&l.noteId);
+  if(!toSync.length){
+    const status=document.getElementById('notionSyncStatus');
+    if(status){status.style.display='block';status.textContent='No imported notes to sync.';setTimeout(()=>status.style.display='none',3000);}
+    return;
+  }
+  const btn=document.getElementById('notionSyncBtn');
+  if(btn){btn.disabled=true;btn.textContent='↻ Syncing…';}
+  const status=document.getElementById('notionSyncStatus');
+  if(status){status.style.display='block';status.style.color='var(--text3)';}
+  let done=0,failed=0;
+  for(const link of toSync){
+    if(status)status.textContent=`Syncing ${done+1}/${toSync.length}: ${link.name}…`;
+    const pageId=extractNotionPageId(link.url);
+    if(!pageId){failed++;continue;}
+    link.syncing=true;renderNotionLinks();
+    try{
+      const r=await fetch(NOTION_WORKER,{method:'POST',headers:{'Content-Type':'application/json'},body:JSON.stringify({pageId})});
+      const d=await r.json();
+      if(!r.ok||d.error)throw new Error(d.error);
+      await sb.from('notes').update({content:d.html||'',title:d.title||link.name,updated_at:new Date().toISOString()}).eq('id',link.noteId);
+      const localNote=allNotes.find(n=>n.id===link.noteId);
+      if(localNote){localNote.content=d.html||'';localNote.title=d.title||link.name;localNote.updated_at=new Date().toISOString();}
+      if(activeNoteId===link.noteId){document.getElementById('noteEditor').innerHTML=d.html||'';}
+      link.lastSync=new Date().toISOString();link.name=d.title||link.name;
+      done++;
+    }catch(e){failed++;console.warn('Sync failed for',link.name,e.message);}
+    link.syncing=false;
+  }
+  localStorage.setItem('_ms_notion_links',JSON.stringify(notionLinks));
+  if(btn){btn.disabled=false;btn.textContent='↻ Sync';}
+  renderNotionLinks();
+  renderNotesList();
+  if(status){
+    status.textContent=`Synced ${done}/${toSync.length}${failed?` (${failed} failed)`:''}`;
+    setTimeout(()=>{status.style.display='none';},4000);
+  }
 }
 
 function viewNotionPage(id){
@@ -4268,26 +4439,69 @@ async function deleteFC(id){
   renderFCStats();renderFCDue();renderFCBrowse();
 }
 
+function openFlashcardSelector(){
+  if(!_lastWrongQs||!_lastWrongQs.length){alert('No wrong answers from this session. Submit a quiz first.');return;}
+  const listEl=document.getElementById('mcqFlashList');
+  const selEl=document.getElementById('mcqFlashSelector');
+  if(!listEl||!selEl)return;
+  listEl.innerHTML=_lastWrongQs.map((q,i)=>`
+    <label style="display:flex;align-items:flex-start;gap:10px;padding:10px;border:1px solid var(--border);border-radius:var(--r);background:var(--surface2);cursor:pointer;">
+      <input type="checkbox" class="flash-sel-cb" data-idx="${i}" checked style="flex-shrink:0;margin-top:2px;">
+      <div style="flex:1;min-width:0;">
+        <div style="font-size:12px;font-weight:600;color:var(--text);line-height:1.4;">${esc(q.question)}</div>
+        <div style="font-size:11px;color:var(--green);margin-top:3px;">✓ ${esc(q.options[q.correct])}</div>
+        ${q.block?`<span class="badge badge-muted" style="font-size:10px;margin-top:4px;">${q.block}</span>`:''}
+      </div>
+    </label>`).join('');
+  selEl.style.display='block';
+  selEl.scrollIntoView({behavior:'smooth',block:'nearest'});
+  hideErr('flashSelErr');
+}
+
+function toggleAllFlashSel(v){
+  document.querySelectorAll('.flash-sel-cb').forEach(cb=>cb.checked=v);
+}
+
 async function wrongToFlashcards(){
-  if(!_lastWrongQs||!_lastWrongQs.length){alert('No wrong answers from this session.');return;}
-  const btn=document.getElementById('mcqWrongFlashBtn');
-  if(btn)btn.innerHTML='<button class="btn btn-outline btn-sm loading" disabled><div class="spin" style="display:inline-block;"></div> Generating…</button>';
+  // Get selected wrong questions
+  const selected=[];
+  document.querySelectorAll('.flash-sel-cb:checked').forEach(cb=>{
+    const idx=parseInt(cb.dataset.idx);
+    if(_lastWrongQs[idx])selected.push(_lastWrongQs[idx]);
+  });
+  if(!selected.length){showErr('flashSelErr','Select at least one question.');return;}
+
+  const spinEl=document.getElementById('flashSelSpin');
+  const txtEl=document.getElementById('flashSelTxt');
+  const genBtn=document.querySelector('#mcqFlashSelector .btn-teal');
+  if(spinEl)spinEl.style.display='inline-block';
+  if(txtEl)txtEl.textContent='Generating…';
+  if(genBtn)genBtn.disabled=true;
+  hideErr('flashSelErr');
+
   try{
-    const block=_lastWrongQs[0]?.block||'Core';
-    const prompt=`Convert these wrong MCQ answers into flashcards for a UK Year 2 med student. For each, create a clear Q&A flashcard capturing the key fact they missed. Raw JSON only: {"flashcards":[{"front":"Q: ...","back":"A: ..."}]}\n\nQuestions:\n${_lastWrongQs.map((q,i)=>`${i+1}. ${q.question}\nCorrect: ${q.options[q.correct]}\nExplanation: ${q.explanation||''}`).join('\n\n')}`;
+    const block=selected[0]?.block||'Core';
+    const subject=selected[0]?.subject||'';
+    const prompt=`Convert these wrong MCQ answers into flashcards for a UK Year 2 med student. For each question create a clear Q&A flashcard capturing the key fact they missed. Use "Q:" and "A:" format. Raw JSON only: {"flashcards":[{"front":"Q: ...","back":"A: ..."}]}\n\nQuestions:\n${selected.map((q,i)=>`${i+1}. ${q.question}\nCorrect answer: ${q.options[q.correct]}\nExplanation: ${q.explanation||''}`).join('\n\n')}`;
     const r=await fetch('https://mymedicinefriend.ranaabhinav23.workers.dev',{method:'POST',headers:{'Content-Type':'application/json'},body:JSON.stringify({model:'claude-haiku-4-5-20251001',max_tokens:2000,messages:[{role:'user',content:prompt}]})});
     const d=await r.json();const raw=(d.content?.[0]?.text||'').trim();
     let p;try{p=JSON.parse(raw);}catch{const m=raw.match(/\{[\s\S]*\}/);if(m)p=JSON.parse(m[0]);else throw new Error('Parse error');}
     const cards=p.flashcards||[];
     if(!cards.length)throw new Error('No flashcards generated');
     for(const c of cards){
-      const{data}=await sb.from('flashcards').insert({year:yr,front:c.front,back:c.back,block,subject:'',created_at:new Date().toISOString()}).select().single();
+      const{data}=await sb.from('flashcards').insert({year:yr,front:c.front,back:c.back,block,subject,created_at:new Date().toISOString()}).select().single();
       if(data)allFlashcards.unshift(data);
     }
-    if(btn)btn.innerHTML=`<button class="btn btn-success btn-sm">✅ ${cards.length} flashcards saved → go to Flashcards</button>`;
+    // Show success
+    document.getElementById('mcqFlashSelector').style.display='none';
+    const flashBtn=document.getElementById('mcqWrongFlashBtn');
+    if(flashBtn)flashBtn.innerHTML=`<span style="color:var(--green);font-weight:700;">✅ ${cards.length} flashcard${cards.length!==1?'s':''} saved to Flashcards page</span>`;
   }catch(e){
-    if(btn)btn.innerHTML=`<button class="btn btn-outline btn-sm" onclick="wrongToFlashcards()">🃏 Make flashcards from wrong answers</button>`;
-    console.error(e);
+    showErr('flashSelErr','Failed: '+e.message);
+  }finally{
+    if(spinEl)spinEl.style.display='none';
+    if(txtEl)txtEl.textContent='Generate flashcards';
+    if(genBtn)genBtn.disabled=false;
   }
 }
 
@@ -4315,6 +4529,7 @@ const TIMER_LOG_KEY='_ms_timer_';
 let timerInterval=null,timerSeconds=0,timerRunning=false,timerIsBreak=false;
 let timerWorkMin=25,timerBreakMin=5,timerSession=1,timerTotalSessions=4;
 let timerStartTime=null,timerTaskName='';
+let timerEndAt=null; // wall-clock end time — survives tab throttling
 let _timerAllSessions=[];
 let _timerHistoryWeekOffset=0;
 
@@ -4372,44 +4587,74 @@ function startTimerRun(){
   timerRunning=true;
   timerStartTime=timerStartTime||Date.now();
   timerTaskName=document.getElementById('timerTask')?.value||'Study session';
+  // Set wall-clock end time based on remaining seconds
+  timerEndAt=Date.now()+(timerSeconds*1000);
   const mainBtn=document.getElementById('timerStartBtn');
   if(mainBtn)mainBtn.textContent='⏸ Pause';
   updateTimerDisplay();
-  timerInterval=setInterval(()=>{
-    if(timerSeconds<=0){
-      clearInterval(timerInterval);timerRunning=false;
-      if(!timerIsBreak){
-        logTimerSession(timerWorkMin,timerTaskName).then(()=>{renderTimerLog();renderHoursStats();});
-        timerSession++;
-        if(timerSession>timerTotalSessions){
-          timerSession=1;
-          const m=document.getElementById('timerMode');if(m)m.textContent='ALL DONE! 🎉';
-          const b=document.getElementById('timerStartBtn');if(b)b.textContent='▶ Start';
-          timerStartTime=null;return;
-        }
-        timerIsBreak=true;timerSeconds=timerBreakMin*60;
-        const m=document.getElementById('timerMode');if(m)m.textContent='BREAK TIME ☕';
-        const b=document.getElementById('timerStartBtn');if(b)b.textContent='▶ Start break';
-      }else{
-        timerIsBreak=false;timerSeconds=timerWorkMin*60;timerStartTime=null;
-        const m=document.getElementById('timerMode');if(m)m.textContent='FOCUS SESSION';
-        const b=document.getElementById('timerStartBtn');if(b)b.textContent='▶ Start';
-      }
-      updateTimerDisplay();updateTimerDots();return;
+  clearInterval(timerInterval);
+  timerInterval=setInterval(timerTick,500); // poll twice per second for responsiveness
+}
+
+function timerTick(){
+  if(!timerRunning||!timerEndAt)return;
+  // Calculate remaining seconds from wall clock — works even if tab was throttled
+  const remaining=Math.max(0,Math.ceil((timerEndAt-Date.now())/1000));
+  timerSeconds=remaining;
+  updateTimerDisplay();
+  if(remaining<=0){
+    clearInterval(timerInterval);timerRunning=false;timerEndAt=null;
+    onTimerSegmentEnd();
+  }
+}
+
+function onTimerSegmentEnd(){
+  if(!timerIsBreak){
+    // Focus session complete — log it
+    logTimerSession(timerWorkMin,timerTaskName).then(()=>{renderTimerLog();renderHoursStats();});
+    timerSession++;
+    if(timerSession>timerTotalSessions){
+      timerSession=1;
+      const m=document.getElementById('timerMode');if(m)m.textContent='ALL DONE! 🎉';
+      const b=document.getElementById('timerStartBtn');if(b)b.textContent='▶ Start';
+      timerStartTime=null;
+      updateTimerDisplay();updateTimerDots();
+      return;
     }
-    timerSeconds--;updateTimerDisplay();
-  },1000);
+    // Start break
+    timerIsBreak=true;timerSeconds=timerBreakMin*60;
+    timerEndAt=Date.now()+(timerSeconds*1000);
+    const m=document.getElementById('timerMode');if(m)m.textContent='BREAK TIME ☕';
+    const b=document.getElementById('timerStartBtn');if(b)b.textContent='▶ Start break';
+    timerRunning=true;
+    clearInterval(timerInterval);
+    timerInterval=setInterval(timerTick,500);
+  }else{
+    // Break complete — start next focus session automatically
+    timerIsBreak=false;timerSeconds=timerWorkMin*60;timerStartTime=null;
+    timerEndAt=Date.now()+(timerSeconds*1000);
+    const m=document.getElementById('timerMode');if(m)m.textContent='FOCUS SESSION';
+    const b=document.getElementById('timerStartBtn');if(b)b.textContent='▶ Start';
+    timerRunning=true;
+    clearInterval(timerInterval);
+    timerInterval=setInterval(timerTick,500);
+  }
+  updateTimerDisplay();updateTimerDots();
 }
 
 function pauseTimer(){
+  // Save remaining seconds at pause time so resume is accurate
+  if(timerEndAt)timerSeconds=Math.max(0,Math.ceil((timerEndAt-Date.now())/1000));
+  timerEndAt=null;
   clearInterval(timerInterval);timerRunning=false;
   const b=document.getElementById('timerStartBtn');if(b)b.textContent='▶ Resume';
   const s=document.getElementById('sidebarTimerBtn');if(s)s.textContent='▶';
+  updateTimerDisplay();
 }
 
 function resetTimer(){
   clearInterval(timerInterval);
-  timerRunning=false;timerIsBreak=false;timerSession=1;timerStartTime=null;
+  timerRunning=false;timerIsBreak=false;timerSession=1;timerStartTime=null;timerEndAt=null;
   timerSeconds=timerWorkMin*60;
   const m=document.getElementById('timerMode');if(m)m.textContent='FOCUS SESSION';
   const b=document.getElementById('timerStartBtn');if(b)b.textContent='▶ Start';
@@ -4462,6 +4707,20 @@ function toggleTimerPopout(){
     updateTimerDisplay();
   }
 }
+// Resync timer display when tab becomes visible again
+document.addEventListener('visibilitychange',()=>{
+  if(document.visibilityState==='visible'&&timerRunning&&timerEndAt){
+    // Recalculate immediately — don't wait for next interval tick
+    const remaining=Math.max(0,Math.ceil((timerEndAt-Date.now())/1000));
+    timerSeconds=remaining;
+    updateTimerDisplay();
+    if(remaining<=0){
+      clearInterval(timerInterval);timerRunning=false;timerEndAt=null;
+      onTimerSegmentEnd();
+    }
+  }
+});
+
 // Make popout draggable
 (function(){
   function initDrag(){
