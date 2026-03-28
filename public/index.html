@@ -853,7 +853,7 @@ label { font-size: 11px; color: var(--text2); font-weight: 600; display: block; 
    <!-- STUDY PLAN -->
    <div class="page" id="page-plan">
     <div class="page-hero">
-      <div><div class="page-hero-title">Study Plan 📅</div><div class="page-hero-sub" id="planHeroSub">9-week exam schedule — track every lecture, every day</div></div>
+      <div><div class="page-hero-title">Study Plan 📅</div><div class="page-hero-sub" id="planHeroSub">28 Mar – 13 May 2026 · GU → Neuro → MSK → CVR → Core → GI → Exams</div></div>
       <div style="display:flex;gap:8px;">
         <button class="btn btn-outline btn-sm" id="planEditBtn" onclick="togglePlanEditMode()">✏ Edit</button>
         <button class="btn btn-outline btn-sm" onclick="openPlanSettings()">⚙ Settings</button>
@@ -1155,10 +1155,39 @@ label { font-size: 11px; color: var(--text2); font-weight: 600; display: block; 
   <div class="modal"><div class="modal-title">Add lecture</div><div class="mb12"><label>Lecture title</label><input type="text" id="lecTitle" placeholder="e.g. Renal physiology — filtration mechanisms"></div><div class="g2 mb12"><div><label>Block</label><select id="lecBlock"><option value="GU">GU</option><option value="MSK">MSK</option><option value="Neurology">Neurology</option><option value="GI">GI</option><option value="CVR">CVR</option><option value="Core">Core</option></select></div><div><label>Subject</label><select id="lecSubj"><option value="Anatomy">Anatomy</option><option value="Physiology">Physiology</option><option value="Pharmacology">Pharmacology</option><option value="Microbiology">Microbiology</option><option value="Immunology">Immunology</option><option value="Pathology">Pathology</option><option value="Biochemistry">Biochemistry</option><option value="Radiology">Radiology</option><option value="Development">Development</option><option value="Haematology">Haematology</option><option value="General">General</option></select></div></div><div class="err-box" id="lecErr"></div><div class="row" style="gap:8px;"><button class="btn btn-primary flex1" onclick="addLec()">Add lecture</button><button class="btn btn-outline" onclick="closeModal('addLecModal')">Cancel</button></div></div>
 </div>
 <div class="modal-bg" id="addDrugModal">
-  <div class="modal"><div class="modal-title">Add drug card</div><div class="mb12"><label>Drug name</label><input type="text" id="dName" placeholder="e.g. Metformin"></div><div class="mb12"><label>Mechanism</label><input type="text" id="dMech" placeholder="e.g. Activates AMPK, reduces hepatic glucose output"></div><div class="mb12"><label>Used for</label><input type="text" id="dUse" placeholder="e.g. Type 2 diabetes, first line"></div><div class="mb12"><label>Key side effect / buzzword</label><input type="text" id="dSide" placeholder="e.g. Lactic acidosis, no weight gain"></div><div class="mb12"><label>Block</label><select id="dBlock"><option>GU</option><option>MSK</option><option>Neurology</option><option>GI</option><option>CVR</option><option>Core</option></select></div><button class="btn btn-outline mb12" id="aiDBtn" onclick="aiCheckDrug()" style="width:100%;justify-content:center;"><div class="spin"></div><span id="aiDTxt">✨ Check what I missed (AI)</span></button><div id="aiDSug" style="display:none;background:var(--ai-sug-bg);border:1px solid var(--ai-sug-border);border-radius:var(--r);padding:14px;margin-bottom:12px;"><div style="font-size:10px;color:var(--accent);font-weight:700;letter-spacing:0.08em;text-transform:uppercase;margin-bottom:6px;">AI suggestions</div><div id="aiDContent" style="font-size:12px;color:var(--text2);line-height:1.7;"></div></div><div class="row" style="gap:8px;"><button class="btn btn-primary flex1" onclick="saveDrug()">Save card</button><button class="btn btn-outline" onclick="closeModal('addDrugModal')">Cancel</button></div><div class="err-box" id="dErr"></div></div>
+  <div class="modal" style="width:600px;max-height:90vh;overflow-y:auto;">
+    <div class="modal-title" id="addDrugModalTitle">Add drug card</div>
+    <input type="hidden" id="dEditId">
+    <div class="mb12"><label>Drug name</label><input type="text" id="dName" placeholder="e.g. Metformin"></div>
+    <div class="mb12"><label>Mechanism</label><textarea id="dMech" placeholder="e.g. Activates AMPK → inhibits hepatic gluconeogenesis&#10;Increases peripheral glucose uptake&#10;Decreases intestinal glucose absorption" style="min-height:70px;"></textarea></div>
+    <div class="mb12"><label>Used for</label><textarea id="dUse" placeholder="e.g. Type 2 diabetes — first line&#10;PCOS&#10;Weight management" style="min-height:55px;"></textarea></div>
+    <div class="mb12"><label>Key side effects / buzzwords</label><textarea id="dSide" placeholder="e.g. Lactic acidosis (rare, hold before contrast/surgery)&#10;GI upset — start low&#10;No weight gain, no hypoglycaemia&#10;Contraindicated: eGFR &lt;30" style="min-height:70px;"></textarea></div>
+    <div class="mb12"><label>Block</label><select id="dBlock"><option>GU</option><option>MSK</option><option>Neurology</option><option>GI</option><option>CVR</option><option>Core</option></select></div>
+    <div class="mb12"><label>Notes <span style="font-weight:400;color:var(--text3);">(extra details, mnemonics, clinical pearls)</span></label><textarea id="dNotes" placeholder="e.g. Mnemonic: MetFORMIN = FORMs less glucose&#10;Clinical pearl: stop 48h before IV contrast&#10;Exam tip: most common drug for T2DM, NOT first line if eGFR &lt;30" style="min-height:65px;"></textarea></div>
+    <button class="btn btn-outline mb12" id="aiDBtn" onclick="aiCheckDrug()" style="width:100%;justify-content:center;"><div class="spin"></div><span id="aiDTxt">✨ Check what I missed (AI)</span></button>
+    <div id="aiDSug" style="display:none;background:var(--ai-sug-bg);border:1px solid var(--ai-sug-border);border-radius:var(--r);padding:14px;margin-bottom:12px;"><div style="font-size:10px;color:var(--accent);font-weight:700;letter-spacing:0.08em;text-transform:uppercase;margin-bottom:6px;">AI suggestions</div><div id="aiDContent" style="font-size:12px;color:var(--text2);line-height:1.7;"></div></div>
+    <div class="row" style="gap:8px;"><button class="btn btn-primary flex1" id="saveDrugBtn" onclick="saveDrug()">Save card</button><button class="btn btn-outline" onclick="closeModal('addDrugModal')">Cancel</button></div>
+    <div class="err-box" id="dErr"></div>
+  </div>
 </div>
 <div class="modal-bg" id="addBugModal">
-  <div class="modal"><div class="modal-title">Add bug</div><div class="mb12"><label>Bug name</label><input type="text" id="bName" placeholder="e.g. Staphylococcus aureus"></div><div class="g2 mb12"><div><label>Gram stain</label><select id="bGram"><option value="+ve">Gram +ve</option><option value="-ve">Gram -ve</option><option value="—">N/A</option></select></div><div><label>Type</label><input type="text" id="bType" placeholder="e.g. Cocci, intracellular"></div></div><div class="mb12"><label>Causes</label><input type="text" id="bCauses" placeholder="e.g. Skin, endocarditis, osteomyelitis"></div><div class="mb12"><label>Treatment</label><input type="text" id="bTx" placeholder="e.g. Flucloxacillin (MSSA), Vancomycin (MRSA)"></div><div class="mb12"><label>Block</label><select id="bBlock"><option>GU</option><option>MSK</option><option>Neurology</option><option>GI</option><option>CVR</option><option>Core</option></select></div><button class="btn btn-outline mb12" id="aiBBtn" onclick="aiCheckBug()" style="width:100%;justify-content:center;"><div class="spin"></div><span id="aiBTxt">✨ Check what I missed (AI)</span></button><div id="aiBSug" style="display:none;background:var(--ai-sug-bg);border:1px solid var(--ai-sug-border);border-radius:var(--r);padding:14px;margin-bottom:12px;"><div style="font-size:10px;color:var(--accent);font-weight:700;letter-spacing:0.08em;text-transform:uppercase;margin-bottom:6px;">AI suggestions</div><div id="aiBContent" style="font-size:12px;color:var(--text2);line-height:1.7;"></div></div><div class="row" style="gap:8px;"><button class="btn btn-primary flex1" onclick="saveBug()">Save bug</button><button class="btn btn-outline" onclick="closeModal('addBugModal')">Cancel</button></div><div class="err-box" id="bErr"></div></div>
+  <div class="modal" style="width:600px;max-height:90vh;overflow-y:auto;">
+    <div class="modal-title" id="addBugModalTitle">Add bug</div>
+    <input type="hidden" id="bEditId">
+    <div class="mb12"><label>Bug name</label><input type="text" id="bName" placeholder="e.g. Staphylococcus aureus"></div>
+    <div class="g2 mb12">
+      <div><label>Gram stain</label><select id="bGram"><option value="+ve">Gram +ve</option><option value="-ve">Gram -ve</option><option value="—">N/A</option></select></div>
+      <div><label>Type</label><input type="text" id="bType" placeholder="e.g. Cocci, intracellular"></div>
+    </div>
+    <div class="mb12"><label>Causes</label><textarea id="bCauses" placeholder="e.g. Skin infections (impetigo, cellulitis)&#10;Endocarditis (IV drug users)&#10;Osteomyelitis&#10;Toxic shock syndrome" style="min-height:70px;"></textarea></div>
+    <div class="mb12"><label>Treatment</label><textarea id="bTx" placeholder="e.g. Flucloxacillin (MSSA)&#10;Vancomycin (MRSA)&#10;Co-amoxiclav if mixed infection" style="min-height:55px;"></textarea></div>
+    <div class="mb12"><label>Block</label><select id="bBlock"><option>GU</option><option>MSK</option><option>Neurology</option><option>GI</option><option>CVR</option><option>Core</option></select></div>
+    <div class="mb12"><label>Notes <span style="font-weight:400;color:var(--text3);">(extra details, virulence factors, exam pearls)</span></label><textarea id="bNotes" placeholder="e.g. Virulence: Protein A (binds IgG Fc), coagulase +ve&#10;Buzzword: 'clustered grapes' on gram stain&#10;Exam tip: most common cause of osteomyelitis overall" style="min-height:65px;"></textarea></div>
+    <button class="btn btn-outline mb12" id="aiBBtn" onclick="aiCheckBug()" style="width:100%;justify-content:center;"><div class="spin"></div><span id="aiBTxt">✨ Check what I missed (AI)</span></button>
+    <div id="aiBSug" style="display:none;background:var(--ai-sug-bg);border:1px solid var(--ai-sug-border);border-radius:var(--r);padding:14px;margin-bottom:12px;"><div style="font-size:10px;color:var(--accent);font-weight:700;letter-spacing:0.08em;text-transform:uppercase;margin-bottom:6px;">AI suggestions</div><div id="aiBContent" style="font-size:12px;color:var(--text2);line-height:1.7;"></div></div>
+    <div class="row" style="gap:8px;"><button class="btn btn-primary flex1" onclick="saveBug()">Save bug</button><button class="btn btn-outline" onclick="closeModal('addBugModal')">Cancel</button></div>
+    <div class="err-box" id="bErr"></div>
+  </div>
 </div>
 
 <div class="modal-bg" id="addPathModal">
@@ -1176,6 +1205,7 @@ label { font-size: 11px; color: var(--text2); font-weight: 600; display: block; 
     <div class="mb12"><label>Investigations</label><textarea id="pInvest" placeholder="e.g. Urinalysis — haematuria&#10;Renal biopsy — IgA deposits (gold standard)&#10;Bloods — raised IgA in 50%&#10;BP monitoring" style="min-height:80px;"></textarea></div>
     <div class="mb12"><label>Treatment / Management</label><textarea id="pTreat" placeholder="e.g. BP control with ACEi/ARB&#10;Steroids if proteinuria >1g/day&#10;Supportive — low salt diet&#10;Dialysis/transplant if ESKD" style="min-height:80px;"></textarea></div>
     <div class="mb12"><label>Complications / Prognosis <span style="font-weight:400;color:var(--text3);">(optional)</span></label><textarea id="pComps" placeholder="e.g. 20-30% progress to ESKD over 20 years, worse if hypertension…" style="min-height:50px;"></textarea></div>
+    <div class="mb12"><label>Notes <span style="font-weight:400;color:var(--text3);">(mnemonics, extra clinical details, exam tips)</span></label><textarea id="pNotes" placeholder="e.g. Mnemonic: IgA = 'young man after URI'&#10;Exam pearl: silver staining on biopsy&#10;Clinical tip: can recur post-transplant" style="min-height:65px;"></textarea></div>
     <button class="btn btn-outline mb12" id="aiPBtn" onclick="aiCheckPath()" style="width:100%;justify-content:center;"><div class="spin"></div><span id="aiPTxt">✨ Check what I missed (AI)</span></button>
     <div id="aiPSug" style="display:none;background:var(--ai-sug-bg);border:1px solid var(--ai-sug-border);border-radius:var(--r);padding:14px;margin-bottom:12px;">
       <div style="font-size:10px;color:var(--accent);font-weight:700;letter-spacing:0.08em;text-transform:uppercase;margin-bottom:6px;">AI suggestions</div>
@@ -1285,7 +1315,7 @@ label { font-size: 11px; color: var(--text2); font-weight: 600; display: block; 
 <div class="modal-bg" id="planSettingsModal">
   <div class="modal">
     <div class="modal-title">Study Plan Settings</div>
-    <div class="mb12"><label>Plan start date (your Week 1 Day 1)</label><input type="date" id="planStartDate"><div style="font-size:11px;color:var(--text3);margin-top:4px;">Your schedule starts Saturday 21st March → enter 2026-03-21</div></div>
+    <div class="mb12"><label>Plan start date (your Week 1 Day 1)</label><input type="date" id="planStartDate"><div style="font-size:11px;color:var(--text3);margin-top:4px;">Your schedule starts Saturday 28th March 2026 → enter 2026-03-28</div></div>
     <div class="mb12"><label>Exam date</label><input type="date" id="planExamDate"><div style="font-size:11px;color:var(--text3);margin-top:4px;">This is what the "Days to exam" counter counts down to</div></div>
     <div class="mb12"><label>Exam name</label><input type="text" id="planExamName" placeholder="e.g. Year 2 Finals"></div>
     <div class="row" style="gap:8px;"><button class="btn btn-primary flex1" onclick="savePlanSettings()">Save</button><button class="btn btn-outline" onclick="closeModal('planSettingsModal')">Cancel</button></div>
@@ -2076,14 +2106,27 @@ function renderDrugs(block){
   const drugs=block==='all'?allDrugs:allDrugs.filter(d=>d.block===block);
   const el=document.getElementById('drugList');
   if(!drugs.length){el.innerHTML=`<div class="empty"><span class="empty-ico">💊</span>No drug cards yet.</div>`;return;}
-  el.innerHTML=drugs.map(d=>`<div class="data-card"><div class="row mb12"><strong style="font-size:14px;flex:1;">${esc(d.name)}</strong><span class="badge badge-muted">${d.block}</span><button class="btn btn-xs btn-danger" onclick="delDrug('${d.id}')">✕</button></div><div class="g2" style="gap:12px;"><div><div class="field-label">Mechanism</div><div class="field-val">${esc(d.mechanism||'—')}</div></div><div><div class="field-label">Used for</div><div class="field-val">${esc(d.used_for||'—')}</div></div><div><div class="field-label">Side effect</div><div class="field-val">${esc(d.side_effect||'—')}</div></div>${d.ai_notes?`<div><div class="field-label" style="color:var(--accent);">AI additions</div><div class="field-val" style="font-size:12px;color:var(--text2);">${esc(d.ai_notes)}</div></div>`:''}</div></div>`).join('');
+  el.innerHTML=drugs.map(d=>`<div class="data-card">
+    <div class="row mb12">
+      <strong style="font-size:15px;flex:1;">${esc(d.name)}</strong>
+      <span class="badge badge-muted">${d.block}</span>
+      <button class="btn btn-xs btn-danger" onclick="delDrug('${d.id}')">✕</button>
+    </div>
+    <div class="g2" style="gap:14px;">
+      <div><div class="field-label">Mechanism</div><div class="field-val" style="white-space:pre-line;">${esc(d.mechanism||'—')}</div></div>
+      <div><div class="field-label">Indications</div><div class="field-val" style="white-space:pre-line;">${esc(d.used_for||'—')}</div></div>
+      <div><div class="field-label">Side effects / contraindications</div><div class="field-val" style="white-space:pre-line;">${esc(d.side_effect||'—')}</div></div>
+      ${d.notes?`<div><div class="field-label">Notes</div><div class="field-val" style="white-space:pre-line;">${esc(d.notes)}</div></div>`:''}
+      ${d.ai_notes?`<div style="${d.notes?'grid-column:span 2':''}"><div class="field-label" style="color:var(--accent);">AI additions</div><div class="field-val" style="font-size:12px;color:var(--text2);white-space:pre-line;">${esc(d.ai_notes)}</div></div>`:''}
+    </div>
+  </div>`).join('');
 }
 function openAddDrug(){document.getElementById('aiDSug').style.display='none';openModal('addDrugModal');}
 async function aiCheckDrug(){const name=document.getElementById('dName').value.trim();if(!name){showErr('dErr','Enter drug name first.');return;}setBusy('aiDBtn','aiDTxt','Checking…',true);const prompt=`UK Year 2 drug card:\nDrug: ${name}\nMechanism: ${document.getElementById('dMech').value||'blank'}\nUsed for: ${document.getElementById('dUse').value||'blank'}\nSide effect: ${document.getElementById('dSide').value||'blank'}\nGaps or errors? Max 3 bullets. If complete say "Looks good."`;try{const r=await fetch('https://mymedicinefriend.ranaabhinav23.workers.dev',{method:'POST',headers:{'Content-Type':'application/json'},body:JSON.stringify({model:'claude-haiku-4-5-20251001',max_tokens:300,messages:[{role:'user',content:prompt}]})});const d=await r.json();document.getElementById('aiDContent').textContent=(d.content?.[0]?.text||'').trim();document.getElementById('aiDSug').style.display='block';}catch(e){showErr('dErr',e.message);}finally{setBusy('aiDBtn','aiDTxt','✨ Check what I missed (AI)',false);}}
 async function saveDrug(){const name=document.getElementById('dName').value.trim();if(!name){showErr('dErr','Name required.');return;}const ai=document.getElementById('aiDSug').style.display!=='none'?document.getElementById('aiDContent').textContent:'';await sb.from('drug_cards').insert({year:yr,block:document.getElementById('dBlock').value,name,mechanism:document.getElementById('dMech').value.trim(),used_for:document.getElementById('dUse').value.trim(),side_effect:document.getElementById('dSide').value.trim(),ai_notes:ai});closeModal('addDrugModal');['dName','dMech','dUse','dSide'].forEach(id=>document.getElementById(id).value='');loadDrugs();}
 async function delDrug(id){await sb.from('drug_cards').delete().eq('id',id);loadDrugs();}
 function startDrugTest(){const drugs=allDrugs.filter(d=>selDrugBlocks.has(d.block));if(!drugs.length){document.getElementById('drugTestArea').innerHTML='<div class="empty">No drug cards in selected blocks.</div>';return;}dTestQs=shuffle([...drugs]);dTestIdx=0;renderDrugCard();}
-function renderDrugCard(){const a=document.getElementById('drugTestArea');if(dTestIdx>=dTestQs.length){a.innerHTML=`<div class="section-card" style="text-align:center;padding:36px;"><div style="font-size:1.2rem;font-weight:800;color:var(--text);margin-bottom:8px;">Done! 🎉</div><div style="color:var(--text2);">Reviewed ${dTestQs.length} drug cards</div><button class="btn btn-primary mt16" onclick="startDrugTest()">Go again</button></div>`;return;}const d=dTestQs[dTestIdx];a.innerHTML=`<div class="section-card"><div class="section-head"><div><div style="font-size:11px;color:var(--text2);">Card ${dTestIdx+1} of ${dTestQs.length}</div><div class="section-title" style="font-size:1.1rem;margin-top:4px;">${esc(d.name)}</div></div><span class="badge badge-muted">${d.block}</span></div><div class="section-body"><div id="dCardBack" style="display:none;"><div class="g2" style="gap:14px;margin-bottom:16px;"><div><div class="field-label">Mechanism</div><div class="field-val">${esc(d.mechanism||'—')}</div></div><div><div class="field-label">Used for</div><div class="field-val">${esc(d.used_for||'—')}</div></div><div><div class="field-label">Side effect</div><div class="field-val">${esc(d.side_effect||'—')}</div></div>${d.ai_notes?`<div><div class="field-label" style="color:var(--accent);">Extra</div><div class="field-val" style="font-size:12px;">${esc(d.ai_notes)}</div></div>`:''}</div></div><div id="dRevBtn"><button class="btn btn-outline" onclick="revDCard()">Reveal answer</button></div><div id="dActBtn" style="display:none;"><button class="btn btn-primary" onclick="nxtDCard()">Next card →</button></div></div></div>`;}
+function renderDrugCard(){const a=document.getElementById('drugTestArea');if(dTestIdx>=dTestQs.length){a.innerHTML=`<div class="section-card" style="text-align:center;padding:36px;"><div style="font-size:1.2rem;font-weight:800;color:var(--text);margin-bottom:8px;">Done! 🎉</div><div style="color:var(--text2);">Reviewed ${dTestQs.length} drug cards</div><button class="btn btn-primary mt16" onclick="startDrugTest()">Go again</button></div>`;return;}const d=dTestQs[dTestIdx];a.innerHTML=`<div class="section-card"><div class="section-head"><div><div style="font-size:11px;color:var(--text2);">Card ${dTestIdx+1} of ${dTestQs.length}</div><div class="section-title" style="font-size:1.1rem;margin-top:4px;">${esc(d.name)}</div></div><span class="badge badge-muted">${d.block}</span></div><div class="section-body"><div id="dCardBack" style="display:none;"><div class="g2" style="gap:14px;margin-bottom:16px;"><div><div class="field-label">Mechanism</div><div class="field-val" style="white-space:pre-line;">${esc(d.mechanism||'—')}</div></div><div><div class="field-label">Indications</div><div class="field-val" style="white-space:pre-line;">${esc(d.used_for||'—')}</div></div><div><div class="field-label">Side effects</div><div class="field-val" style="white-space:pre-line;">${esc(d.side_effect||'—')}</div></div>${d.notes?`<div><div class="field-label">Notes</div><div class="field-val" style="white-space:pre-line;">${esc(d.notes)}</div></div>`:''} ${d.ai_notes?`<div style="grid-column:span 2"><div class="field-label" style="color:var(--accent);">AI additions</div><div class="field-val" style="font-size:12px;white-space:pre-line;">${esc(d.ai_notes)}</div></div>`:''}</div></div><div id="dRevBtn"><button class="btn btn-outline" onclick="revDCard()">Reveal answer</button></div><div id="dActBtn" style="display:none;"><button class="btn btn-primary" onclick="nxtDCard()">Next card →</button></div></div></div>`;}
 function revDCard(){document.getElementById('dCardBack').style.display='block';document.getElementById('dRevBtn').style.display='none';document.getElementById('dActBtn').style.display='block';}
 function nxtDCard(){dTestIdx++;renderDrugCard();}
 
@@ -3204,104 +3247,114 @@ function setDayTasks(weekNum,dayIdx,tasks){
   savePlanCustomData(custom);
 }
 
+// PLAN START: 28 Mar 2026 (Sat). Weeks are Sat→Fri.
 const STUDY_PLAN=[
-  {week:1,topic:'GU',pass:'2nd',type:'revision',lectures:33,hoursPerLec:1.25,color:'#ec4899',
+  // ── WEEK 1: GU finish (vacation 10h days) ──
+  {week:1,topic:'🏖 GU — Finish lectures',pass:'1st',type:'new',lectures:20,hoursPerLec:1.5,color:'#ec4899',
     days:[
-      {day:'Sat',tasks:['GU lectures 1-5 (revision) · 1.25hrs each','Generate MCQs after each lecture']},
-      {day:'Sun',tasks:['Off 😴']},
-      {day:'Mon',tasks:['GU lectures 6-10 (revision)','Generate MCQs after each lecture']},
-      {day:'Tue',tasks:['GU lectures 11-15 (revision)','Generate MCQs after each lecture']},
-      {day:'Wed',tasks:['GU lectures 16-20 (revision)','Generate MCQs after each lecture']},
-      {day:'Thu',tasks:['GU lectures 21-25 (revision)','Generate MCQs after each lecture']},
-      {day:'Fri',tasks:['GU lectures 26-30 (revision)','Generate MCQs after each lecture']},
+      {day:'Sat',tasks:['GU lec 14–16 (3 lecs)','50 MCQs','EIPOM 2h']},
+      {day:'Sun',tasks:['Off 😴 — REST']},
+      {day:'Mon',tasks:['GU lec 17–21 (5 lecs)','50 MCQs','EIPOM 2h']},
+      {day:'Tue',tasks:['GU lec 22–26 (5 lecs)','50 MCQs','EIPOM 2h']},
+      {day:'Wed',tasks:['GU lec 27–31 (5 lecs)','50 MCQs','EIPOM 2h']},
+      {day:'Thu',tasks:['GU lec 32–33 FINISH ✅','🧠 GU 400Q BLITZ','EIPOM 2h']},
+      {day:'Fri',tasks:['Off 😴']},
     ]
   },
-  {week:2,topic:'GU finish + Neuro start',pass:'2nd',type:'revision',lectures:33,hoursPerLec:1.25,color:'#ec4899',
+  // ── WEEK 2: Neurology (vacation 10h days) ──
+  {week:2,topic:'🏖 Neurology — All 27 lecs',pass:'1st',type:'new',lectures:27,hoursPerLec:1.5,color:'#10b981',
     days:[
-      {day:'Sat',tasks:['GU lectures 31-33 (last 3)','Full GU MCQ test — all blocks','Review all GU wrong answers']},
-      {day:'Sun',tasks:['Off 😴']},
-      {day:'Mon',tasks:['Neuro lectures 1-5 (revision)','Generate MCQs after each']},
-      {day:'Tue',tasks:['Neuro lectures 6-10 (revision)','Generate MCQs after each']},
-      {day:'Wed',tasks:['Neuro lectures 11-15 (revision)','Generate MCQs after each']},
-      {day:'Thu',tasks:['Neuro lectures 16-20 (revision)','Generate MCQs after each']},
-      {day:'Fri',tasks:['Neuro lectures 21-25 (revision)','Generate MCQs after each']},
+      {day:'Sat',tasks:['Neuro lec 1–6 (6 lecs)','50 MCQs','EIPOM 2h']},
+      {day:'Sun',tasks:['Off 😴 — REST']},
+      {day:'Mon',tasks:['Neuro lec 7–12 (6 lecs)','50 MCQs','EIPOM 2h']},
+      {day:'Tue',tasks:['Neuro lec 13–18 (6 lecs)','50 MCQs','EIPOM 2h']},
+      {day:'Wed',tasks:['Neuro lec 19–24 (6 lecs)','50 MCQs','EIPOM 1h (nearly done)']},
+      {day:'Thu',tasks:['Neuro lec 25–27 FINISH ✅','🧠 Neuro 400Q BLITZ']},
+      {day:'Fri',tasks:['Off 😴']},
     ]
   },
-  {week:3,topic:'Neuro finish + MSK + Core start',pass:'2nd + 1st',type:'mixed',lectures:27,hoursPerLec:1.5,color:'#10b981',
+  // ── WEEK 3: MSK start + back to uni ──
+  {week:3,topic:'🏖→🎓 MSK start · Vacation ends Sun 12 Apr',pass:'1st',type:'new',lectures:9,hoursPerLec:1.5,color:'#3b82f6',
     days:[
-      {day:'Sat',tasks:['Neuro lectures 26-30 (finish)','Full Neuro MCQ test','Review all Neuro wrong answers']},
-      {day:'Sun',tasks:['Off 😴']},
-      {day:'Mon',tasks:['3 MSK revision (1.25hrs each)','1 Core new lecture (2hrs)']},
-      {day:'Tue',tasks:['3 MSK revision','1 Core new lecture']},
-      {day:'Wed',tasks:['3 MSK revision','1 Core new lecture']},
-      {day:'Thu',tasks:['3 MSK revision','1 Core new lecture']},
-      {day:'Fri',tasks:['2 MSK revision','1 Core new lecture']},
+      {day:'Sat',tasks:['MSK lec 1–6 (6 lecs)','50 MCQs']},
+      {day:'Sun',tasks:['MSK lec 7–9 (3 lecs)','EIPOM finish — DONE ✅','80–100 Qs GU+Neuro cumulative','VACATION ENDS 🎓']},
+      {day:'Mon',tasks:['MSK lec 10–14 (5 lecs)','50 MCQs']},
+      {day:'Tue',tasks:['MSK lec 15–19 (5 lecs)','50 MCQs']},
+      {day:'Wed',tasks:['MSK lec 20–24 (5 lecs)','50 MCQs']},
+      {day:'Thu',tasks:['MSK lec 25–26 FINISH ✅','🧠 MSK 400Q BLITZ']},
+      {day:'Fri',tasks:['Off 😴']},
     ]
   },
-  {week:4,topic:'MSK finish + Core + CVR start',pass:'2nd + 1st',type:'mixed',lectures:26,hoursPerLec:1.75,color:'#3b82f6',
+  // ── WEEK 4: CVR ──
+  {week:4,topic:'🎓 CVR — All 24 lecs (new)',pass:'1st',type:'new',lectures:24,hoursPerLec:1.5,color:'#ef4444',
     days:[
-      {day:'Sat',tasks:['2 MSK + 1 Core new','MCQ test on MSK','Review MSK wrong answers']},
+      {day:'Sat',tasks:['CVR lec 1–4 (4 lecs)','50 MCQs']},
       {day:'Sun',tasks:['Off 😴']},
-      {day:'Mon',tasks:['2 Core new lectures (2hrs each)','1 CVR new lecture (2hrs)']},
-      {day:'Tue',tasks:['2 Core new lectures','1 CVR new lecture']},
-      {day:'Wed',tasks:['2 Core new lectures','1 CVR new lecture']},
-      {day:'Thu',tasks:['1 Core new lecture','2 CVR new lectures']},
-      {day:'Fri',tasks:['1 Core new lecture','2 CVR new lectures']},
+      {day:'Mon',tasks:['CVR lec 5–9 (5 lecs)','80–100 Qs GU+Neuro+MSK cumulative · light CVR review']},
+      {day:'Tue',tasks:['CVR lec 5–9 (5 lecs)','50 MCQs']},
+      {day:'Wed',tasks:['CVR lec 10–14 (5 lecs)','50 MCQs']},
+      {day:'Thu',tasks:['CVR lec 15–19 (5 lecs)','50 MCQs']},
+      {day:'Fri',tasks:['CVR lec 20–24 FINISH ✅','🧠 CVR 400Q BLITZ']},
     ]
   },
-  {week:5,topic:'Core finish + CVR + GI',pass:'1st',type:'new',lectures:31,hoursPerLec:2,color:'#8b5cf6',
+  // ── WEEK 5: Core ──
+  {week:5,topic:'🎓 Core — All 20 lecs (new)',pass:'1st',type:'new',lectures:20,hoursPerLec:1.5,color:'#8b5cf6',
     days:[
-      {day:'Sat',tasks:['Last Core lecture','MCQ test on Core block','Review Core wrong answers']},
+      {day:'Sat',tasks:['Core lec 1–5 (5 lecs)','50 MCQs']},
       {day:'Sun',tasks:['Off 😴']},
-      {day:'Mon',tasks:['3 CVR new lectures (2hrs each)']},
-      {day:'Tue',tasks:['3 CVR new lectures']},
-      {day:'Wed',tasks:['2 CVR new + 1 GI new']},
-      {day:'Thu',tasks:['3 GI new lectures']},
-      {day:'Fri',tasks:['3 GI new lectures']},
+      {day:'Mon',tasks:['Core lec 1–5 (5 lecs)','80–100 Qs GU+Neuro+MSK+CVR cumulative · light Core review']},
+      {day:'Tue',tasks:['Core lec 6–12 (7 lecs — push hard)','50 MCQs']},
+      {day:'Wed',tasks:['Core lec 13–20 FINISH ✅','🧠 Core 400Q BLITZ']},
+      {day:'Thu',tasks:['Off 😴']},
+      {day:'Fri',tasks:['Off 😴']},
     ]
   },
-  {week:6,topic:'CVR finish + GI finish + GU 2nd pass',pass:'2nd',type:'revision',lectures:33,hoursPerLec:1,color:'#ef4444',
-    days:[
-      {day:'Sat',tasks:['Remaining CVR/GI lectures','MCQ test on CVR','Review CVR wrong answers']},
-      {day:'Sun',tasks:['Off 😴']},
-      {day:'Mon',tasks:['5 GU 2nd pass — blurt first then check notes','Quick Recall on GU']},
-      {day:'Tue',tasks:['5 GU 2nd pass','Quick Recall session']},
-      {day:'Wed',tasks:['5 GU 2nd pass','Quick Recall session']},
-      {day:'Thu',tasks:['5 GU 2nd pass','Quick Recall session']},
-      {day:'Fri',tasks:['5 GU 2nd pass','Quick Recall session']},
-    ]
-  },
-  {week:7,topic:'GU finish + Neuro 2nd pass',pass:'2nd',type:'revision',lectures:30,hoursPerLec:1,color:'#10b981',
-    days:[
-      {day:'Sat',tasks:['Last 8 GU 2nd pass + 2 Neuro start','Review all GU wrong answers']},
-      {day:'Sun',tasks:['Off 😴']},
-      {day:'Mon',tasks:['5 Neuro 2nd pass','Quick Recall on Neuro']},
-      {day:'Tue',tasks:['5 Neuro 2nd pass','Quick Recall on Neuro']},
-      {day:'Wed',tasks:['5 Neuro 2nd pass','Quick Recall on Neuro']},
-      {day:'Thu',tasks:['5 Neuro 2nd pass','Quick Recall on Neuro']},
-      {day:'Fri',tasks:['Last 8 Neuro 2nd pass','Review all Neuro wrong answers']},
-    ]
-  },
-  {week:8,topic:'MSK + CVR + GI 2nd pass',pass:'2nd',type:'revision',lectures:51,hoursPerLec:1,color:'#f59e0b',
-    days:[
-      {day:'Sat',tasks:['4 MSK 2nd pass start','Mock exam — Neuro + GU combined']},
-      {day:'Sun',tasks:['Off 😴']},
-      {day:'Mon',tasks:['Finish MSK 2nd pass (remaining)','Review MSK wrong answers']},
-      {day:'Tue',tasks:['5 CVR 2nd pass','Quick Recall on CVR']},
-      {day:'Wed',tasks:['5 CVR 2nd pass','Quick Recall on CVR']},
-      {day:'Thu',tasks:['5 CVR 2nd pass','Quick Recall on CVR']},
-      {day:'Fri',tasks:['Last 10 CVR + start GI 2nd pass','Review CVR wrong answers']},
-    ]
-  },
-  {week:9,topic:'GI finish + Core 2nd pass + Finals',pass:'2nd',type:'exam-prep',lectures:23,hoursPerLec:1,color:'#06b6d4',
+  // ── WEEK 6: GI ──
+  {week:6,topic:'🎓 GI — All 28 lecs (new, push hard)',pass:'1st',type:'new',lectures:28,hoursPerLec:1.5,color:'#f97316',
     days:[
       {day:'Sat',tasks:['Off 😴']},
-      {day:'Sun',tasks:['Finish GI 2nd pass','Core 2nd pass start']},
-      {day:'Mon',tasks:['Core 2nd pass','Quick Recall on Core']},
-      {day:'Tue',tasks:['Core 2nd pass finish','Quick Recall on Core']},
-      {day:'Wed',tasks:['Finish Core 2nd pass','Review ALL remaining wrong answers']},
-      {day:'Thu',tasks:['ALL wrong answers from the whole 9 weeks','Pharmacology drug card review']},
-      {day:'Fri',tasks:['Past papers only 📝','Full 2-hour mock exam','No new content — you\'ve done the work 🎯']},
+      {day:'Sun',tasks:['Off 😴']},
+      {day:'Mon',tasks:['GI lec 1–6 (6 lecs)','50 MCQs']},
+      {day:'Tue',tasks:['GI lec 7–13 (7 lecs)','50 MCQs']},
+      {day:'Wed',tasks:['GI lec 14–21 (8 lecs — hardest day)','50 MCQs']},
+      {day:'Thu',tasks:['GI lec 22–28 FINISH ✅','🧠 GI 400Q BLITZ','100 Qs ALL blocks']},
+      {day:'Fri',tasks:['Off 😴 — trust the work 💪']},
+    ]
+  },
+  // ── WEEK 7: Exams ──
+  {week:7,topic:'🏆 EXAM WEEK + OSCE',pass:'exam',type:'exam-prep',lectures:0,hoursPerLec:0,color:'#06b6d4',
+    days:[
+      {day:'Sat',tasks:['Off 😴 — rest before exam']},
+      {day:'Sun',tasks:['Off 😴 — rest before exam']},
+      {day:'Mon',tasks:['🧠 Light GI review morning','🏆 WRITTEN EXAM','OSCE day 1']},
+      {day:'Tue',tasks:['OSCE day 2']},
+      {day:'Wed',tasks:['OSCE day 3']},
+      {day:'Thu',tasks:['200 mixed Qs all blocks · review wrong answers']},
+      {day:'Fri',tasks:['200 mixed Qs · flashcard SRS · drug cards']},
+    ]
+  },
+  // ── WEEK 8: OSCE + Exam 2 prep ──
+  {week:8,topic:'🏆 OSCE + Exam 2 prep',pass:'exam',type:'exam-prep',lectures:0,hoursPerLec:0,color:'#06b6d4',
+    days:[
+      {day:'Sat',tasks:['100 Qs each block — targeted blitz']},
+      {day:'Sun',tasks:['Off 😴']},
+      {day:'Mon',tasks:['🏆 EXAM DAY 1']},
+      {day:'Tue',tasks:['🏆 EXAM DAY 2']},
+      {day:'Wed',tasks:['Off 😴 — you did it! 🎉']},
+      {day:'Thu',tasks:['Off 😴']},
+      {day:'Fri',tasks:['Off 😴']},
+    ]
+  },
+  // ── WEEK 9: buffer ──
+  {week:9,topic:'✅ Done — consolidation',pass:'done',type:'exam-prep',lectures:0,hoursPerLec:0,color:'#10b981',
+    days:[
+      {day:'Sat',tasks:['Off 😴']},
+      {day:'Sun',tasks:['Off 😴']},
+      {day:'Mon',tasks:['Review any remaining weak areas']},
+      {day:'Tue',tasks:['Off 😴']},
+      {day:'Wed',tasks:['Off 😴']},
+      {day:'Thu',tasks:['Off 😴']},
+      {day:'Fri',tasks:['Off 😴']},
     ]
   }
 ];
@@ -4250,10 +4303,11 @@ function renderSRSCard() {
       <div id="srsCardBack" style="display:none;margin-top:24px;text-align:left;">
         <div style="height:1px;background:var(--border);margin-bottom:20px;"></div>
         <div class="g2" style="gap:16px;margin-bottom:16px;">
-          <div><div class="field-label">Mechanism</div><div class="field-val">${esc(drug.mechanism || '—')}</div></div>
-          <div><div class="field-label">Used for</div><div class="field-val">${esc(drug.used_for || '—')}</div></div>
-          <div><div class="field-label">Side effect</div><div class="field-val">${esc(drug.side_effect || '—')}</div></div>
-          ${drug.ai_notes ? `<div><div class="field-label" style="color:var(--accent);">AI notes</div><div class="field-val" style="font-size:12px;">${esc(drug.ai_notes)}</div></div>` : ''}
+          <div><div class="field-label">Mechanism</div><div class="field-val" style="white-space:pre-line;">${esc(drug.mechanism || '—')}</div></div>
+          <div><div class="field-label">Indications</div><div class="field-val" style="white-space:pre-line;">${esc(drug.used_for || '—')}</div></div>
+          <div><div class="field-label">Side effects</div><div class="field-val" style="white-space:pre-line;">${esc(drug.side_effect || '—')}</div></div>
+          ${drug.notes ? `<div><div class="field-label">Notes</div><div class="field-val" style="white-space:pre-line;">${esc(drug.notes)}</div></div>` : ''}
+          ${drug.ai_notes ? `<div style="grid-column:span 2"><div class="field-label" style="color:var(--accent);">AI notes</div><div class="field-val" style="font-size:12px;white-space:pre-line;">${esc(drug.ai_notes)}</div></div>` : ''}
         </div>
         <div style="font-size:12px;color:var(--text2);margin-bottom:12px;font-weight:600;">How well did you know this?</div>
         <div style="display:flex;gap:8px;flex-wrap:wrap;justify-content:center;">
