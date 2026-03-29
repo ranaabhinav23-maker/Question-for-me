@@ -75,20 +75,7 @@ body { font-family: var(--font); background: var(--bg); color: var(--text); min-
 ::-webkit-scrollbar-track { background: transparent; }
 ::-webkit-scrollbar-thumb { background: var(--border2); border-radius: 99px; }
 
-#lock { position: fixed; inset: 0; z-index: 9999; background: var(--navy); display: flex; align-items: center; justify-content: center; }
-#lock::before{content:'';position:absolute;inset:0;pointer-events:none;background:radial-gradient(ellipse 60% 50% at 20% 40%,rgba(6,182,212,0.08) 0%,transparent 60%),radial-gradient(ellipse 40% 40% at 80% 70%,rgba(16,185,129,0.06) 0%,transparent 50%);}
-.lock-card { background: var(--navy2); border: 1px solid var(--navy-light); border-radius: 20px; padding: 48px 44px; width: 400px; text-align: center; box-shadow: 0 40px 80px rgba(0,0,0,0.5); }
-.lock-icon { width: 56px; height: 56px; background: linear-gradient(135deg,var(--accent),var(--accent2)); border-radius: 14px; margin: 0 auto 20px; display: flex; align-items: center; justify-content: center; font-size: 22px; }
-.lock-logo { font-size: 1.5rem; font-weight: 800; color: white; margin-bottom: 4px; letter-spacing: -0.03em; }
-.lock-logo span { color: var(--accent); }
-.lock-sub { font-size: 12px; color: rgba(255,255,255,0.4); margin-bottom: 32px; }
-.lock-card input { width: 100%; background: rgba(255,255,255,0.06); border: 1px solid rgba(255,255,255,0.1); border-radius: var(--r2); padding: 13px 16px; font-family: var(--mono); font-size: 14px; color: white; outline: none; margin-bottom: 12px; letter-spacing: 0.1em; text-align: center; transition: border-color 0.2s; }
-.lock-card input:focus { border-color: var(--accent); }
-.lock-card input.shake { animation: shake 0.4s ease; border-color: var(--red); }
-@keyframes shake { 0%,100%{transform:translateX(0)} 20%{transform:translateX(-7px)} 40%{transform:translateX(7px)} 60%{transform:translateX(-4px)} 80%{transform:translateX(4px)} }
-.lock-err { font-size: 11px; color: #f87171; margin-top: 8px; min-height: 16px; }
-
-#app { display: none; }
+#app { display: block; }
 .layout { display: flex; min-height: 100vh; }
 
 .sidebar { width: var(--sidebar-w); background: var(--navy); display: flex; flex-direction: column; position: fixed; height: 100vh; z-index: 20; overflow-y: auto; transition: background 0.25s; }
@@ -417,23 +404,6 @@ label { font-size: 11px; color: var(--text2); font-weight: 600; display: block; 
 </style>
 </head>
 <body>
-
-<!-- LOCK -->
-<div id="lock">
-  <div class="lock-card">
-    <div class="lock-icon">🧬</div>
-    <div class="lock-logo">Medic <span>Meduvita</span></div>
-    <div class="lock-sub">Meduvita · AI-powered revision</div>
-    <input type="password" id="pwInput" placeholder="••••••••" autocomplete="off" onkeydown="if(event.key==='Enter')tryUnlock()">
-    <button class="btn btn-teal" style="width:100%;justify-content:center;padding:12px;font-size:14px;" id="lockBtn" onclick="tryUnlock()">
-      <div class="spin"></div>Unlock
-    </button>
-    <div class="lock-err" id="lockErr"></div>
-    <div style="margin-top:16px;font-size:11px;color:rgba(255,255,255,0.25);text-align:center;">
-      Password: V@nshr@na &nbsp;·&nbsp; <span onclick="hardResetLock()" style="cursor:pointer;text-decoration:underline;">having trouble?</span>
-    </div>
-  </div>
-</div>
 
 <!-- APP -->
 <div id="app">
@@ -1408,42 +1378,7 @@ async function sha256str(s){
   return Array.from(new Uint8Array(buf)).map(b=>b.toString(16).padStart(2,'0')).join('');
 }
 
-async function tryUnlock(){
-  const now=Date.now();
-  if(now<lockTil){document.getElementById('lockErr').textContent='Locked — wait '+Math.ceil((lockTil-now)/1000)+'s';return;}
-  const pw=document.getElementById('pwInput').value;
-  if(!pw)return;
-  const btn=document.getElementById('lockBtn');
-  btn.disabled=true;
-  btn.querySelector('.spin').style.display='inline-block';
-  document.getElementById('lockErr').textContent='';
-  try{
-    const h=await sha256str(pw+PW_SALT);
-    if(h===PW_HASH){
-      sessionStorage.setItem(SK,'1');
-      unlock();
-    } else {
-      fails++;
-      const inp=document.getElementById('pwInput');
-      inp.value='';inp.classList.add('shake');
-      setTimeout(()=>inp.classList.remove('shake'),400);
-      if(fails>=8){lockTil=Date.now()+600000;document.getElementById('lockErr').textContent='Locked 10 min.';}
-      else if(fails>=5){lockTil=Date.now()+120000;document.getElementById('lockErr').textContent='Locked 2 min.';}
-      else if(fails>=3){lockTil=Date.now()+30000;document.getElementById('lockErr').textContent='Locked 30s.';}
-      else{document.getElementById('lockErr').textContent='Incorrect. ('+fails+' attempt'+(fails>1?'s':'')+')';}
-      btn.disabled=false;
-      btn.querySelector('.spin').style.display='none';
-    }
-  }catch(e){
-    document.getElementById('lockErr').textContent='Error: '+e.message;
-    btn.disabled=false;
-    btn.querySelector('.spin').style.display='none';
-  }
-}
-
-function unlock(){
-  document.getElementById('lock').style.display='none';
-  document.getElementById('app').style.display='block';
+function populateUserUI(){
   if(currentUser){
     const name=currentUser.user_metadata?.full_name||currentUser.email.split('@')[0];
     const initials=name.split(' ').map(w=>w[0]).join('').toUpperCase().slice(0,2);
@@ -1452,22 +1387,13 @@ function unlock(){
     if(nameEl)nameEl.textContent=name;
     if(avatarEl)avatarEl.textContent=initials;
   }
-  init();
-}
-
-function hardResetLock(){
-  fails=0;lockTil=0;
-  document.getElementById('lockErr').textContent='';
-  document.getElementById('pwInput').value='';
-  document.getElementById('pwInput').focus();
-  alert('Reset done. Password is: V@nshr@na');
 }
 
 async function signOut(){
   await sb.auth.signOut();
   currentUser=null;
   sessionStorage.removeItem(SK);
-  location.reload();
+  window.location.href='landing.html';
 }
 
 // ── SINGLE DOMContentLoaded ──
@@ -1482,14 +1408,20 @@ document.addEventListener('DOMContentLoaded',async function(){
     sessionStorage.setItem(SK,'1');
   }
 
-  if(sessionStorage.getItem(SK)==='1') unlock();
+  // If not authenticated, send back to landing page
+  if(sessionStorage.getItem(SK)!=='1'){
+    window.location.href='landing.html';
+    return;
+  }
 
-  // Listen for auth changes (e.g. magic link)
+  populateUserUI();
+  init();
+
+  // Listen for auth changes (e.g. sign-out in another tab)
   sb.auth.onAuthStateChange((_event,session)=>{
-    if(session?.user&&!currentUser){
-      currentUser=session.user;
-      sessionStorage.setItem(SK,'1');
-      unlock();
+    if(!session){
+      sessionStorage.removeItem(SK);
+      window.location.href='landing.html';
     }
   });
 });
@@ -2507,7 +2439,7 @@ async function savePath(){
       complications:(document.getElementById('pComps')?.value||'').trim(),
       notes:(document.getElementById('pNotes')?.value||'').trim()||null,
       ai_notes:ai
-    });
+    }));
     if(error)throw error;
     closeModal('addPathModal');
     ['pName','pCauses','pTypes','pPathophys','pClinical','pInvest','pTreat','pComps','pNotes'].forEach(id=>{
