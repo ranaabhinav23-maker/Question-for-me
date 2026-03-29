@@ -1,0 +1,517 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>Medic Meduvita · Sign In</title>
+<link href="https://fonts.googleapis.com/css2?family=Instrument+Serif:ital@0;1&family=DM+Sans:opsz,wght@9..40,300;9..40,400;9..40,500;9..40,600;9..40,700;9..40,800&family=JetBrains+Mono:wght@400;500&display=swap" rel="stylesheet">
+<script src="https://cdn.jsdelivr.net/npm/@supabase/supabase-js@2"></script>
+<style>
+:root {
+  --navy:      #0f1c2e;
+  --navy2:     #162438;
+  --navy-l:    #243752;
+  --accent:    #06b6d4;
+  --accent2:   #10b981;
+  --red:       #ef4444;
+  --bg:        #f1f5f9;
+  --surface:   #ffffff;
+  --border:    #e2e8f0;
+  --border2:   #cbd5e1;
+  --text:      #0f172a;
+  --text2:     #475569;
+  --text3:     #94a3b8;
+  --font:      'DM Sans', sans-serif;
+  --serif:     'Instrument Serif', serif;
+  --mono:      'JetBrains Mono', monospace;
+  --r:  8px;
+  --r2: 12px;
+  --r3: 16px;
+}
+*, *::before, *::after { box-sizing: border-box; margin: 0; padding: 0; }
+body {
+  font-family: var(--font);
+  background: var(--bg);
+  min-height: 100vh;
+  display: grid;
+  grid-template-columns: 1fr 1fr;
+  -webkit-font-smoothing: antialiased;
+}
+
+/* ── LEFT PANEL ── */
+.left {
+  background: var(--navy);
+  display: flex; flex-direction: column;
+  padding: 40px;
+  position: relative;
+  overflow: hidden;
+}
+.left::before {
+  content: '';
+  position: absolute; inset: 0;
+  background:
+    radial-gradient(ellipse 70% 60% at 20% 30%, rgba(6,182,212,0.12) 0%, transparent 60%),
+    radial-gradient(ellipse 50% 50% at 80% 80%, rgba(16,185,129,0.08) 0%, transparent 60%);
+  pointer-events: none;
+}
+.left-logo { display: flex; align-items: center; gap: 10px; margin-bottom: auto; position: relative; }
+.logo-mark {
+  width: 34px; height: 34px;
+  background: linear-gradient(135deg, var(--accent), var(--accent2));
+  border-radius: 9px;
+  display: flex; align-items: center; justify-content: center;
+  font-size: 14px; font-weight: 800; color: white;
+}
+.logo-name { font-size: 16px; font-weight: 800; color: white; letter-spacing: -0.02em; }
+.logo-name span { color: var(--accent); }
+
+.left-content { position: relative; margin-top: auto; padding-bottom: 20px; }
+.left-tag {
+  display: inline-flex; align-items: center; gap: 6px;
+  background: rgba(6,182,212,0.12); border: 1px solid rgba(6,182,212,0.2);
+  border-radius: 99px; padding: 5px 12px;
+  font-size: 11px; font-weight: 600; color: var(--accent);
+  margin-bottom: 20px;
+}
+.left-content h2 {
+  font-family: var(--serif);
+  font-size: 2.4rem; font-weight: 400;
+  line-height: 1.1; letter-spacing: -0.02em;
+  color: white; margin-bottom: 14px;
+}
+.left-content h2 em { font-style: italic; color: var(--accent); }
+.left-content p { font-size: 14px; color: rgba(255,255,255,0.45); line-height: 1.7; margin-bottom: 32px; max-width: 360px; }
+
+/* Feature pills */
+.feature-list { display: flex; flex-direction: column; gap: 10px; }
+.feature-item {
+  display: flex; align-items: center; gap: 10px;
+  font-size: 13px; color: rgba(255,255,255,0.65); font-weight: 500;
+}
+.feature-check {
+  width: 20px; height: 20px; border-radius: 5px;
+  background: rgba(16,185,129,0.15); border: 1px solid rgba(16,185,129,0.25);
+  display: flex; align-items: center; justify-content: center;
+  font-size: 11px; flex-shrink: 0;
+}
+
+.left-back {
+  position: absolute; top: 40px; left: 40px;
+  font-size: 12px; color: rgba(255,255,255,0.35);
+  text-decoration: none; display: flex; align-items: center; gap: 5px;
+  transition: color 0.2s;
+}
+.left-back:hover { color: rgba(255,255,255,0.7); }
+
+/* ── RIGHT PANEL ── */
+.right {
+  display: flex; flex-direction: column;
+  align-items: center; justify-content: center;
+  padding: 40px;
+  background: var(--surface);
+}
+.right-inner { width: 100%; max-width: 400px; }
+
+.right-title { font-size: 22px; font-weight: 800; color: var(--text); letter-spacing: -0.03em; margin-bottom: 4px; }
+.right-sub { font-size: 14px; color: var(--text2); margin-bottom: 28px; }
+
+/* Tabs */
+.tab-row {
+  display: flex;
+  background: var(--bg); border: 1px solid var(--border);
+  border-radius: var(--r); padding: 3px; gap: 3px; margin-bottom: 24px;
+}
+.tab-btn {
+  flex: 1; background: none; border: none; border-radius: 6px;
+  padding: 9px; font-family: var(--font); font-size: 13px; font-weight: 600;
+  color: var(--text3); cursor: pointer; transition: all 0.2s;
+}
+.tab-btn.active { background: white; color: var(--text); box-shadow: 0 1px 4px rgba(0,0,0,0.08); }
+
+/* Google button */
+.btn-google {
+  width: 100%; display: flex; align-items: center; justify-content: center; gap: 10px;
+  background: white; border: 1.5px solid var(--border);
+  border-radius: var(--r2); padding: 12px;
+  font-family: var(--font); font-size: 14px; font-weight: 600; color: var(--text);
+  cursor: pointer; transition: border-color 0.2s, box-shadow 0.2s, transform 0.15s;
+  box-shadow: 0 1px 3px rgba(0,0,0,0.06);
+}
+.btn-google:hover { border-color: var(--border2); box-shadow: 0 3px 10px rgba(0,0,0,0.08); transform: translateY(-1px); }
+.btn-google:active { transform: translateY(0); }
+.google-icon { width: 18px; height: 18px; flex-shrink: 0; }
+
+/* Divider */
+.divider {
+  display: flex; align-items: center; gap: 12px;
+  margin: 18px 0; font-size: 11px; font-weight: 600;
+  color: var(--text3); text-transform: uppercase; letter-spacing: 0.06em;
+}
+.divider::before, .divider::after {
+  content: ''; flex: 1; height: 1px; background: var(--border);
+}
+
+/* Form */
+.form-group { display: none; flex-direction: column; gap: 12px; }
+.form-group.active { display: flex; }
+
+label { font-size: 12px; font-weight: 600; color: var(--text2); display: block; margin-bottom: 5px; }
+input[type="text"],
+input[type="email"],
+input[type="password"] {
+  width: 100%; background: var(--bg);
+  border: 1.5px solid var(--border); border-radius: var(--r2);
+  padding: 11px 14px; font-family: var(--font); font-size: 14px; color: var(--text);
+  outline: none; transition: border-color 0.2s, box-shadow 0.2s;
+}
+input::placeholder { color: var(--text3); }
+input:focus { border-color: var(--accent); box-shadow: 0 0 0 3px rgba(6,182,212,0.1); background: white; }
+input.error { border-color: var(--red); }
+input.shake { animation: shake 0.4s ease; }
+@keyframes shake {
+  0%,100%{transform:translateX(0)} 20%{transform:translateX(-6px)}
+  40%{transform:translateX(6px)} 60%{transform:translateX(-4px)} 80%{transform:translateX(4px)}
+}
+
+.field { display: flex; flex-direction: column; }
+.field-hint { font-size: 11px; color: var(--text3); margin-top: 4px; }
+
+/* Access code field */
+.access-field {
+  background: rgba(6,182,212,0.04);
+  border: 1.5px solid rgba(6,182,212,0.2);
+  border-radius: var(--r2); padding: 12px 14px;
+}
+.access-field input {
+  border: none; background: transparent; padding: 0;
+  font-family: var(--mono); letter-spacing: 0.08em;
+}
+.access-field input:focus { box-shadow: none; }
+.access-label {
+  font-size: 10px; font-weight: 700; color: var(--accent);
+  text-transform: uppercase; letter-spacing: 0.08em; margin-bottom: 4px;
+}
+
+/* Submit button */
+.btn-submit {
+  width: 100%; background: linear-gradient(135deg, var(--navy), #1d2f45);
+  border: none; border-radius: var(--r2);
+  padding: 13px; font-family: var(--font); font-size: 14px; font-weight: 700; color: white;
+  cursor: pointer; display: flex; align-items: center; justify-content: center; gap: 8px;
+  transition: opacity 0.2s, transform 0.15s;
+  box-shadow: 0 3px 12px rgba(15,28,46,0.2);
+}
+.btn-submit:hover { opacity: 0.88; transform: translateY(-1px); }
+.btn-submit:disabled { opacity: 0.55; cursor: not-allowed; transform: none; }
+
+.spin {
+  display: none; width: 14px; height: 14px;
+  border: 2px solid rgba(255,255,255,0.3);
+  border-top-color: white; border-radius: 50%;
+  animation: spin 0.7s linear infinite; flex-shrink: 0;
+}
+@keyframes spin { to { transform: rotate(360deg); } }
+
+/* Error / success messages */
+.msg-err {
+  background: rgba(239,68,68,0.07); border: 1px solid rgba(239,68,68,0.2);
+  border-radius: var(--r); padding: 10px 14px;
+  font-size: 12px; color: var(--red); display: none;
+}
+.msg-ok {
+  background: rgba(16,185,129,0.07); border: 1px solid rgba(16,185,129,0.2);
+  border-radius: var(--r); padding: 10px 14px;
+  font-size: 12px; color: #059669; display: none; line-height: 1.5;
+}
+
+.terms { font-size: 11px; color: var(--text3); text-align: center; line-height: 1.6; margin-top: 8px; }
+.terms a { color: var(--text2); }
+
+/* Lockout */
+.lockout-bar {
+  background: rgba(239,68,68,0.07); border: 1px solid rgba(239,68,68,0.15);
+  border-radius: var(--r); padding: 8px 12px;
+  font-size: 11px; color: var(--red); font-weight: 500;
+  display: none; align-items: center; gap: 6px;
+}
+
+/* ── RESPONSIVE ── */
+@media (max-width: 768px) {
+  body { grid-template-columns: 1fr; }
+  .left { display: none; }
+  .right { padding: 40px 24px; min-height: 100vh; background: var(--bg); }
+  .right-inner { max-width: 100%; }
+}
+</style>
+</head>
+<body>
+
+<!-- LEFT PANEL -->
+<div class="left">
+  <a href="index.html" class="left-back">← Back to home</a>
+  <div class="left-logo">
+    <div class="logo-mark">M</div>
+    <div class="logo-name">Medic <span>Meduvita</span></div>
+  </div>
+  <div class="left-content">
+    <div class="left-tag">🧬 AI-Powered Revision</div>
+    <h2>Study smarter.<br><em>Pass faster.</em></h2>
+    <p>The complete revision platform built for medical students who want results, not just hours logged.</p>
+    <div class="feature-list">
+      <div class="feature-item"><div class="feature-check">✓</div>Unlimited AI-generated MCQs from your notes</div>
+      <div class="feature-item"><div class="feature-check">✓</div>Lecture tracker across all your study blocks</div>
+      <div class="feature-item"><div class="feature-check">✓</div>Smart flashcards with spaced repetition</div>
+      <div class="feature-item"><div class="feature-check">✓</div>Focus timer with automatic session logging</div>
+      <div class="feature-item"><div class="feature-check">✓</div>Detailed analytics & progress tracking</div>
+    </div>
+  </div>
+</div>
+
+<!-- RIGHT PANEL -->
+<div class="right">
+  <div class="right-inner">
+    <div class="right-title" id="panelTitle">Welcome back</div>
+    <div class="right-sub" id="panelSub">Sign in to continue studying</div>
+
+    <!-- Tabs -->
+    <div class="tab-row">
+      <button class="tab-btn active" onclick="switchTab('signin')">Sign in</button>
+      <button class="tab-btn" onclick="switchTab('signup')">Create account</button>
+    </div>
+
+    <!-- Lockout bar -->
+    <div class="lockout-bar" id="lockoutBar">🔒 <span id="lockoutMsg">Too many attempts. Please wait.</span></div>
+
+    <!-- Google -->
+    <button class="btn-google" onclick="signInGoogle()">
+      <svg class="google-icon" viewBox="0 0 24 24" xmlns="http://www.w3.org/2000/svg">
+        <path d="M22.56 12.25c0-.78-.07-1.53-.2-2.25H12v4.26h5.92c-.26 1.37-1.04 2.53-2.21 3.31v2.77h3.57c2.08-1.92 3.28-4.74 3.28-8.09z" fill="#4285F4"/>
+        <path d="M12 23c2.97 0 5.46-.98 7.28-2.66l-3.57-2.77c-.98.66-2.23 1.06-3.71 1.06-2.86 0-5.29-1.93-6.16-4.53H2.18v2.84C3.99 20.53 7.7 23 12 23z" fill="#34A853"/>
+        <path d="M5.84 14.09c-.22-.66-.35-1.36-.35-2.09s.13-1.43.35-2.09V7.07H2.18C1.43 8.55 1 10.22 1 12s.43 3.45 1.18 4.93l2.85-2.22.81-.62z" fill="#FBBC05"/>
+        <path d="M12 5.38c1.62 0 3.06.56 4.21 1.64l3.15-3.15C17.45 2.09 14.97 1 12 1 7.7 1 3.99 3.47 2.18 7.07l3.66 2.84c.87-2.6 3.3-4.53 6.16-4.53z" fill="#EA4335"/>
+      </svg>
+      Continue with Google
+    </button>
+
+    <div class="divider">or</div>
+
+    <!-- SIGN IN FORM -->
+    <div class="form-group active" id="signinForm">
+      <div class="field">
+        <label>Email address</label>
+        <input type="email" id="siEmail" placeholder="you@example.com" autocomplete="email">
+      </div>
+      <div class="field">
+        <label>Password</label>
+        <input type="password" id="siPw" placeholder="Your password"
+          autocomplete="current-password"
+          onkeydown="if(event.key==='Enter')doSignIn()">
+      </div>
+      <div class="msg-err" id="siErr"></div>
+      <button class="btn-submit" id="siBtn" onclick="doSignIn()">
+        <div class="spin" id="siSpin"></div>
+        Sign in
+      </button>
+    </div>
+
+    <!-- SIGN UP FORM -->
+    <div class="form-group" id="signupForm">
+      <div class="field">
+        <label>Full name</label>
+        <input type="text" id="suName" placeholder="Dr. First Last" autocomplete="name">
+      </div>
+      <div class="field">
+        <label>Email address</label>
+        <input type="email" id="suEmail" placeholder="you@example.com" autocomplete="email">
+      </div>
+      <div class="field">
+        <label>Password</label>
+        <input type="password" id="suPw" placeholder="Min. 8 characters" autocomplete="new-password">
+      </div>
+      <div class="access-field">
+        <div class="access-label">🔑 Access code required</div>
+        <input type="password" id="suCode" placeholder="Enter access code"
+          autocomplete="off"
+          onkeydown="if(event.key==='Enter')doSignUp()">
+        <div style="font-size:11px;color:rgba(6,182,212,0.6);margin-top:4px;">Ask your cohort admin for the access code</div>
+      </div>
+      <div class="msg-err" id="suErr"></div>
+      <div class="msg-ok" id="suOk"></div>
+      <button class="btn-submit" id="suBtn" onclick="doSignUp()">
+        <div class="spin" id="suSpin"></div>
+        Create account
+      </button>
+      <div class="terms">By creating an account you agree to our <a href="#">Terms</a> and <a href="#">Privacy Policy</a></div>
+    </div>
+
+  </div>
+</div>
+
+<script>
+const SB_URL  = 'https://tzdkptyeodvlllxmvmqf.supabase.co';
+const SB_KEY  = 'eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJpc3MiOiJzdXBhYmFzZSIsInJlZiI6InR6ZGtwdHllb2R2bGxseG12bXFmIiwicm9sZSI6ImFub24iLCJpYXQiOjE3NzM5MzQ3ODQsImV4cCI6MjA4OTUxMDc4NH0.ofEgXFjqp4xqbuXl6T5GO7tVoMRl0YzT2o5fdELi8uM';
+const PW_HASH = '53376799f4948971998e519f778678f7434ccfecd9574a7bded2f9c65a01d2c6';
+const PW_SALT = 'medstudy_2025_salt';
+const SK      = '_ms_auth';
+const sb      = supabase.createClient(SB_URL, SB_KEY);
+
+let fails = 0, lockTil = 0;
+
+// ── On load: if already authed, skip to dashboard ──
+(async () => {
+  const { data: { session } } = await sb.auth.getSession();
+  if (session?.user && sessionStorage.getItem(SK) === '1') {
+    window.location.href = 'dashboard.html';
+  }
+  // Handle OAuth redirect (Google)
+  sb.auth.onAuthStateChange((_event, session) => {
+    if (session?.user) {
+      sessionStorage.setItem(SK, '1');
+      window.location.href = 'dashboard.html';
+    }
+  });
+})();
+
+// ── Helpers ──
+async function sha256(s) {
+  const buf = await crypto.subtle.digest('SHA-256', new TextEncoder().encode(s));
+  return Array.from(new Uint8Array(buf)).map(b => b.toString(16).padStart(2, '0')).join('');
+}
+function showErr(id, msg) {
+  const el = document.getElementById(id);
+  if (!el) return;
+  el.textContent = msg; el.style.display = 'block';
+}
+function hideMsg(id) {
+  const el = document.getElementById(id);
+  if (el) el.style.display = 'none';
+}
+function setBusy(spinId, btnId, busy) {
+  document.getElementById(spinId).style.display = busy ? 'inline-block' : 'none';
+  document.getElementById(btnId).disabled = busy;
+}
+function shake(id) {
+  const el = document.getElementById(id);
+  if (!el) return;
+  el.classList.add('shake', 'error');
+  setTimeout(() => { el.classList.remove('shake'); }, 400);
+}
+function checkLockout() {
+  const now = Date.now();
+  if (now < lockTil) {
+    const secs = Math.ceil((lockTil - now) / 1000);
+    document.getElementById('lockoutBar').style.display = 'flex';
+    document.getElementById('lockoutMsg').textContent = `Too many attempts. Wait ${secs}s before trying again.`;
+    return true;
+  }
+  document.getElementById('lockoutBar').style.display = 'none';
+  return false;
+}
+function recordFail() {
+  fails++;
+  if (fails >= 8) lockTil = Date.now() + 600000;
+  else if (fails >= 5) lockTil = Date.now() + 120000;
+  else if (fails >= 3) lockTil = Date.now() + 30000;
+}
+
+// ── Tab switcher ──
+function switchTab(tab) {
+  const isSignIn = tab === 'signin';
+  document.querySelectorAll('.tab-btn').forEach((b, i) => {
+    b.classList.toggle('active', isSignIn ? i === 0 : i === 1);
+  });
+  document.getElementById('signinForm').classList.toggle('active', isSignIn);
+  document.getElementById('signupForm').classList.toggle('active', !isSignIn);
+  document.getElementById('panelTitle').textContent = isSignIn ? 'Welcome back' : 'Create your account';
+  document.getElementById('panelSub').textContent = isSignIn ? 'Sign in to continue studying' : 'Join Medic Meduvita today';
+  hideMsg('siErr'); hideMsg('suErr'); hideMsg('suOk');
+  document.getElementById('lockoutBar').style.display = 'none';
+}
+
+// ── Google OAuth ──
+async function signInGoogle() {
+  const { error } = await sb.auth.signInWithOAuth({
+    provider: 'google',
+    options: {
+      redirectTo: window.location.origin + '/dashboard.html'
+    }
+  });
+  if (error) showErr('siErr', error.message);
+}
+
+// ── Sign In ──
+async function doSignIn() {
+  if (checkLockout()) return;
+  const email = document.getElementById('siEmail').value.trim();
+  const pw    = document.getElementById('siPw').value;
+  hideMsg('siErr');
+
+  if (!email) { shake('siEmail'); showErr('siErr', 'Please enter your email.'); return; }
+  if (!pw)    { shake('siPw');    showErr('siErr', 'Please enter your password.'); return; }
+
+  setBusy('siSpin', 'siBtn', true);
+  try {
+    const { data, error } = await sb.auth.signInWithPassword({ email, password: pw });
+    if (error) throw error;
+    sessionStorage.setItem(SK, '1');
+    window.location.href = 'dashboard.html';
+  } catch (e) {
+    recordFail();
+    shake('siPw');
+    document.getElementById('siPw').value = '';
+    showErr('siErr', checkLockout() ? '' : (e.message?.includes('Invalid') ? 'Incorrect email or password.' : e.message));
+    setBusy('siSpin', 'siBtn', false);
+  }
+}
+
+// ── Sign Up ──
+async function doSignUp() {
+  const name  = document.getElementById('suName').value.trim();
+  const email = document.getElementById('suEmail').value.trim();
+  const pw    = document.getElementById('suPw').value;
+  const code  = document.getElementById('suCode').value;
+  hideMsg('suErr'); hideMsg('suOk');
+
+  if (!name)  { shake('suName');  showErr('suErr', 'Please enter your full name.'); return; }
+  if (!email) { shake('suEmail'); showErr('suErr', 'Please enter your email address.'); return; }
+  if (!pw || pw.length < 8) { shake('suPw'); showErr('suErr', 'Password must be at least 8 characters.'); return; }
+  if (!code)  { shake('suCode');  showErr('suErr', 'An access code is required to create an account.'); return; }
+
+  // Verify access code
+  const h = await sha256(code + PW_SALT);
+  if (h !== PW_HASH) {
+    shake('suCode');
+    document.getElementById('suCode').value = '';
+    showErr('suErr', 'Incorrect access code. Ask your admin for the correct code.');
+    return;
+  }
+
+  setBusy('suSpin', 'suBtn', true);
+  try {
+    const { data, error } = await sb.auth.signUp({
+      email,
+      password: pw,
+      options: { data: { full_name: name } }
+    });
+    if (error) throw error;
+
+    if (data.user && !data.session) {
+      // Email confirmation required
+      const ok = document.getElementById('suOk');
+      ok.textContent = '✅ Account created! Check your email for a confirmation link, then sign in.';
+      ok.style.display = 'block';
+      ['suName','suEmail','suPw','suCode'].forEach(id => { document.getElementById(id).value = ''; });
+    } else if (data.session) {
+      // Auto-confirmed
+      sessionStorage.setItem(SK, '1');
+      window.location.href = 'dashboard.html';
+    }
+  } catch (e) {
+    showErr('suErr', e.message?.includes('already registered') ? 'This email is already registered. Try signing in instead.' : (e.message || 'Sign up failed.'));
+  } finally {
+    setBusy('suSpin', 'suBtn', false);
+  }
+}
+</script>
+</body>
+</html>
