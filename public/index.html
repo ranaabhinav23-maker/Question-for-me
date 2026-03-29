@@ -444,11 +444,12 @@ label { font-size: 11px; color: var(--text2); font-weight: 600; display: block; 
       <div class="logo-name">Medic <span>Meduvita</span></div>
     </div>
     <div class="sidebar-user">
-      <div class="user-avatar">AB</div>
-      <div>
-        <div class="user-name">Abhinav</div>
+      <div class="user-avatar" id="sidebarUserAvatar">AB</div>
+      <div style="flex:1;min-width:0;">
+        <div class="user-name" id="sidebarUserName">Abhinav</div>
         <div class="user-year" id="sidebarYear">Year 2</div>
       </div>
+      <button onclick="signOut()" title="Sign out" style="background:none;border:none;color:rgba(255,255,255,0.3);cursor:pointer;font-size:14px;padding:2px;flex-shrink:0;" onmouseover="this.style.color='#ef4444'" onmouseout="this.style.color='rgba(255,255,255,0.3)'">⏻</button>
     </div>
     <div class="nav-section">Practice</div>
     <div style="padding:0 0 4px;">
@@ -846,7 +847,7 @@ label { font-size: 11px; color: var(--text2); font-weight: 600; display: block; 
     <div class="page-hero"><div><div class="page-hero-title">Bug Table</div><div class="page-hero-sub">Build your master microbiology reference</div></div><button class="btn btn-primary btn-sm" onclick="openAddBug()">＋ Add bug</button></div>
     <div style="padding:20px 32px 0;">
       <div class="tab-row mb20"><div class="tab active" onclick="bTab('browse',this)">Browse</div><div class="tab" onclick="bTab('test',this)">Test yourself</div></div>
-      <div id="bugBrowse"><div class="pill-row" id="bugPills"></div><div class="section-card" style="overflow-x:auto;"><table class="btable"><thead><tr><th>Bug</th><th>Gram</th><th>Type</th><th>Causes</th><th>Treatment</th><th>Block</th><th></th></tr></thead><tbody id="bugBody"></tbody></table></div></div>
+      <div id="bugBrowse"><div class="pill-row" id="bugPills"></div><div class="section-card" style="overflow-x:auto;"><table class="btable"><thead><tr><th>Bug</th><th>Gram</th><th>Type</th><th>Causes</th><th>Treatment</th><th>Notes</th><th>Block</th><th></th></tr></thead><tbody id="bugBody"></tbody></table></div></div>
       <div id="bugTest" style="display:none;"><div class="section-card mb16"><div class="section-head"><div class="section-title">Select blocks</div></div><div class="section-body"><div class="pill-row" id="bugTestPills"></div><button class="btn btn-primary mt8" onclick="startBugTest()">Start test</button></div></div><div id="bugTestArea"></div></div>
     </div>
    </div>
@@ -1344,6 +1345,28 @@ const SUBJECTS=['Anatomy','Physiology','Pharmacology','Microbiology','Immunology
 const BC={GU:'gu',MSK:'msk',Neurology:'neuro',GI:'gi',CVR:'cvr',Core:'core'};
 const BLOCK_COLORS={GU:'#ec4899',MSK:'#3b82f6',Neurology:'#10b981',GI:'#f97316',CVR:'#ef4444',Core:'#8b5cf6'};
 const sb=supabase.createClient(SB_URL,SB_KEY);
+
+// ── AUTH STATE (must be declared before any function that uses it) ──
+const PW_HASH='53376799f4948971998e519f778678f7434ccfecd9574a7bded2f9c65a01d2c6';
+const PW_SALT='medstudy_2025_salt';
+const OWNER_EMAIL='ranaabhinav23@gmail.com';
+let currentUser=null;
+
+// Returns null for owner (so queries match legacy rows with user_id IS NULL),
+// returns UUID string for everyone else.
+function getUserId(){
+  if(!currentUser)return null;
+  if(currentUser.email===OWNER_EMAIL)return null;
+  return currentUser.id;
+}
+
+// Wrap a Supabase insert payload with user_id for non-owners
+function uInsert(data){
+  const uid=getUserId();
+  if(uid===null)return data;
+  return Array.isArray(data)?data.map(r=>({...r,user_id:uid})):{...data,user_id:uid};
+}
+
 let yr='Year 2',fails=0,lockTil=0;
 let mcqQs=[],mcqPk={},mcqDone=false;
 let allDrugs=[],allBugs=[],allFlashcards=[];
@@ -1379,13 +1402,12 @@ function applyTheme(){
   updateThemeUI(saved==='dark');
 }
 
-// ── AUTH ──
-const PW_HASH='53376799f4948971998e519f778678f7434ccfecd9574a7bded2f9c65a01d2c6';
-const PW_SALT='medstudy_2025_salt';
+// ── AUTH — Supabase Auth + legacy pin lock ──
 async function sha256str(s){
   const buf=await crypto.subtle.digest('SHA-256',new TextEncoder().encode(s));
   return Array.from(new Uint8Array(buf)).map(b=>b.toString(16).padStart(2,'0')).join('');
 }
+
 async function tryUnlock(){
   const now=Date.now();
   if(now<lockTil){document.getElementById('lockErr').textContent='Locked — wait '+Math.ceil((lockTil-now)/1000)+'s';return;}
@@ -1418,11 +1440,21 @@ async function tryUnlock(){
     btn.querySelector('.spin').style.display='none';
   }
 }
+
 function unlock(){
   document.getElementById('lock').style.display='none';
   document.getElementById('app').style.display='block';
+  if(currentUser){
+    const name=currentUser.user_metadata?.full_name||currentUser.email.split('@')[0];
+    const initials=name.split(' ').map(w=>w[0]).join('').toUpperCase().slice(0,2);
+    const nameEl=document.getElementById('sidebarUserName');
+    const avatarEl=document.getElementById('sidebarUserAvatar');
+    if(nameEl)nameEl.textContent=name;
+    if(avatarEl)avatarEl.textContent=initials;
+  }
   init();
 }
+
 function hardResetLock(){
   fails=0;lockTil=0;
   document.getElementById('lockErr').textContent='';
@@ -1431,11 +1463,35 @@ function hardResetLock(){
   alert('Reset done. Password is: V@nshr@na');
 }
 
+async function signOut(){
+  await sb.auth.signOut();
+  currentUser=null;
+  sessionStorage.removeItem(SK);
+  location.reload();
+}
+
 // ── SINGLE DOMContentLoaded ──
-document.addEventListener('DOMContentLoaded',function(){
+document.addEventListener('DOMContentLoaded',async function(){
   applyTheme();
   document.querySelectorAll('.modal-bg').forEach(m=>m.addEventListener('click',e=>{if(e.target===m)m.classList.remove('open');}));
+
+  // Try to restore Supabase session
+  const{data:{session}}=await sb.auth.getSession();
+  if(session?.user){
+    currentUser=session.user;
+    sessionStorage.setItem(SK,'1');
+  }
+
   if(sessionStorage.getItem(SK)==='1') unlock();
+
+  // Listen for auth changes (e.g. magic link)
+  sb.auth.onAuthStateChange((_event,session)=>{
+    if(session?.user&&!currentUser){
+      currentUser=session.user;
+      sessionStorage.setItem(SK,'1');
+      unlock();
+    }
+  });
 });
 
 async function init(){
@@ -1508,7 +1564,12 @@ function toggleTestPill(id,block,el){const s=id==='drugTestPills'?selDrugBlocks:
 function getActivePills(id){return[...document.querySelectorAll(`#${id} .pill.active`)].map(p=>{const c=[...p.classList];for(const b of BLOCKS)if(c.includes('pill-'+BC[b]))return b;return null;}).filter(Boolean);}
 
 async function loadDash(){
-  const[lecR,mcqR,wrongR]=await Promise.all([sb.from('lectures').select('*').eq('year',yr),sb.from('mcq_sessions').select('*').eq('year',yr),sb.from('wrong_answers').select('*').eq('year',yr).eq('resolved',false)]);
+  const uid=getUserId();
+  function scoped(table){
+    const q=sb.from(table).select('*').eq('year',yr);
+    return uid===null?q.is('user_id',null):q.eq('user_id',uid);
+  }
+  const[lecR,mcqR,wrongR]=await Promise.all([scoped('lectures'),scoped('mcq_sessions'),scoped('wrong_answers').eq('resolved',false)]);
   const lecs=lecR.data||[],sessions=mcqR.data||[],wrongs=wrongR.data||[];
   document.getElementById('sLec').textContent=lecs.filter(l=>l.pass1).length;
   document.getElementById('sLecSub').textContent=`of ${lecs.length} total`;
@@ -1549,8 +1610,12 @@ async function loadDash(){
 
 function updateWrongBadge(n){
   const el=document.getElementById('wrongCount');
-  if(n===undefined){sb.from('wrong_answers').select('*',{count:'exact',head:true}).eq('year',yr).eq('resolved',false).then(r=>{const c=r.count||0;el.textContent=c;el.style.display=c>0?'inline':'none';});}
-  else{el.textContent=n;el.style.display=n>0?'inline':'none';}
+  if(n===undefined){
+    const uid=getUserId();
+    let q=sb.from('wrong_answers').select('*',{count:'exact',head:true}).eq('year',yr).eq('resolved',false);
+    q=(uid===null?q.is('user_id',null):q.eq('user_id',uid));
+    q.then(r=>{const c=r.count||0;el.textContent=c;el.style.display=c>0?'inline':'none';});
+  }else{el.textContent=n;el.style.display=n>0?'inline':'none';}
 }
 
 function renderTargets(){
@@ -1572,7 +1637,10 @@ function openTargetModal(){renderTargets();openModal('targetModal');}
 let _allLecsCache=null;
 async function loadLecs(forceRefresh=false){
   if(!_allLecsCache||forceRefresh){
-    const{data}=await sb.from('lectures').select('*').eq('year',yr).order('created_at');
+    const uid=getUserId();
+    let q=sb.from('lectures').select('*').eq('year',yr);
+    q=(uid===null?q.is('user_id',null):q.eq('user_id',uid));
+    const{data}=await q.order('created_at');
     _allLecsCache=data||[];
     renderLecTimeRemaining(_allLecsCache);
   }
@@ -1594,7 +1662,7 @@ async function addLec(){
   const block=document.getElementById('lecBlock').value;
   const subject=document.getElementById('lecSubj').value;
   if(!title){showErr('lecErr','Please enter a lecture title.');return;}
-  const{error}=await sb.from('lectures').insert({title,block,subject,year:yr,pass1:false,pass2:false});
+  const{error}=await sb.from('lectures').insert(uInsert({title,block,subject,year:yr,pass1:false,pass2:false}));
   if(error){showErr('lecErr','Save failed: '+error.message);return;}
   closeModal('addLecModal');
   document.getElementById('lecTitle').value='';
@@ -1609,7 +1677,10 @@ async function delLec(id){await sb.from('lectures').delete().eq('id',id);_allLec
 let _notePickerAll = [];
 async function loadNotePickerData() {
   if (_notePickerAll.length) return _notePickerAll;
-  const { data } = await sb.from('notes').select('id,title,block,subject,lecture_ref,content').eq('year', yr).order('updated_at', { ascending: false });
+  const uid=getUserId();
+  let npq=sb.from('notes').select('id,title,block,subject,lecture_ref,content').eq('year',yr);
+  npq=(uid===null?npq.is('user_id',null):npq.eq('user_id',uid));
+  const{data}=await npq.order('updated_at',{ascending:false});
   _notePickerAll = data || [];
   return _notePickerAll;
 }
@@ -1880,9 +1951,8 @@ async function subMCQ(){
   const flashBtn=document.getElementById('mcqWrongFlashBtn');
   if(flashBtn)flashBtn.style.display=wrongs.length?'block':'none';
   // Save session
-  try{await sb.from('mcq_sessions').insert({year:yr,block,total:mcqQs.length,score,questions:mcqQs});}catch(e){console.warn('mcq session save:',e);}
-  // Save wrong answers with subject field
-  if(wrongs.length){try{await sb.from('wrong_answers').insert(wrongs);}catch(e){console.warn('wrong answers save:',e);}}
+  try{await sb.from('mcq_sessions').insert(uInsert({year:yr,block,total:mcqQs.length,score,questions:mcqQs}));}catch(e){console.warn('mcq session save:',e);}
+  if(wrongs.length){try{await sb.from('wrong_answers').insert(wrongs.map(w=>uInsert(w)));}catch(e){console.warn('wrong answers save:',e);}}
   _allWrongAnswers=null; // clear cache so review page reloads fresh
   // Save ALL generated questions to shared question bank
   try{
@@ -1984,8 +2054,8 @@ async function submitMock(){
     document.getElementById(`mxe${i}`).classList.add('show');
   });
   const pct=Math.round(score/mockQs.length*100);
-  await sb.from('mcq_sessions').insert({year:yr,block:'Mock Exam',total:mockQs.length,score,questions:mockQs});
-  if(wrongs.length)await sb.from('wrong_answers').insert(wrongs);
+  await sb.from('mcq_sessions').insert(uInsert({year:yr,block:'Mock Exam',total:mockQs.length,score,questions:mockQs}));
+  if(wrongs.length)await sb.from('wrong_answers').insert(wrongs.map(w=>uInsert(w)));
   const area=document.getElementById('mockExamArea');
   const banner=document.createElement('div');
   banner.style.cssText='margin-bottom:20px;';
@@ -2123,7 +2193,30 @@ function renderDrugs(block){
 }
 function openAddDrug(){document.getElementById('aiDSug').style.display='none';openModal('addDrugModal');}
 async function aiCheckDrug(){const name=document.getElementById('dName').value.trim();if(!name){showErr('dErr','Enter drug name first.');return;}setBusy('aiDBtn','aiDTxt','Checking…',true);const prompt=`UK Year 2 drug card:\nDrug: ${name}\nMechanism: ${document.getElementById('dMech').value||'blank'}\nUsed for: ${document.getElementById('dUse').value||'blank'}\nSide effect: ${document.getElementById('dSide').value||'blank'}\nGaps or errors? Max 3 bullets. If complete say "Looks good."`;try{const r=await fetch('https://mymedicinefriend.ranaabhinav23.workers.dev',{method:'POST',headers:{'Content-Type':'application/json'},body:JSON.stringify({model:'claude-haiku-4-5-20251001',max_tokens:300,messages:[{role:'user',content:prompt}]})});const d=await r.json();document.getElementById('aiDContent').textContent=(d.content?.[0]?.text||'').trim();document.getElementById('aiDSug').style.display='block';}catch(e){showErr('dErr',e.message);}finally{setBusy('aiDBtn','aiDTxt','✨ Check what I missed (AI)',false);}}
-async function saveDrug(){const name=document.getElementById('dName').value.trim();if(!name){showErr('dErr','Name required.');return;}const ai=document.getElementById('aiDSug').style.display!=='none'?document.getElementById('aiDContent').textContent:'';await sb.from('drug_cards').insert({year:yr,block:document.getElementById('dBlock').value,name,mechanism:document.getElementById('dMech').value.trim(),used_for:document.getElementById('dUse').value.trim(),side_effect:document.getElementById('dSide').value.trim(),ai_notes:ai});closeModal('addDrugModal');['dName','dMech','dUse','dSide'].forEach(id=>document.getElementById(id).value='');loadDrugs();}
+async function saveDrug(){
+  const name=document.getElementById('dName').value.trim();
+  if(!name){showErr('dErr','Name required.');return;}
+  const ai=document.getElementById('aiDSug').style.display!=='none'?document.getElementById('aiDContent').textContent:'';
+  const notes=(document.getElementById('dNotes')?.value||'').trim();
+  try{
+    const{error}=await sb.from('drug_cards').insert(uInsert({
+      year:yr,
+      block:document.getElementById('dBlock').value,
+      name,
+      mechanism:document.getElementById('dMech').value.trim(),
+      used_for:document.getElementById('dUse').value.trim(),
+      side_effect:document.getElementById('dSide').value.trim(),
+      notes:notes||null,
+      ai_notes:ai||null
+    }));
+    if(error)throw error;
+    closeModal('addDrugModal');
+    ['dName','dMech','dUse','dSide','dNotes'].forEach(id=>{const el=document.getElementById(id);if(el)el.value='';});
+    document.getElementById('aiDSug').style.display='none';
+    hideErr('dErr');
+    loadDrugs();
+  }catch(e){showErr('dErr','Save failed: '+e.message);}
+}
 async function delDrug(id){await sb.from('drug_cards').delete().eq('id',id);loadDrugs();}
 function startDrugTest(){const drugs=allDrugs.filter(d=>selDrugBlocks.has(d.block));if(!drugs.length){document.getElementById('drugTestArea').innerHTML='<div class="empty">No drug cards in selected blocks.</div>';return;}dTestQs=shuffle([...drugs]);dTestIdx=0;renderDrugCard();}
 function renderDrugCard(){const a=document.getElementById('drugTestArea');if(dTestIdx>=dTestQs.length){a.innerHTML=`<div class="section-card" style="text-align:center;padding:36px;"><div style="font-size:1.2rem;font-weight:800;color:var(--text);margin-bottom:8px;">Done! 🎉</div><div style="color:var(--text2);">Reviewed ${dTestQs.length} drug cards</div><button class="btn btn-primary mt16" onclick="startDrugTest()">Go again</button></div>`;return;}const d=dTestQs[dTestIdx];a.innerHTML=`<div class="section-card"><div class="section-head"><div><div style="font-size:11px;color:var(--text2);">Card ${dTestIdx+1} of ${dTestQs.length}</div><div class="section-title" style="font-size:1.1rem;margin-top:4px;">${esc(d.name)}</div></div><span class="badge badge-muted">${d.block}</span></div><div class="section-body"><div id="dCardBack" style="display:none;"><div class="g2" style="gap:14px;margin-bottom:16px;"><div><div class="field-label">Mechanism</div><div class="field-val" style="white-space:pre-line;">${esc(d.mechanism||'—')}</div></div><div><div class="field-label">Indications</div><div class="field-val" style="white-space:pre-line;">${esc(d.used_for||'—')}</div></div><div><div class="field-label">Side effects</div><div class="field-val" style="white-space:pre-line;">${esc(d.side_effect||'—')}</div></div>${d.notes?`<div><div class="field-label">Notes</div><div class="field-val" style="white-space:pre-line;">${esc(d.notes)}</div></div>`:''} ${d.ai_notes?`<div style="grid-column:span 2"><div class="field-label" style="color:var(--accent);">AI additions</div><div class="field-val" style="font-size:12px;white-space:pre-line;">${esc(d.ai_notes)}</div></div>`:''}</div></div><div id="dRevBtn"><button class="btn btn-outline" onclick="revDCard()">Reveal answer</button></div><div id="dActBtn" style="display:none;"><button class="btn btn-primary" onclick="nxtDCard()">Next card →</button></div></div></div>`;}
@@ -2132,14 +2225,42 @@ function nxtDCard(){dTestIdx++;renderDrugCard();}
 
 // ── BUGS ──
 function bTab(t,el){document.querySelectorAll('#page-bugs .tab').forEach(x=>x.classList.remove('active'));el.classList.add('active');document.getElementById('bugBrowse').style.display=t==='browse'?'block':'none';document.getElementById('bugTest').style.display=t==='test'?'block':'none';}
-async function loadBugs(){const{data}=await sb.from('bug_table').select('*').eq('year',yr).order('created_at');allBugs=data||[];renderBugs('all');}
-function renderBugs(block){const bugs=block==='all'?allBugs:allBugs.filter(b=>b.block===block);const tb=document.getElementById('bugBody');if(!bugs.length){tb.innerHTML='<tr><td colspan="7" style="text-align:center;color:var(--text2);padding:36px;">No bugs added yet</td></tr>';return;}tb.innerHTML=bugs.map(b=>`<tr><td><strong>${esc(b.name)}</strong>${b.ai_notes?`<br><small style="color:var(--accent);font-size:10px;">${esc(b.ai_notes)}</small>`:''}</td><td><span class="badge ${b.gram==='+ve'?'badge-blue':b.gram==='-ve'?'badge-red':'badge-muted'}">${b.gram}</span></td><td style="color:var(--text2);">${esc(b.type||'—')}</td><td style="color:var(--text2);">${esc(b.causes||'—')}</td><td style="color:var(--text2);">${esc(b.treatment||'—')}</td><td><span class="dot d-${BC[b.block]||''}" style="margin-right:6px;"></span>${b.block}</td><td><button class="btn btn-xs btn-danger" onclick="delBug('${b.id}')">✕</button></td></tr>`).join('');}
+async function loadBugs(){
+  const uid=getUserId();
+  let bq=sb.from('bug_table').select('*').eq('year',yr);
+  bq=(uid===null?bq.is('user_id',null):bq.eq('user_id',uid));
+  const{data}=await bq.order('created_at');
+  allBugs=data||[];renderBugs('all');
+}
+function renderBugs(block){const bugs=block==='all'?allBugs:allBugs.filter(b=>b.block===block);const tb=document.getElementById('bugBody');if(!bugs.length){tb.innerHTML='<tr><td colspan="8" style="text-align:center;color:var(--text2);padding:36px;">No bugs added yet</td></tr>';return;}tb.innerHTML=bugs.map(b=>`<tr><td><strong>${esc(b.name)}</strong>${b.ai_notes?`<br><small style="color:var(--accent);font-size:10px;">${esc(b.ai_notes)}</small>`:''}</td><td><span class="badge ${b.gram==='+ve'?'badge-blue':b.gram==='-ve'?'badge-red':'badge-muted'}">${b.gram}</span></td><td style="color:var(--text2);">${esc(b.type||'—')}</td><td style="color:var(--text2);white-space:pre-line;">${esc(b.causes||'—')}</td><td style="color:var(--text2);white-space:pre-line;">${esc(b.treatment||'—')}</td><td style="color:var(--text2);font-size:11px;max-width:140px;">${b.notes?esc(b.notes):'—'}</td><td><span class="dot d-${BC[b.block]||''}" style="margin-right:6px;"></span>${b.block}</td><td><button class="btn btn-xs btn-danger" onclick="delBug('${b.id}')">✕</button></td></tr>`).join('');}
 function openAddBug(){document.getElementById('aiBSug').style.display='none';openModal('addBugModal');}
 async function aiCheckBug(){const name=document.getElementById('bName').value.trim();if(!name){showErr('bErr','Enter bug name first.');return;}setBusy('aiBBtn','aiBTxt','Checking…',true);const prompt=`UK Year 2 bug entry:\nBug: ${name}, Gram: ${document.getElementById('bGram').value}, Type: ${document.getElementById('bType').value||'blank'}, Causes: ${document.getElementById('bCauses').value||'blank'}, Treatment: ${document.getElementById('bTx').value||'blank'}\nGaps? Max 3 bullets. If complete say "Looks good."`;try{const r=await fetch('https://mymedicinefriend.ranaabhinav23.workers.dev',{method:'POST',headers:{'Content-Type':'application/json'},body:JSON.stringify({model:'claude-haiku-4-5-20251001',max_tokens:300,messages:[{role:'user',content:prompt}]})});const d=await r.json();document.getElementById('aiBContent').textContent=(d.content?.[0]?.text||'').trim();document.getElementById('aiBSug').style.display='block';}catch(e){showErr('bErr',e.message);}finally{setBusy('aiBBtn','aiBTxt','✨ Check what I missed (AI)',false);}}
-async function saveBug(){const name=document.getElementById('bName').value.trim();if(!name){showErr('bErr','Name required.');return;}const ai=document.getElementById('aiBSug').style.display!=='none'?document.getElementById('aiBContent').textContent:'';await sb.from('bug_table').insert({year:yr,block:document.getElementById('bBlock').value,name,gram:document.getElementById('bGram').value,type:document.getElementById('bType').value.trim(),causes:document.getElementById('bCauses').value.trim(),treatment:document.getElementById('bTx').value.trim(),ai_notes:ai});closeModal('addBugModal');['bName','bType','bCauses','bTx'].forEach(id=>document.getElementById(id).value='');loadBugs();}
+async function saveBug(){
+  const name=document.getElementById('bName').value.trim();
+  if(!name){showErr('bErr','Name required.');return;}
+  const ai=document.getElementById('aiBSug').style.display!=='none'?document.getElementById('aiBContent').textContent:'';
+  const notes=(document.getElementById('bNotes')?.value||'').trim();
+  try{
+    const{error}=await sb.from('bug_table').insert(uInsert({
+      year:yr,block:document.getElementById('bBlock').value,name,
+      gram:document.getElementById('bGram').value,
+      type:document.getElementById('bType').value.trim(),
+      causes:document.getElementById('bCauses').value.trim(),
+      treatment:document.getElementById('bTx').value.trim(),
+      notes:notes||null,
+      ai_notes:ai||null
+    }));
+    if(error)throw error;
+    closeModal('addBugModal');
+    ['bName','bType','bCauses','bTx','bNotes'].forEach(id=>{const el=document.getElementById(id);if(el)el.value='';});
+    document.getElementById('aiBSug').style.display='none';
+    hideErr('bErr');
+    loadBugs();
+  }catch(e){showErr('bErr','Save failed: '+e.message);}
+}
 async function delBug(id){await sb.from('bug_table').delete().eq('id',id);loadBugs();}
 function startBugTest(){const bugs=allBugs.filter(b=>selBugBlocks.has(b.block));if(!bugs.length){document.getElementById('bugTestArea').innerHTML='<div class="empty">No bugs in selected blocks.</div>';return;}bTestQs=shuffle([...bugs]);bTestIdx=0;renderBugCard();}
-function renderBugCard(){const a=document.getElementById('bugTestArea');if(bTestIdx>=bTestQs.length){a.innerHTML=`<div class="section-card" style="text-align:center;padding:36px;"><div style="font-size:1.2rem;font-weight:800;color:var(--text);margin-bottom:8px;">Done! 🎉</div><div style="color:var(--text2);">Reviewed ${bTestQs.length} bugs</div><button class="btn btn-primary mt16" onclick="startBugTest()">Go again</button></div>`;return;}const b=bTestQs[bTestIdx];a.innerHTML=`<div class="section-card"><div class="section-head"><div><div style="font-size:11px;color:var(--text2);">Bug ${bTestIdx+1} of ${bTestQs.length}</div><div class="section-title" style="font-size:1.1rem;margin-top:4px;">${esc(b.name)}</div></div><span class="badge badge-muted">${b.block}</span></div><div class="section-body"><div style="font-size:12px;color:var(--text2);margin-bottom:16px;">What do you remember?</div><div id="bCardBack" style="display:none;"><div class="g2" style="gap:14px;margin-bottom:16px;"><div><div class="field-label">Gram</div><div class="field-val">${b.gram}</div></div><div><div class="field-label">Type</div><div class="field-val">${esc(b.type||'—')}</div></div><div><div class="field-label">Causes</div><div class="field-val">${esc(b.causes||'—')}</div></div><div><div class="field-label">Treatment</div><div class="field-val">${esc(b.treatment||'—')}</div></div>${b.ai_notes?`<div style="grid-column:span 2"><div class="field-label" style="color:var(--accent);">Extra</div><div class="field-val" style="font-size:12px;">${esc(b.ai_notes)}</div></div>`:''}</div></div><div id="bRevBtn"><button class="btn btn-outline" onclick="revBCard()">Reveal answer</button></div><div id="bActBtn" style="display:none;margin-top:12px;"><button class="btn btn-primary" onclick="nxtBCard()">Next bug →</button></div></div></div>`;}
+function renderBugCard(){const a=document.getElementById('bugTestArea');if(bTestIdx>=bTestQs.length){a.innerHTML=`<div class="section-card" style="text-align:center;padding:36px;"><div style="font-size:1.2rem;font-weight:800;color:var(--text);margin-bottom:8px;">Done! 🎉</div><div style="color:var(--text2);">Reviewed ${bTestQs.length} bugs</div><button class="btn btn-primary mt16" onclick="startBugTest()">Go again</button></div>`;return;}const b=bTestQs[bTestIdx];a.innerHTML=`<div class="section-card"><div class="section-head"><div><div style="font-size:11px;color:var(--text2);">Bug ${bTestIdx+1} of ${bTestQs.length}</div><div class="section-title" style="font-size:1.1rem;margin-top:4px;">${esc(b.name)}</div></div><span class="badge badge-muted">${b.block}</span></div><div class="section-body"><div style="font-size:12px;color:var(--text2);margin-bottom:16px;">What do you remember?</div><div id="bCardBack" style="display:none;"><div class="g2" style="gap:14px;margin-bottom:16px;"><div><div class="field-label">Gram</div><div class="field-val">${b.gram}</div></div><div><div class="field-label">Type</div><div class="field-val">${esc(b.type||'—')}</div></div><div><div class="field-label">Causes</div><div class="field-val" style="white-space:pre-line;">${esc(b.causes||'—')}</div></div><div><div class="field-label">Treatment</div><div class="field-val" style="white-space:pre-line;">${esc(b.treatment||'—')}</div></div>${b.notes?`<div style="grid-column:span 2"><div class="field-label" style="color:var(--purple);">Notes</div><div class="field-val" style="font-size:12px;white-space:pre-line;">${esc(b.notes)}</div></div>`:''}${b.ai_notes?`<div style="grid-column:span 2"><div class="field-label" style="color:var(--accent);">AI extras</div><div class="field-val" style="font-size:12px;">${esc(b.ai_notes)}</div></div>`:''}</div></div><div id="bRevBtn"><button class="btn btn-outline" onclick="revBCard()">Reveal answer</button></div><div id="bActBtn" style="display:none;margin-top:12px;"><button class="btn btn-primary" onclick="nxtBCard()">Next bug →</button></div></div></div>`;}
 function revBCard(){document.getElementById('bCardBack').style.display='block';document.getElementById('bRevBtn').style.display='none';document.getElementById('bActBtn').style.display='block';}
 function nxtBCard(){bTestIdx++;renderBugCard();}
 
@@ -2252,6 +2373,7 @@ function renderPathSRSCard(){
           ${p.investigations?`<div><div class="field-label">Investigations</div><div class="field-val" style="white-space:pre-line;">${esc(p.investigations)}</div></div>`:''}
           ${p.treatment?`<div><div class="field-label">Treatment</div><div class="field-val" style="white-space:pre-line;">${esc(p.treatment)}</div></div>`:''}
           ${p.complications?`<div style="grid-column:span 2"><div class="field-label">Complications</div><div class="field-val" style="white-space:pre-line;">${esc(p.complications)}</div></div>`:''}
+          ${p.notes?`<div style="grid-column:span 2"><div class="field-label" style="color:var(--purple);">Notes</div><div class="field-val" style="white-space:pre-line;">${esc(p.notes)}</div></div>`:''}
         </div>
         <div style="font-size:12px;color:var(--text2);margin-bottom:12px;font-weight:600;">How well did you know this?</div>
         <div style="display:flex;gap:8px;flex-wrap:wrap;justify-content:center;">
@@ -2292,6 +2414,7 @@ function renderPathCard(){
           ${p.investigations?`<div><div class="field-label">Investigations</div><div class="field-val" style="white-space:pre-line;">${esc(p.investigations)}</div></div>`:''}
           ${p.treatment?`<div><div class="field-label">Treatment</div><div class="field-val" style="white-space:pre-line;">${esc(p.treatment)}</div></div>`:''}
           ${p.complications?`<div style="grid-column:span 2"><div class="field-label">Complications</div><div class="field-val" style="white-space:pre-line;">${esc(p.complications)}</div></div>`:''}
+          ${p.notes?`<div style="grid-column:span 2"><div class="field-label" style="color:var(--purple);">Notes</div><div class="field-val" style="white-space:pre-line;">${esc(p.notes)}</div></div>`:''}
           ${p.ai_notes?`<div style="grid-column:span 2"><div class="field-label" style="color:var(--accent);">AI notes</div><div class="field-val" style="font-size:12px;">${esc(p.ai_notes)}</div></div>`:''}
         </div>
       </div>
@@ -2302,7 +2425,10 @@ function renderPathCard(){
 }
 
 async function loadPath(){
-  const{data}=await sb.from('path_cards').select('*').eq('year',yr).order('created_at');
+  const uid=getUserId();
+  let pq=sb.from('path_cards').select('*').eq('year',yr);
+  pq=(uid===null?pq.is('user_id',null):pq.eq('user_id',uid));
+  const{data}=await pq.order('created_at');
   allPaths=data||[];
   renderPaths('all');
 }
@@ -2328,6 +2454,7 @@ function renderPaths(block){
         ${p.investigations?`<div><div class="field-label">Investigations</div><div class="field-val" style="font-size:12px;white-space:pre-line;">${esc(p.investigations)}</div></div>`:''}
         ${p.treatment?`<div><div class="field-label">Treatment</div><div class="field-val" style="font-size:12px;white-space:pre-line;">${esc(p.treatment)}</div></div>`:''}
         ${p.complications?`<div style="grid-column:span 2"><div class="field-label">Complications / Prognosis</div><div class="field-val" style="font-size:12px;white-space:pre-line;">${esc(p.complications)}</div></div>`:''}
+        ${p.notes?`<div style="grid-column:span 2"><div class="field-label" style="color:var(--purple);">Notes</div><div class="field-val" style="font-size:12px;white-space:pre-line;">${esc(p.notes)}</div></div>`:''}
         ${p.ai_notes?`<div style="grid-column:span 2"><div class="field-label" style="color:var(--accent);">AI additions</div><div class="field-val" style="font-size:12px;color:var(--text2);white-space:pre-line;">${esc(p.ai_notes)}</div></div>`:''}
       </div>
     </div>`).join('');
@@ -2366,7 +2493,7 @@ async function savePath(){
   if(btn){btn.disabled=true;btn.textContent='Saving…';}
   const ai=document.getElementById('aiPSug').style.display!=='none'?document.getElementById('aiPContent').textContent:'';
   try{
-    const{error}=await sb.from('path_cards').insert({
+    const{error}=await sb.from('path_cards').insert(uInsert({
       year:yr,
       block:document.getElementById('pBlock').value,
       subject:document.getElementById('pSubject').value,
@@ -2378,11 +2505,12 @@ async function savePath(){
       investigations:document.getElementById('pInvest').value.trim(),
       treatment:document.getElementById('pTreat').value.trim(),
       complications:(document.getElementById('pComps')?.value||'').trim(),
+      notes:(document.getElementById('pNotes')?.value||'').trim()||null,
       ai_notes:ai
     });
     if(error)throw error;
     closeModal('addPathModal');
-    ['pName','pCauses','pTypes','pPathophys','pClinical','pInvest','pTreat','pComps'].forEach(id=>{
+    ['pName','pCauses','pTypes','pPathophys','pClinical','pInvest','pTreat','pComps','pNotes'].forEach(id=>{
       const el=document.getElementById(id);if(el)el.value='';
     });
     const aiSug=document.getElementById('aiPSug');if(aiSug)aiSug.style.display='none';
@@ -2438,14 +2566,19 @@ function updateReviewBadge(){
   el.textContent=n+' question'+(n!==1?'s':'');
 }
 async function loadReview(){
-  const{data}=await sb.from('wrong_answers').select('*').eq('year',yr).eq('resolved',false).order('created_at',{ascending:false});
+  const uid=getUserId();
+  let wq=sb.from('wrong_answers').select('*').eq('year',yr).eq('resolved',false);
+  wq=(uid===null?wq.is('user_id',null):wq.eq('user_id',uid));
+  const{data}=await wq.order('created_at',{ascending:false});
   _allWrongAnswers=data||[];
   updateReviewBadge();
 }
 async function startReview(){
-  // Load fresh if not cached
   if(!_allWrongAnswers){
-    const{data}=await sb.from('wrong_answers').select('*').eq('year',yr).eq('resolved',false).order('created_at',{ascending:false});
+    const uid=getUserId();
+    let wq=sb.from('wrong_answers').select('*').eq('year',yr).eq('resolved',false);
+    wq=(uid===null?wq.is('user_id',null):wq.eq('user_id',uid));
+    const{data}=await wq.order('created_at',{ascending:false});
     _allWrongAnswers=data||[];
   }
   const filtered=getFilteredWrongs();
@@ -2603,7 +2736,10 @@ let noteBlockFilter='all';
 async function loadNotes(){
   renderNotionLinks();
   buildNotesFilterBar();
-  const{data}=await sb.from('notes').select('*').eq('year',yr).order('updated_at',{ascending:false});
+  const uid=getUserId();
+  let nq=sb.from('notes').select('*').eq('year',yr);
+  nq=(uid===null?nq.is('user_id',null):nq.eq('user_id',uid));
+  const{data}=await nq.order('updated_at',{ascending:false});
   allNotes=data||[];
   renderNotesList();
   // If no active note, show empty state
@@ -2662,7 +2798,7 @@ async function createNote(){
   const block=document.getElementById('newNoteBlock').value;
   const subject=document.getElementById('newNoteSubject').value;
   const lecture_ref=document.getElementById('newNoteLecture').value.trim();
-  const{data,error}=await sb.from('notes').insert({year:yr,title,block,subject,lecture_ref,content:'',updated_at:new Date().toISOString()}).select().single();
+  const{data,error}=await sb.from('notes').insert(uInsert({year:yr,title,block,subject,lecture_ref,content:'',updated_at:new Date().toISOString()})).select().single();
   if(error){showErr('newNoteErr','Save failed: '+error.message);return;}
   closeModal('newNoteModal');
   allNotes.unshift(data);
@@ -4341,7 +4477,10 @@ function rateSRS(quality) {
 
 // Update loadDrugs to also refresh SRS badge
 async function loadDrugs(){
-  const{data}=await sb.from('drug_cards').select('*').eq('year',yr).order('created_at');
+  const uid=getUserId();
+  let dq=sb.from('drug_cards').select('*').eq('year',yr);
+  dq=(uid===null?dq.is('user_id',null):dq.eq('user_id',uid));
+  const{data}=await dq.order('created_at');
   allDrugs=data||[];
   renderDrugs('all');
   updateSRSBadge();
@@ -4383,7 +4522,10 @@ function isFCDue(id){
 }
 
 async function loadFlashcards(){
-  const{data}=await sb.from('flashcards').select('*').eq('year',yr).order('created_at',{ascending:false});
+  const uid=getUserId();
+  let fq=sb.from('flashcards').select('*').eq('year',yr);
+  fq=(uid===null?fq.is('user_id',null):fq.eq('user_id',uid));
+  const{data}=await fq.order('created_at',{ascending:false});
   allFlashcards=data||[];
   renderFCStats();
   renderFCDue();
@@ -4469,7 +4611,7 @@ async function saveFlashcard(){
   const block=document.getElementById('fcBlock')?.value||'';
   const subject=document.getElementById('fcSubject')?.value||'';
   try{
-    const{data,error}=await sb.from('flashcards').insert({year:yr,front,back,block,subject,created_at:new Date().toISOString()}).select().single();
+    const{data,error}=await sb.from('flashcards').insert(uInsert({year:yr,front,back,block,subject,created_at:new Date().toISOString()})).select().single();
     if(error)throw error;
     allFlashcards.unshift(data);
     closeModal('addFlashcardModal');
@@ -4623,7 +4765,7 @@ let _timerHistoryWeekOffset=0;
 
 async function logTimerSession(minutes,task){
   const now=new Date();
-  const entry={year:yr,date:now.toISOString().split('T')[0],time_of_day:now.toLocaleTimeString('en-GB',{hour:'2-digit',minute:'2-digit'}),minutes,task:task||'Study session',created_at:now.toISOString()};
+  const entry=uInsert({year:yr,date:now.toISOString().split('T')[0],time_of_day:now.toLocaleTimeString('en-GB',{hour:'2-digit',minute:'2-digit'}),minutes,task:task||'Study session',created_at:now.toISOString()});
   try{await sb.from('focus_sessions').insert(entry);_timerAllSessions.unshift(entry);}
   catch(e){console.warn('Supabase timer save failed:',e.message);}
   const local=JSON.parse(localStorage.getItem(TIMER_LOG_KEY+yr)||'[]');
@@ -4633,7 +4775,10 @@ async function logTimerSession(minutes,task){
 
 async function loadTimerSessions(){
   try{
-    const{data}=await sb.from('focus_sessions').select('*').eq('year',yr).order('created_at',{ascending:false});
+    const uid=getUserId();
+    let tq=sb.from('focus_sessions').select('*').eq('year',yr);
+    tq=(uid===null?tq.is('user_id',null):tq.eq('user_id',uid));
+    const{data}=await tq.order('created_at',{ascending:false});
     _timerAllSessions=data||[];
   }catch(e){_timerAllSessions=JSON.parse(localStorage.getItem(TIMER_LOG_KEY+yr)||'[]');}
 }
